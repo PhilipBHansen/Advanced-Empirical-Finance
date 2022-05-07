@@ -7,22 +7,6 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-# library(lubridate)
-# library(sandwich)
-# library(lmtest)
-# library(RSQLite)
-# library(tidyverse)
-# library(tidymodels) 
-# library(furrr) 
-# library(glmnet)
-# library(broom)
-# library(timetk)
-# library(scales)
-# library(keras)
-# library(hardhat)
-# library(kableExtra)
-# library(data.table)
-# library(ranger)
 
 ##################
 ### USER INPUT ###
@@ -40,19 +24,30 @@ if(substr(tmp,1,12) == "C:/Users/Mie"){
   setwd("C:/Users/phili/OneDrive - CBS - Copenhagen Business School/Desktop/Code/R - code/AEF")
 }
 
-print(getwd())
-
-
-
 ######################
 ### END USER INPUT ###
 ######################
 
 
-# tidy_finance_ML <- dbConnect(SQLite(), "tidy_finance_ML.sqlite",extended_types = TRUE)
-# scm <- tbl(tidy_finance_ML, "stock_characteristics_monthly") %>% collect() 
-# 
-# options(scipen = 999)
+# Load packages
+library(lubridate)
+library(sandwich)
+library(lmtest)
+library(RSQLite)
+library(tidyverse)
+library(tidymodels)
+library(furrr)
+library(glmnet)
+library(broom)
+library(timetk)
+library(scales)
+library(keras)
+library(hardhat)
+library(kableExtra)
+library(data.table)
+library(ranger)
+
+options(scipen = 999)
 
 ```
 
