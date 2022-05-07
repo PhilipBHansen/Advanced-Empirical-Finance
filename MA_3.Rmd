@@ -48,13 +48,15 @@ library(kableExtra)
 library(data.table)
 library(ranger)
 
+# Changes decimals from having e to having 0s
 options(scipen = 999)
 
+# Loading data
 tidy_finance <- dbConnect(SQLite(), "tidy_finance.sqlite", extended_types = TRUE) # Connect to sql
-crsp_monthly <- tbl(tidy_finance, "crsp_monthly") %>% collect() 
+crsp_monthly <- tbl(tidy_finance, "crsp_monthly") %>% collect() %>% select("permno", "date", "month", "ret", "mktcap", "mktcap_lag", "industry", "ret_excess")
  
-crsp_monthly_reduced <- crsp_monthly %>% filter(month >= "1962-01-01") %>% filter(month <= "2020-12-01")
-
+# Filtering on desired time interval for uninterrupted stocks
+crsp_monthly_reduced <- crsp_monthly[crsp_monthly$permno %in% (intersect(crsp_monthly %>% filter(month=="1962-01-01") %>% select(permno),crsp_monthly %>% filter(month=="2019-12-01") %>% select(permno)))$permno,]
 
 ```
 
