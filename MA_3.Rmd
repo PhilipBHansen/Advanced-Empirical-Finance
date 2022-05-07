@@ -59,8 +59,7 @@ crsp_monthly <- tbl(tidy_finance, "crsp_monthly") %>% collect() %>% select("perm
 
 ```
 
-We find the stocks that exist both in 1962 and 2020, by cross referencing the unique permnos in january 1962 with the unique pernmos in december 2019. This gives us a list of 132 stocks, that we define as our investment universe. We then generate a summary of the excess return.
-
+We find the stocks that are traded each month from 1962 until 2020, by counting the number of months in this interval, counting the number of times each stock (permno) is traded and then filtering on the stocks that are traded the same amount of times as there exists of month (which for this interval is `r n_months`). This results in an investment universe consisting of 119 stocks. We then create the following summary of the excess return.
 
 ```{r Exercise 1, echo=TRUE}
 # Filtering on desired time interval for uninterrupted stocks
