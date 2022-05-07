@@ -8,9 +8,9 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-##################
-### USER INPUT ###
-################## 
+########################
+### BEGIN USER INPUT ###
+######################## 
 
 # Automatic setup for working directory for authors of this file
 tmp <- getwd()
@@ -53,7 +53,7 @@ options(scipen = 999)
 tidy_finance <- dbConnect(SQLite(), "tidy_finance.sqlite", extended_types = TRUE) # Connect to sql
 crsp_monthly <- tbl(tidy_finance, "crsp_monthly") %>% collect() 
  
-crsp_monthly_reduced<- crsp_monthly %>% filter(month>="1962-01-01") %>% filter(month<="2020-12-01")
+crsp_monthly_reduced <- crsp_monthly %>% filter(month >= "1962-01-01") %>% filter(month <= "2020-12-01")
 
 
 ```
