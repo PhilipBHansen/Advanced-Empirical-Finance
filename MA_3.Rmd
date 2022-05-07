@@ -59,14 +59,28 @@ crsp_monthly <- tbl(tidy_finance, "crsp_monthly") %>% collect() %>% select("perm
 
 ```
 
-```{r excersise 1: filtration of data, echo=FALSE}
+We find the stocks that exist both in 1962 and 2020, by cross referencing the unique permnos in january 1962 with the unique pernmos in december 2019. This gives us a list of 132 stocks, that we define as our investment universe. We then generate a summary of the excess return.
+
+
+```{r Exercise 1, echo=TRUE}
 # Filtering on desired time interval for uninterrupted stocks
 crsp_monthly_reduced <- crsp_monthly[crsp_monthly$permno %in% (intersect(crsp_monthly %>% filter(month=="1962-01-01") %>% select(permno),crsp_monthly %>% filter(month=="2019-12-01") %>% select(permno)))$permno,]
+
+
+crsp_monthly_reduced %>%
+  group_by(month) %>%
+  summarise(across(ret_excess, #Creating list of summarize statistics
+                   list(mean = mean, sd = sd, min = min,
+                        q25 = ~quantile(., 0.25),
+                        median = median,
+                        q75 = ~quantile(., 0.75), max = max),
+                   .names = "{.fn} excess_ret")) %>% #Adds the name to every element in the list
+  summarise(across(-month, mean)) %>%
+knitr::kable(digits = 4)%>% kable_paper("hover", full_width = T) #creates a table to view the data.
+
 ```
 
-
-
-
+We see that on average a equally weighted portfolio with all assets in our investment universe would have generated a 0.78% monthly return. We also see that on average the 25% worst performing stocks have generated a negative excess return of -3.38% or worse. While the 25% best performing stocks have generated a excess return of 4.57% or more.
 
 ```{r excersise 2: compute optimal weights, echo=FALSE}
 # Function that computes the optimal weights
@@ -87,6 +101,9 @@ optimal_weights <- function(w_prev, mu, Sigma, beta, gamma = gamma_default, B){
 }
 
 ```
+
+
+
 
 
 
