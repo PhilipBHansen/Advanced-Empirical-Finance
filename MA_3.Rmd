@@ -57,12 +57,9 @@ crsp_monthly <- tbl(tidy_finance, "crsp_monthly") %>% collect() %>% select("perm
 
 ```
 
-```{r filtration of data, echo=FALSE}
-# Filtering on desired time interval for uninterrupted stocks
-crsp_monthly_reduced <- crsp_monthly[crsp_monthly$permno %in% (intersect(crsp_monthly %>% filter(month=="1962-01-01") %>% select(permno),crsp_monthly %>% filter(month=="2019-12-01") %>% select(permno)))$permno,]
-```
 
-We find the stocks that exist both in 1962 and 2020, by cross referencing the unique permnos in january 1962 with the unique pernmos in december 2019. This gives us a list of 132 stocks, that we define as our investment universe. We then generate a summa
+
+We find the stocks that exist both in 1962 and 2020, by cross referencing the unique permnos in january 1962 with the unique pernmos in december 2019. This gives us a list of 132 stocks, that we define as our investment universe. We then generate a summary of the excess return.
 
 ```{r Exercise 1, echo=TRUE}
 # Filtering on desired time interval for uninterrupted stocks
