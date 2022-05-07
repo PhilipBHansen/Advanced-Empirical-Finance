@@ -1,6 +1,6 @@
 ---
 title: "AEF Mandatory Assignment 3"
-author: "Mie Schjerling"
+author: "Alexander Mogensen, Mie Schjerling and Philip Hansen"
 date: "7/5/2022"
 output: pdf_document
 ---
@@ -12,12 +12,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ### USER INPUT ###
 ################## 
 
+# Automatic setup for working directory for authors of this file
 tmp <- getwd()
 if(substr(tmp,1,12) == "C:/Users/Mie"){
   # Mie
   setwd("C:/Users/Mie/OneDrive/CBS/Kandidat/data")
 } else if(substr(tmp,1,14) == "C:/Users/Alexm"){
-  # Mogensen
+  # Alexander
   setwd("C:/Users/Alexm/Documents")
 } else{
   # Philip
