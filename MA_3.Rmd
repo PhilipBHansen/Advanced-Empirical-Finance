@@ -25,6 +25,8 @@ if(substr(tmp,1,12) == "C:/Users/Mie"){
   setwd("C:/Users/phili/OneDrive - CBS - Copenhagen Business School/Desktop/Code/R - code/AEF")
 }
 
+gamma_default <- 4
+
 ######################
 ### END USER INPUT ###
 ######################
@@ -57,7 +59,7 @@ crsp_monthly <- tbl(tidy_finance, "crsp_monthly") %>% collect() %>% select("perm
 
 ```
 
-```{r filtration of data, echo=FALSE}
+```{r excersise 1: filtration of data, echo=FALSE}
 # Filtering on desired time interval for uninterrupted stocks
 crsp_monthly_reduced <- crsp_monthly[crsp_monthly$permno %in% (intersect(crsp_monthly %>% filter(month=="1962-01-01") %>% select(permno),crsp_monthly %>% filter(month=="2019-12-01") %>% select(permno)))$permno,]
 ```
@@ -66,6 +68,25 @@ crsp_monthly_reduced <- crsp_monthly[crsp_monthly$permno %in% (intersect(crsp_mo
 
 
 
+```{r excersise 2: compute optimal weights, echo=FALSE}
+# Function that computes the optimal weights
+optimal_weights <- function(w_prev, mu, Sigma, beta, gamma = gamma_default, B){
+  N <- ncol(Sigma)
+  iota <- rep(1, N)
+  
+  Sigma_proc <- Sigma + beta / gamma * diag(B) # Cost-adjusted sigma
+  mu_proc <- mu + beta * diag(B) %*% w_prev # Cost-adjusted mu
+  
+  Sigma_inv <- solve(Sigma_proc) # invert Sigma 
+  
+  # Calculates the optimal weights
+  w_mvp <- Sigma_inv %*% iota
+  w_mvp <- w_mvp / sum(w_mvp)
+  w_opt <- w_mvp  + 1/gamma * (Sigma_inv - w_mvp %*% t(iota) %*% Sigma_inv) %*% mu_proc
+  return(w_opt)
+}
+
+```
 
 
 
