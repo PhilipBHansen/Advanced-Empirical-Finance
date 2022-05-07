@@ -64,9 +64,22 @@ We find the stocks that exist both in 1962 and 2020, by cross referencing the un
 
 ```{r Exercise 1, echo=TRUE}
 # Filtering on desired time interval for uninterrupted stocks
-crsp_monthly_reduced <- crsp_monthly[crsp_monthly$permno %in% (intersect(crsp_monthly %>% filter(month=="1962-01-01") %>% select(permno),crsp_monthly %>% filter(month=="2019-12-01") %>% select(permno)))$permno,]
+crsp_monthly_reduced <- crsp_monthly %>% 
+  filter(month >= "1962-01-01") %>% 
+  filter(month >= "1962-01-01") 
 
+stocks_traded <- crsp_monthly_reduced %>% 
+  group_by(permno) %>% 
+  summarise(n=n())
 
+n_months <- length(unique(crsp_monthly_reduced$month))
+
+stocks_traded <- stocks_traded %>% filter(n == n_months)
+
+crsp_monthly_reduced <- crsp_monthly_reduced %>%
+  filter(permno %in% stocks_traded$permno)
+
+# Creating summary statistics
 crsp_monthly_reduced %>%
   group_by(month) %>%
   summarise(across(ret_excess, #Creating list of summarize statistics
@@ -102,6 +115,18 @@ optimal_weights <- function(w_prev, mu, Sigma, beta, gamma = gamma_default, B){
 
 ```
 
+```{r excersise 2: compute sample mean and variance-covariance matrix, echo=FALSE}
+
+# Computes sample mean excess return
+mu <- crsp_monthly_reduced %>%
+  group_by(permno) %>%
+  summarise(across(ret_excess, mean)) 
+
+# Computes sample variance-covariance matrix
+Sigma <- crsp_monthly_reduced %>% select(month,ret_excess) %>% cov() %>% as.matrix() 
+
+
+```
 
 
 
