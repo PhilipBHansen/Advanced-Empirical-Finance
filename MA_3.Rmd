@@ -7,28 +7,49 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(lubridate)
-library(sandwich)
-library(lmtest)
-library(RSQLite)
-library(tidyverse)
-library(tidymodels) 
-library(furrr) 
-library(glmnet)
-library(broom)
-library(timetk)
-library(scales)
-library(keras)
-library(hardhat)
-library(kableExtra)
-library(data.table)
-library(ranger)
+# library(lubridate)
+# library(sandwich)
+# library(lmtest)
+# library(RSQLite)
+# library(tidyverse)
+# library(tidymodels) 
+# library(furrr) 
+# library(glmnet)
+# library(broom)
+# library(timetk)
+# library(scales)
+# library(keras)
+# library(hardhat)
+# library(kableExtra)
+# library(data.table)
+# library(ranger)
 
-setwd("C:/Users/Mie/OneDrive/CBS/Kandidat/data")
-tidy_finance_ML <- dbConnect(SQLite(), "tidy_finance_ML.sqlite",extended_types = TRUE)
-scm <- tbl(tidy_finance_ML, "stock_characteristics_monthly") %>% collect() 
+##################
+### USER INPUT ###
+##################
 
-options(scipen = 999)
+tmp <- getwd()
+if(substr(tmp,1,12) == "C:/Users/Mie"){
+  # Mie
+  setwd("C:/Users/Mie/OneDrive/CBS/Kandidat/data")
+} else if(substr(tmp,1,4) == "C:/Users/Alexm"){
+  # Mogensen
+  setwd("C:/Users/Alexm/Documents")
+} 
+
+print(getwd())
+
+
+
+######################
+### END USER INPUT ###
+######################
+
+
+# tidy_finance_ML <- dbConnect(SQLite(), "tidy_finance_ML.sqlite",extended_types = TRUE)
+# scm <- tbl(tidy_finance_ML, "stock_characteristics_monthly") %>% collect() 
+# 
+# options(scipen = 999)
 
 ```
 
