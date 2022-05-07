@@ -122,7 +122,14 @@ mu <- crsp_monthly_reduced %>%
   summarise(across(ret_excess, mean)) 
 
 # Computes sample variance-covariance matrix
-Sigma <- crsp_monthly_reduced %>% select(month,ret_excess) %>% cov() %>% as.matrix() 
+stocks <- unique(crsp_monthly_reduced$permno)
+returns <- matrix(ncol = length(stocks), nrow = n_months)
+colnames(returns) <- stocks
+for(i in 1:length(stocks)){
+  returns[,i] <- (crsp_monthly_reduced %>% filter(permno == stocks[i]))$ret_excess
+}
+
+Sigma <- returns %>% cov() %>% as.matrix()
 
 
 ```
