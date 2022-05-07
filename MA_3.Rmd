@@ -50,5 +50,11 @@ library(ranger)
 
 options(scipen = 999)
 
+tidy_finance <- dbConnect(SQLite(), "tidy_finance.sqlite", extended_types = TRUE) # Connect to sql
+crsp_monthly <- tbl(tidy_finance, "crsp_monthly") %>% collect() 
+ 
+crsp_monthly_reduced<- crsp_monthly %>% filter(month>="1962-01-01") %>% filter(month<="2020-12-01")
+
+
 ```
 
