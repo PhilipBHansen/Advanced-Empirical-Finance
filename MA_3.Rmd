@@ -65,7 +65,7 @@ We find the stocks that are traded each month from 1962 until 2020, by counting 
 # Filtering on desired time interval for uninterrupted stocks
 crsp_monthly_reduced <- crsp_monthly %>% 
   filter(month >= "1962-01-01") %>% 
-  filter(month >= "1962-01-01") 
+  filter(month <= "2019-12-01") 
 
 stocks_traded <- crsp_monthly_reduced %>% 
   group_by(permno) %>% 
@@ -117,9 +117,11 @@ optimal_weights <- function(w_prev, mu, Sigma, lambda, gamma = gamma_default){
 ```{r excersise 2: compute sample mean and variance-covariance matrix, echo=FALSE}
 
 # Computes sample mean excess return
-mu <- crsp_monthly_reduced %>%
+mu <- (crsp_monthly_reduced %>%
   group_by(permno) %>%
-  summarise(across(ret_excess, mean)) 
+  summarise(across(ret_excess, mean)))$ret_excess
+
+
 
 # Computes sample variance-covariance matrix
 stocks <- unique(crsp_monthly_reduced$permno)
@@ -138,27 +140,45 @@ Sigma <- returns %>% cov() %>% as.matrix()
 
 ```{r excersise 3: Backtesting, echo=FALSE}
 #Prepare vectors that contain results
-N<-Nrow(Sigma)
-T<-100 #Number of periods
-NP_return<-rep(0,T)
-HEA_return<-rep(0,T)
-NSS_return<-rep(0,T)
-
-NP_turnover<-rep(0,T)
-HEA_turnover<-rep(0,T)
-NSS_turnover<-rep(0,T)
-
-NP_TC<-rep(0,T)
-HEA_TC<-rep(0,T)
-NSS_TC<-rep(0,T)
-
-for(i in 1:2){ #Begin for loop for monthly portfolio estimation
-  
-#Estimate Sigma and mu using data from the last 12 months
+N<-nrow(Sigma)
 window_length<-12
+months<-sort(unique(crsp_monthly_reduced$month))
+periods<-17-window_length #Number of periods
+NP_return<-rep(0,periods)
+HEA_return<-rep(0,periods)
+NSS_return<-rep(0,periods)
 
-#Sigma_hat
-#mu_hat
+NP_turnover<-rep(0,periods)
+HEA_turnover<-rep(0,periods)
+NSS_turnover<-rep(0,periods)
+
+NP_TC<-rep(0,periods)
+HEA_TC<-rep(0,periods)
+NSS_TC<-rep(0,periods)
+
+test_mu<-rep(0,periods)
+
+for(i in 1:periods){ #Begin for loop for monthly portfolio estimation
+  
+
+  #Chosse the part of the data frame that matches our window
+  crsp_monthly_reduced_tmp<-crsp_monthly_reduced %>% filter(month %in% months[i:i+12])
+  # Computes sample mean excess return
+  mu_hat <- (crsp_monthly_reduced_tmp %>%
+  group_by(permno) %>%
+  summarise(across(ret_excess, mean)))$ret_excess
+
+  # Computes sample variance-covariance matrix
+  stocks <- unique(crsp_monthly_reduced$permno)
+  returns <- matrix(ncol = length(stocks), nrow = n_months)
+  colnames(returns) <- stocks
+  for(i in 1:length(stocks)){
+    returns[,i] <- (crsp_monthly_reduced_tmp %>% filter(permno == stocks[i]))$ret_excess
+  }
+  
+  Sigma_hat <- returns %>% cov() %>% as.matrix()
+  Sigma_hat
+  test_mu[i]<-t(rep(1,122)) %*% mu_hat
 
 #Define lambda
 lambda<-200/10000
@@ -166,34 +186,34 @@ lambda<-200/10000
 #Calculate portfolio weights
 
   #Naive portfolio
-    NP<-rep(1/N,N)
-    NP_return_tmp<-t(NP) %*% mu_hat
+   # NP<-rep(1/N,N)
+   # NP_return_tmp<-t(NP) %*% mu_hat
   #Hautsch et al. portfolio
     #HEA<-....   Closed form fomula
-    HEA_return_tmp<-t(HEA) %*% mu_hat
+   # HEA_return_tmp<-t(HEA) %*% mu_hat
   #Jagannathan portfolion
     # NSS<-...   No_short_sale_weight
-    NSS_return_tmp<-t(NSS) %*% mu_hat
+   # NSS_return_tmp<-t(NSS) %*% mu_hat
 
   
   # calculate Transaction cost and turnover. Save them
-  NP_turnover[i]<-
-  HEA_turnover[i]<-
-  NSS_turnover[i]<-
-    
-  NP_TC[i]<-
-  HEA_TC[i]<-
-  NSS_TC[i]<-
+ # NP_turnover[i]<-1
+#  HEA_turnover[i]<-1
+ # NSS_turnover[i]<-1
+ #   
+#  NP_TC[i]<-1
+#  HEA_TC[i]<-1
+#  NSS_TC[i]<-1
 
   #Calculate returns adjusted for transaction cost
-  NP_return<-NP_return_tmp-NP_TC[i]
-  HEA_return<-HEA_return_tmp-HEA_TC[i]
-  NSS_return<-NSS_return_tmp-NSS_TC[i]
+ # NP_return<-NP_return_tmp-NP_TC[i]
+ # HEA_return<-HEA_return_tmp-HEA_TC[i]
+ # NSS_return<-NSS_return_tmp-NSS_TC[i]
       
   #Save portolio weigths lagged for turnover calculation in next month  
-  NP_lagged<-NP
-  HEA_lagged<-HEA_lagged
-  NSS_lagged<-NSS   
+ # NP_lagged<-NP
+#  HEA_lagged<-HEA
+#  NSS_lagged<-NSS   
      
 } #End loop
 
@@ -201,7 +221,7 @@ lambda<-200/10000
 
 #Sharpe ratio
 
-
+test_mu
 
 ```
 
