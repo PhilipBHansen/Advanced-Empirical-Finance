@@ -94,6 +94,79 @@ knitr::kable(digits = 4)%>% kable_paper("hover", full_width = T) #creates a tabl
 
 We see that on average a equally weighted portfolio with all assets in our investment universe would have generated a 0.78% monthly return. We also see that on average the 25% worst performing stocks have generated a negative excess return of -3.38% or worse. While the 25% best performing stocks have generated a excess return of 4.57% or more.
 
+### Exercise 2
+
+When trying to find the optimal portfolio, it can be important to include transaction cost when rebalancing since this obviously affect the return. If the cost of rebalancing the portfolio outweighs the expected excess return from the new portfolio, then it would be more efficient to keep the original portfolio. We can therefore look at the following portfolio choice problem for transaction-cost[^1]:
+\begin{align}
+    \omega_{t+1}^{*}=\arg \max _{\omega \in \mathbb{R}^{N}, \iota^{\prime} \omega=1} \omega^{\prime} \mu-\nu_{t}\left(\omega, \omega_{t^{+}}, \lambda\right)-\frac{\gamma}{2} \omega^{\prime} \Sigma \omega 
+\label{eq:1} 
+\end{align}
+
+In this assignment, we assume that transaction costs are quadratic in rebalancing and proportional
+to the amount of risk, e.g., $TC\left(\omega,\omega_{t^+}\right) = \lambda\left(\omega - \omega_{t^+}\right)^{\prime} \Sigma \left(\omega - \omega_{t^+}\right)$. $\lambda \in R_{+}$ is a cost parameter and $\omega_{t^+} := \frac{\omega_t \circ \left(1+r_t\right)}{\iota^{\prime}\left(\omega_t \circ \left(1+r_t\right)\right)}$ is the weight vector before rebalancing. $\circ$ denotes element-wise
+multiplication. By inserting $TC\left(\omega,\omega_{t^+}\right)$ into \eqref{eq:1}, we get the following maximization problem[^2]:
+\begin{align}
+    \omega_{t+1}^{*}=\arg \max _{\omega \in \mathbb{R}^{N}, \iota^{\prime} \omega=1} \omega^{\prime} \mu-\lambda\left(\omega - \omega_{t^+}\right)^{\prime} \Sigma \left(\omega - \omega_{t^+}\right)-\frac{\gamma}{2} \omega^{\prime} \Sigma \omega 
+\label{eq:2} 
+\end{align}
+
+In order to find a closed form solution, we start by rewriting the function to be maximized in equation \eqref{eq:2} as follows (the constant $\omega_{t^+}^{\prime}\Sigma\omega_{t^+}$ will be ignored, since it doesn't affect the optimal portfolio choice. So technically the equal sign is not true, but for this purpose it is fine):
+\begin{align*}
+     & \omega^{\prime} \mu-\lambda\left(\omega - \omega_{t^+}\right)^{\prime} \Sigma \left(\omega - \omega_{t^+}\right)-\frac{\gamma}{2} \omega^{\prime} \Sigma \omega \\
+     &= \omega^{\prime} \mu-\lambda\left(\omega^{\prime}\Sigma\omega - 2\omega^{\prime}\Sigma\omega_{t^+} + \underset{\text{constant}}{\omega_{t^+}^{\prime}\Sigma\omega_{t^+}}\right) -\frac{\gamma}{2} \omega^{\prime} \Sigma \omega \\
+     &= \omega^{\prime} \mu-\lambda\left(\omega^{\prime}\Sigma\omega - 2\omega^{\prime}\Sigma\omega_{t^+}\right) -\frac{\gamma}{2} \omega^{\prime} \Sigma \omega \\
+     &= \omega^{\prime} \left(\mu + 2\lambda \Sigma \omega_{t^+}\right) - \frac{\gamma}{2} \omega^{\prime} \left(\Sigma + \frac{2\lambda}{\gamma}\Sigma\right)\omega \\
+     &= \omega^{\prime} \left(\mu + 2\lambda \Sigma \omega_{t^+}\right) - \frac{\gamma}{2}\left(\gamma + 2\lambda\right) \omega^{\prime}\Sigma\omega \\
+     &= \omega^{\prime} \mu^{*} - \frac{\gamma}{2} \omega^{\prime}\Sigma^{*}\omega 
+\end{align*}
+
+Where we have defined and used that $\mu^{*}=\mu + 2\lambda \Sigma \omega_{t^+}$ and $\Sigma^{*}=\left(\gamma + 2\lambda\right)\Sigma$. We can now use this to find a closed-form solution. To maximize a function is the same as minimizing the negative funtion:
+\begin{align}
+    \omega_{t+1}^{*}=\arg \min _{\omega \in \mathbb{R}^{N}, \iota^{\prime} \omega=1} \frac{\gamma}{2} \omega^{\prime} \Sigma^{*} \omega - \omega^{\prime} \mu^{*}
+\label{eq:3} 
+\end{align}
+
+[^1]: We assume that $\beta$ is a mistake and that it should in fact have been $\lambda$: $\nu_t(\omega,\omega_{t^+},\gamma)$.
+[^2]: We assume that $\nu_t(\omega,\omega_{t^+},\beta)$ and $TC(\omega,\omega_{t^+})$ are equal to each other, since we otherwise don't have a function for $\nu_t$.
+
+In order to find a closed-form solution, we define the Lagrange, differentiate it with respect to $\omega$ and $\lambda$ and then solve for $\omega$ (using that $\Sigma^{*}$ is symmetric):
+\begin{equation*}
+    \mathcal{L}\left(\mathbf{\omega}, \lambda\right) = \frac{\gamma}{2} \omega^{\prime} \Sigma^{*} \omega - \omega^{\prime} \mu^{*} + \lambda\left(\iota^{\prime}\omega - 1\right)
+\end{equation*}
+\begin{align*}
+    \frac{\partial\mathcal{L}\left(\mathbf{\omega}, \lambda\right)}{\partial\omega} = \frac{\gamma}{2}\left(\Sigma^{*}+\left(\Sigma^{*}\right)^{\prime}\right)\omega - \mu^{*} + \lambda\iota &= \gamma\Sigma^{*}\omega - \mu^{*} + \lambda\iota = 0
+\end{align*}
+\begin{align}
+    \Leftrightarrow \gamma\Sigma^{*}\omega &= \mu^{*} - \lambda\iota \notag\\
+    \Leftrightarrow \omega &= \frac{1}{\gamma}\left(\left(\Sigma^{*}\right)^{-1}\mu^{*} - \lambda\left(\Sigma^{*}\right)^{-1}\iota\right) \notag\\
+    \iota^{\prime}\omega &= \frac{1}{\gamma}\left(\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\mu^{*} - \lambda\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\iota\right)
+\label{eq:4}
+\end{align}
+\begin{align}
+    \frac{\partial\mathcal{L}\left(\mathbf{\omega}, \lambda\right)}{\partial\omega} = \iota^{\prime}\omega - 1 = 0 \quad \Leftrightarrow \quad \iota^{\prime}\omega = 1
+\label{eq:5}
+\end{align}
+Equating \eqref{eq:4} and \eqref{eq:5} and soolve for $\lambda$:
+\begin{align}
+    1 &= \frac{1}{\gamma}\left(\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\mu^{*} - \lambda\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\iota\right) \notag\\
+    \lambda\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\iota &= \iota^{\prime}\left(\Sigma^{*}\right)^{-1}\mu^{*} - \gamma \notag\\
+    \lambda &= \frac{1}{\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\iota}\left(\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\mu^{*} - \gamma\right)
+\label{eq:6}
+\end{align}
+Inserting \eqref{eq:6} in \eqref{eq:4} results in the following closed-form solution:
+\begin{align}
+    \iota^{\prime}\omega &= \frac{1}{\gamma}\left(\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\mu^{*} - \frac{1}{\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\iota}\left(\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\mu^{*} - \gamma\right)\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\iota\right) \notag\\
+    \Leftrightarrow \omega &= \frac{1}{\gamma}\left(\left(\Sigma^{*}\right)^{-1}\mu^{*} - \frac{1}{\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\iota}\left(\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\mu^{*} - \gamma\right)\left(\Sigma^{*}\right)^{-1}\iota\right) \notag\\
+    &= \frac{1}{\gamma}\left(\gamma\frac{1}{\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\iota}\left(\Sigma^{*}\right)^{-1}\iota + \left(\left(\Sigma^{*}\right)^{-1} - \frac{1}{\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\iota}\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\left(\Sigma^{*}\right)^{-1}\iota\right)\mu^{*}\right) \notag\\
+    &= \frac{1}{\gamma}\left(\left(\Sigma^{*}\right)^{-1} - \frac{1}{\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\iota}\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\left(\Sigma^{*}\right)^{-1}\iota\right)\mu^{*} + \frac{1}{\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\iota}\left(\Sigma^{*}\right)^{-1}\iota
+\label{eq:7}
+\end{align}
+By using $\mu^{*}$ and $\Sigma^{*}$ we have now found the closed-form solution in \eqref{eq:7}, which is just the closed-form solution for the standard mean-variance portfolio optimization problem. By inserting $\mu^{*}$ and $\Sigma^{*}$ into this, we get the closed-form solution for the portfolio choice problem with transaction-cost:
+\begin{equation*}
+    \omega_{t+1}^{*} = \frac{1}{\gamma}\left(\left(\Sigma^{*}\right)^{-1} - \frac{1}{\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\iota}\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\left(\Sigma^{*}\right)^{-1}\iota\right)\mu^{*} + \frac{1}{\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\iota}\left(\Sigma^{*}\right)^{-1}\iota
+\end{equation*}
+
+
 ```{r excersise 2: compute optimal weights, echo=FALSE}
 # Function that computes the optimal weights
 optimal_weights <- function(w_prev, mu, Sigma, lambda, gamma = gamma_default){
