@@ -271,13 +271,13 @@ lambda<-200/10000
 
   
   # calculate Transaction cost and turnover. Save them
- # NP_turnover[i]<-1
-#  HEA_turnover[i]<-1
- # NSS_turnover[i]<-1
+ # NP_turnover[i]<- sum(abs(as.vector(NP)-as.vector(NP_return_tmp)))
+#  HEA_turnover[i]<- sum(abs(as.vector(HEA)-as.vector(HEA_return_tmp)))
+ # NSS_turnover[i]<- sum(abs(as.vector(NSS)-as.vector(NSS_return_tmp)))
  #   
-#  NP_TC[i]<-1
-#  HEA_TC[i]<-1
-#  NSS_TC[i]<-1
+#  NP_TC[i]<- lambda %*%(NP - NP_return_tmp)%*% sigma_hat %*% (NP - NP_return_tmp)
+#  HEA_TC[i]<- lambda %*%(NP - NP_return_tmp)%*% sigma_hat %*% (NP - NP_return_tmp)
+#  NSS_TC[i]<- lambda %*%(NP - NP_return_tmp)%*% sigma_hat %*% (NP - NP_return_tmp)
 
   #Calculate returns adjusted for transaction cost
  # NP_return<-NP_return_tmp-NP_TC[i]
