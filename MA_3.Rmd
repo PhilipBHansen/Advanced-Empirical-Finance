@@ -96,7 +96,7 @@ We see that on average a equally weighted portfolio with all assets in our inves
 
 ```{r excersise 2: compute optimal weights, echo=FALSE}
 # Function that computes the optimal weights
-optimal_weights <- function(w_prev, mu, Sigma, lambda, gamma = gamma_default, B){
+optimal_weights <- function(w_prev, mu, Sigma, lambda, gamma = gamma_default){
   N <- ncol(Sigma)
   iota <- rep(1, N)
   
