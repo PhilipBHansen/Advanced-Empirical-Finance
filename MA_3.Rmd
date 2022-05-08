@@ -59,9 +59,7 @@ crsp_monthly <- tbl(tidy_finance, "crsp_monthly") %>% collect() %>% select("perm
 
 ```
 
-We find the stocks that are traded each month from 1962 until 2020, by counting the number of months in this interval, counting the number of times each stock (permno) is traded and then filtering on the stocks that are traded the same amount of times as there exists of month (which for this interval is `r n_months`). This results in an investment universe consisting of 119 stocks. We then create the following summary of the excess return.
-
-```{r Exercise 1, echo=TRUE}
+```{r Exercise 1 data filtering, echo=FALSE}
 # Filtering on desired time interval for uninterrupted stocks
 crsp_monthly_reduced <- crsp_monthly %>% 
   filter(month >= "1962-01-01") %>% 
@@ -78,6 +76,11 @@ stocks_traded <- stocks_traded %>% filter(n == n_months)
 crsp_monthly_reduced <- crsp_monthly_reduced %>%
   filter(permno %in% stocks_traded$permno)
 
+```
+
+We find the stocks that are traded each month from 1962 until 2020, by counting the number of months in this interval, counting the number of times each stock (permno) is traded and then filtering on the stocks that are traded the same amount of times as there exists of month (which for this interval is `r n_months`). This results in an investment universe consisting of 119 stocks. We then create the following summary of the excess return.
+
+```{r Exercise 1 summary, echo=FALSE}
 # Creating summary statistics
 crsp_monthly_reduced %>%
   group_by(month) %>%
@@ -143,7 +146,7 @@ In order to find a closed-form solution, we define the Lagrange, differentiate i
 \label{eq:4}
 \end{align}
 \begin{align}
-    \frac{\partial\mathcal{L}\left(\mathbf{\omega}, \lambda\right)}{\partial\omega} = \iota^{\prime}\omega - 1 = 0 \quad \Leftrightarrow \quad \iota^{\prime}\omega = 1
+    \frac{\partial\mathcal{L}\left(\mathbf{\omega}, \lambda\right)}{\partial\lambda} = \iota^{\prime}\omega - 1 = 0 \quad \Leftrightarrow \quad \iota^{\prime}\omega = 1
 \label{eq:5}
 \end{align}
 Equating \eqref{eq:4} and \eqref{eq:5} and soolve for $\lambda$:
