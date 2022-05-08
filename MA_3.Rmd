@@ -234,7 +234,7 @@ NSS_TC<-rep(0,periods)
 
 test_mu<-rep(0,periods)
 
-for(i in 1:periods){ #Begin for loop for monthly portfolio estimation
+for(i in 1:(periods)){ #Begin for loop for monthly portfolio estimation
   
 
   #Chosse the part of the data frame that matches our window
@@ -244,26 +244,27 @@ for(i in 1:periods){ #Begin for loop for monthly portfolio estimation
   group_by(permno) %>%
   summarise(across(ret_excess, mean)))$ret_excess
 
+  r<-((crsp_monthly_reduced %>% filter(month == months[i+13]))$ret_excess)
+
+  
   # Computes sample variance-covariance matrix
   stocks <- unique(crsp_monthly_reduced$permno)
   returns <- matrix(ncol = length(stocks), nrow = n_months)
   colnames(returns) <- stocks
-  for(i in 1:length(stocks)){
-    returns[,i] <- (crsp_monthly_reduced_tmp %>% filter(permno == stocks[i]))$ret_excess
+  for(j in 1:length(stocks)){
+    returns[,j] <- (crsp_monthly_reduced_tmp %>% filter(permno == stocks[j]))$ret_excess
   }
   
   Sigma_hat <- returns %>% cov() %>% as.matrix()
-  Sigma_hat
-  test_mu[i]<-t(rep(1,122)) %*% mu_hat
-
+  
 #Define lambda
 lambda<-200/10000
 
 #Calculate portfolio weights
 
   #Naive portfolio
-   # NP<-rep(1/N,N)
-   # NP_return_tmp<-t(NP) %*% mu_hat
+   NP<-rep(1/N,N)
+   NP_return_tmp<-t(NP) %*% r
   #Hautsch et al. portfolio
     #HEA<-....   Closed form fomula
    # HEA_return_tmp<-t(HEA) %*% mu_hat
@@ -273,13 +274,13 @@ lambda<-200/10000
 
   
   # calculate Transaction cost and turnover. Save them
- # NP_turnover[i]<-1
-#  HEA_turnover[i]<-1
- # NSS_turnover[i]<-1
+ # NP_turnover[i]<- sum(abs(as.vector(NP)-as.vector(NP_return_tmp)))
+#  HEA_turnover[i]<- sum(abs(as.vector(HEA)-as.vector(HEA_return_tmp)))
+ # NSS_turnover[i]<- sum(abs(as.vector(NSS)-as.vector(NSS_return_tmp)))
  #   
-#  NP_TC[i]<-1
-#  HEA_TC[i]<-1
-#  NSS_TC[i]<-1
+#  NP_TC[i]<- lambda %*%(NP - NP_return_tmp)%*% sigma_hat %*% (NP - NP_return_tmp)
+#  HEA_TC[i]<- lambda %*%(NP - NP_return_tmp)%*% sigma_hat %*% (NP - NP_return_tmp)
+#  NSS_TC[i]<- lambda %*%(NP - NP_return_tmp)%*% sigma_hat %*% (NP - NP_return_tmp)
 
   #Calculate returns adjusted for transaction cost
  # NP_return<-NP_return_tmp-NP_TC[i]
@@ -296,6 +297,7 @@ lambda<-200/10000
 #Average turnover
 
 #Sharpe ratio
+
 
 test_mu
 
