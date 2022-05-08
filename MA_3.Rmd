@@ -265,7 +265,8 @@ for(i in 1:periods){ #Begin for loop for monthly portfolio estimation
   mu_hat <- (crsp_monthly_reduced_tmp %>%
   group_by(permno) %>%
   summarise(across(ret_excess, mean)))$ret_excess
-
+  
+  # Generate a vector with returns for current month
   r<-((crsp_monthly_reduced %>% filter(month == months[i+window_length]))$ret_excess)
 
   # Computes sample variance-covariance matrix
@@ -318,11 +319,25 @@ for(i in 1:periods){ #Begin for loop for monthly portfolio estimation
 #Average turnover
 
 #Sharpe ratio
+NP_SR<-mean(NP_return)/sqrt(1/(periods-1)*sum((NP_return-mean(NP_return))^2))
+HEA_SR<-mean(HEA_return)/sqrt(1/(periods-1)*sum((HEA_return-mean(HEA_return))^2))
+NSS_SR<-mean(NSS_return)/sqrt(1/(periods-1)*sum((NSS_return-mean(NSS_return))^2))
 
+Turnover_SR<-matrix(c(mean(NP_return),sd(NP_return),mean(NP_turnover),sd(NP_turnover),NP_SR,
+                      mean(HEA_return),sd(HEA_return),mean(HEA_turnover),sd(HEA_turnover),HEA_SR,
+                      mean(NSS_return),sd(NSS_return),mean(NSS_turnover),sd(NSS_turnover),NSS_SR),
+                      ncol = 3)
+colnames(Turnover_SR)<-c("NP","HEA","NSS")
+rownames(Turnover_SR)<-c("Average return","Return standard deviation","Average Turnover","Turnover standard deviation", "Sharpe ratio")
+Turnover_SR %>% knitr::kable() %>% kable_paper("hover", full_width = T)
 
 ```
+NP is the naive portfolio, HAE is the Hautsch et al. portfolio and NSS is the no short sale portfolio.
 
 
+The no short portfolio performed the best with a 1.5% average monthly return. The naive portfolio performed amazingly well  taking its simplicity into account with a 0.9% monthly return. The transaction cost optimized portfolio had a really poor performance with an average monthly loss of 11%.
+
+We would not describe this as a "true" out of sample experiment. The used rolling window strategy has similarities with a out of sample experiment. In a way it is a series of smaller out of sample experiments, but we always only predict one month ahead which means the portion of data that is picked to be "out of sample" is really small.
 
 
 
