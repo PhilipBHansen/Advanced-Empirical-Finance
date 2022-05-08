@@ -241,6 +241,9 @@ for(i in 1:(periods)){ #Begin for loop for monthly portfolio estimation
   group_by(permno) %>%
   summarise(across(ret_excess, mean)))$ret_excess
 
+  r<-((crsp_monthly_reduced %>% filter(month == months[i+13]))$ret_excess)
+
+  
   # Computes sample variance-covariance matrix
   stocks <- unique(crsp_monthly_reduced$permno)
   returns <- matrix(ncol = length(stocks), nrow = n_months)
@@ -250,11 +253,6 @@ for(i in 1:(periods)){ #Begin for loop for monthly portfolio estimation
   }
   
   Sigma_hat <- returns %>% cov() %>% as.matrix()
-  Sigma_hat
-  
-  sum(mu_hat)
-  
-  test_mu[i]<-sum(mu_hat)  
   
 #Define lambda
 lambda<-200/10000
@@ -262,8 +260,8 @@ lambda<-200/10000
 #Calculate portfolio weights
 
   #Naive portfolio
-   # NP<-rep(1/N,N)
-   # NP_return_tmp<-t(NP) %*% mu_hat
+   NP<-rep(1/N,N)
+   NP_return_tmp<-t(NP) %*% r
   #Hautsch et al. portfolio
     #HEA<-....   Closed form fomula
    # HEA_return_tmp<-t(HEA) %*% mu_hat
