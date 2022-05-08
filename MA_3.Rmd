@@ -136,7 +136,74 @@ Sigma <- returns %>% cov() %>% as.matrix()
 
 
 
+```{r excersise 3: Backtesting, echo=FALSE}
+#Prepare vectors that contain results
+N<-Nrow(Sigma)
+T<-100 #Number of periods
+NP_return<-rep(0,T)
+HEA_return<-rep(0,T)
+NSS_return<-rep(0,T)
 
+NP_turnover<-rep(0,T)
+HEA_turnover<-rep(0,T)
+NSS_turnover<-rep(0,T)
+
+NP_TC<-rep(0,T)
+HEA_TC<-rep(0,T)
+NSS_TC<-rep(0,T)
+
+for(i in 1:2){ #Begin for loop for monthly portfolio estimation
+  
+#Estimate Sigma and mu using data from the last 12 months
+window_length<-12
+
+#Sigma_hat
+#mu_hat
+
+#Define lambda
+lambda<-200/10000
+
+#Calculate portfolio weights
+
+  #Naive portfolio
+    NP<-rep(1/N,N)
+    NP_return_tmp<-t(NP) %*% mu_hat
+  #Hautsch et al. portfolio
+    #HEA<-....   Closed form fomula
+    HEA_return_tmp<-t(HEA) %*% mu_hat
+  #Jagannathan portfolion
+    # NSS<-...   No_short_sale_weight
+    NSS_return_tmp<-t(NSS) %*% mu_hat
+
+  
+  # calculate Transaction cost and turnover. Save them
+  NP_turnover[i]<-
+  HEA_turnover[i]<-
+  NSS_turnover[i]<-
+    
+  NP_TC[i]<-
+  HEA_TC[i]<-
+  NSS_TC[i]<-
+
+  #Calculate returns adjusted for transaction cost
+  NP_return<-NP_return_tmp-NP_TC[i]
+  HEA_return<-HEA_return_tmp-HEA_TC[i]
+  NSS_return<-NSS_return_tmp-NSS_TC[i]
+      
+  #Save portolio weigths lagged for turnover calculation in next month  
+  NP_lagged<-NP
+  HEA_lagged<-HEA_lagged
+  NSS_lagged<-NSS   
+     
+} #End loop
+
+#Average turnover
+
+#Sharpe ratio
+
+
+
+```
 
 
 
