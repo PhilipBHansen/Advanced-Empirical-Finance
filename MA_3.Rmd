@@ -158,7 +158,7 @@ NSS_TC<-rep(0,periods)
 
 test_mu<-rep(0,periods)
 
-for(i in 1:periods){ #Begin for loop for monthly portfolio estimation
+for(i in 1:(periods)){ #Begin for loop for monthly portfolio estimation
   
 
   #Chosse the part of the data frame that matches our window
@@ -172,14 +172,17 @@ for(i in 1:periods){ #Begin for loop for monthly portfolio estimation
   stocks <- unique(crsp_monthly_reduced$permno)
   returns <- matrix(ncol = length(stocks), nrow = n_months)
   colnames(returns) <- stocks
-  for(i in 1:length(stocks)){
-    returns[,i] <- (crsp_monthly_reduced_tmp %>% filter(permno == stocks[i]))$ret_excess
+  for(j in 1:length(stocks)){
+    returns[,j] <- (crsp_monthly_reduced_tmp %>% filter(permno == stocks[j]))$ret_excess
   }
   
   Sigma_hat <- returns %>% cov() %>% as.matrix()
   Sigma_hat
-  test_mu[i]<-t(rep(1,122)) %*% mu_hat
-
+  
+  sum(mu_hat)
+  
+  test_mu[i]<-sum(mu_hat)  
+  
 #Define lambda
 lambda<-200/10000
 
@@ -220,6 +223,7 @@ lambda<-200/10000
 #Average turnover
 
 #Sharpe ratio
+
 
 test_mu
 
