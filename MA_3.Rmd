@@ -125,7 +125,7 @@ In order to find a closed form solution, we start by rewriting the function to b
      &= \omega^{\prime} \mu^{*} - \frac{\gamma}{2} \omega^{\prime}\Sigma^{*}\omega 
 \end{align*}
 
-Where we have defined and used that $\mu^{*}=\mu + 2\lambda \Sigma \omega_{t^+}$ and $\Sigma^{*}=\left(\gamma + 2\lambda\right)\Sigma$. We can now use this to find a closed-form solution. To maximize a function is the same as minimizing the negative funtion:
+Where we have defined and used that $\mu^{*}=\mu + 2\lambda \Sigma \omega_{t^+}$ and $\Sigma^{*}=\left(\gamma + 2\lambda\right)\Sigma$. We can now use this to find a closed-form solution. To maximize a function is the same as minimizing the negative function:
 \begin{align}
     \omega_{t+1}^{*}=\arg \min _{\omega \in \mathbb{R}^{N}, \iota^{\prime} \omega=1} \frac{\gamma}{2} \omega^{\prime} \Sigma^{*} \omega - \omega^{\prime} \mu^{*}
 \label{eq:3} 
@@ -134,7 +134,7 @@ Where we have defined and used that $\mu^{*}=\mu + 2\lambda \Sigma \omega_{t^+}$
 [^1]: We assume that $\beta$ is a mistake and that it should in fact have been $\lambda$: $\nu_t(\omega,\omega_{t^+},\gamma)$.
 [^2]: We assume that $\nu_t(\omega,\omega_{t^+},\beta)$ and $TC(\omega,\omega_{t^+})$ are equal to each other, since we otherwise don't have a function for $\nu_t$.
 
-In order to find a closed-form solution, we define the Lagrange, differentiate it with respect to $\omega$ and $\lambda$ and then solve for $\omega$ (using that $\Sigma^{*}$ is symmetric):
+In order to find a closed-form solution, we define the Lagrangian, differentiate it with respect to $\omega$ and $\lambda$ and then solve for $\omega$ (using that $\Sigma^{*}$ is symmetric):
 \begin{equation*}
     \mathcal{L}\left(\mathbf{\omega}, \lambda\right) = \frac{\gamma}{2} \omega^{\prime} \Sigma^{*} \omega - \omega^{\prime} \mu^{*} + \lambda\left(\iota^{\prime}\omega - 1\right)
 \end{equation*}
@@ -151,7 +151,7 @@ In order to find a closed-form solution, we define the Lagrange, differentiate i
     \frac{\partial\mathcal{L}\left(\mathbf{\omega}, \lambda\right)}{\partial\lambda} = \iota^{\prime}\omega - 1 = 0 \quad \Leftrightarrow \quad \iota^{\prime}\omega = 1
 \label{eq:5}
 \end{align}
-Equating \eqref{eq:4} and \eqref{eq:5} and soolve for $\lambda$:
+Equating \eqref{eq:4} and \eqref{eq:5} and solve for $\lambda$:
 \begin{align}
     1 &= \frac{1}{\gamma}\left(\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\mu^{*} - \lambda\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\iota\right) \notag\\
     \lambda\iota^{\prime}\left(\Sigma^{*}\right)^{-1}\iota &= \iota^{\prime}\left(\Sigma^{*}\right)^{-1}\mu^{*} - \gamma \notag\\
@@ -177,7 +177,8 @@ By using $\mu^{*}$ and $\Sigma^{*}$ we have now found the closed-form solution i
 optimal_weights <- function(w_prev, mu, Sigma, lambda, gamma = gamma_default){
   N <- ncol(Sigma)
   iota <- rep(1, N)
-  
+ 
+  #Define mu_star and sigma_star according to the previously found close form solution 
   mu_star <- mu + 2 * lambda * Sigma %*% w_prev # Cost-adjusted mu
   Sigma_star <- (gamma + 2 * lambda) / gamma * Sigma # Cost-adjusted sigma
   
@@ -323,12 +324,15 @@ NP_SR<-mean(NP_return)/sqrt(1/(periods-1)*sum((NP_return-mean(NP_return))^2))
 HEA_SR<-mean(HEA_return)/sqrt(1/(periods-1)*sum((HEA_return-mean(HEA_return))^2))
 NSS_SR<-mean(NSS_return)/sqrt(1/(periods-1)*sum((NSS_return-mean(NSS_return))^2))
 
+#Generates a matrix with the results to display them.
 Turnover_SR<-matrix(c(mean(NP_return),sd(NP_return),mean(NP_turnover),sd(NP_turnover),NP_SR,
                       mean(HEA_return),sd(HEA_return),mean(HEA_turnover),sd(HEA_turnover),HEA_SR,
                       mean(NSS_return),sd(NSS_return),mean(NSS_turnover),sd(NSS_turnover),NSS_SR),
                       ncol = 3)
+#Adds row and column names
 colnames(Turnover_SR)<-c("NP","HEA","NSS")
 rownames(Turnover_SR)<-c("Average return","Return standard deviation","Average Turnover","Turnover standard deviation", "Sharpe ratio")
+#Prints the table
 Turnover_SR %>% knitr::kable() %>% kable_paper("hover", full_width = T)
 
 ```
