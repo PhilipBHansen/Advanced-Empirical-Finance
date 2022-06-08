@@ -1,0 +1,463 @@
+---
+title: "AEF Mandatory Assignment 1 - updated"
+author: "Alexander Mogensen, Mie Schjerling and Philip Hansen"
+date: "8/6/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+########################
+### BEGIN USER INPUT ###
+######################## 
+
+# Automatic setup for working directory for authors of this file
+tmp <- getwd()
+if(substr(tmp,1,12) == "C:/Users/Mie"){
+  # Mie
+  setwd("C:/Users/Mie/OneDrive/CBS/Kandidat/data")
+} else if(substr(tmp,1,14) == "C:/Users/Alexm"){
+  # Alexander
+  setwd("C:/Users/Alexm/Documents")
+} else{
+  # Philip
+  setwd("C:/Users/phili/OneDrive - CBS - Copenhagen Business School/Desktop/Code/R - code/AEF")
+}
+
+# If NON-AUTHOR runs this code, please insert your own path to the working directory where you store tidy_finance.sqlite and uncomment the line below:
+# setwd("INSERT PATH TO YOUR TIDY_FINANCE FILE")
+
+######################
+### END USER INPUT ###
+######################
+
+
+# Loading packages
+library(tidyquant)
+library(tidyverse)
+library(RSQLite)
+library(lubridate)
+library(sandwich)
+library(lmtest)
+library(scales)
+library(kableExtra)
+
+
+# Changes decimals from having e to having 0s
+options(scipen = 999)
+
+# Loading relevant data
+tidy_finance <- dbConnect(SQLite(), "tidy_finance.sqlite", extended_types = TRUE) # Connect to sql
+crsp_monthly <- tbl(tidy_finance, "crsp_monthly") %>% collect() %>% select("permno", "month", "ret_excess", "mktcap", "mktcap_lag")
+ff_monthly <- tbl(tidy_finance, "factors_ff_monthly") %>% collect() %>% select("month", "mkt_excess")
+
+
+```
+
+
+# Excercise 1
+The financial stock data for this assignment comes from the CRSP-universe and includes stock data from "1989-02-01" to "2020-12-01). We load the variables *permno*, *month*, *ret_excess*, *mktcap* and *mktcap_lag*. Furthermore, we also use the monthly Fama-French data which includes the variables *month* and *mkt_excess*. Below is the definition of the variables used in the assignment:
+1. *Permno*: Permno is a security identification number. Each security has its own unique PERMNO. A permno belongs to permco and a permco is CRPS's company identifier. One permco is not locked to only one permno, but can have more than one. 
+2. *ret_excess*: This is the excess return, which is the return on the stock minus the return we get on the risk-free asset over the same period. So the excess return shows the extra return you get by investing in a risky asset compared to just putting your money in the bank (investing in the risk-free asset).
+3. *mktcap*: Market capitalization (or market cap) is the total value of the company. It is calculated as the total amount of outstanding shares of a company multiplied with the stock price. This makes it easier to compare the size of each company to one another and to the market in general. 
+4. *mkt_excess*: This is the excess return for the whole market combined.
+
+In order to get a sense of the data, we create the following summary statistics, where we calculate the mean, standard deviation and quartiles for both the excess return and the market capitalization for each month and then we average these results over all months. This gives us the following table:
+
+```{r summary statistics, echo=FALSE}
+
+# Creating the summary statistics of the excess return and market cap
+ crsp_monthly_reduced <- crsp_monthly %>% select(ret_excess, mktcap)
+# 
+# kable(summary(crsp_monthly_reduced), booktabs = T, digits = 4, col.names = c("Excess Return", "Market Cap"), 
+#       caption = "Summary statistics of the excess return and the market cap") %>% 
+#   kable_classic(full_width = F) %>% 
+#   kable_styling(latex_options = "HOLD_position")
+
+
+
+
+# Generates an empty data frame, assigns columns for summary statistics and loads a vector with the variables we wish to summarise
+summary1 <- data.frame(matrix(ncol=7, nrow=2)) #There are 7 summary statistics and two variables
+colnames(summary1) <- c("mean", "sd", "min", "Q1","median", "Q3", "max")
+var_names<- c("ret_excess",  "mktcap")
+
+# Loops through all the chosen variables and calculates mean, sd, min, Q1, median, Q3 and max for each month then takes the average of those results.  
+for(i in 1:2){  
+summary1[i,] <- crsp_monthly %>%
+    group_by(month) %>%
+  summarise(across(var_names[i],
+                   list(mean = mean, 
+                        sd = sd, 
+                        min = min,
+                        q25 = ~quantile(., 0.25),
+                        median = median,
+                        q75 = ~quantile(., 0.75), 
+                        max = max),
+                   .names = "{.fn}  ")) %>%
+  summarise(across(-month, mean))
+}
+
+#Assigns relevant row names
+rownames(summary1) <- c("Excess return", "Market cap")
+
+#Prints the summary nicely in a table
+summary1 %>% knitr::kable(booktabs = T, digits = 4, caption = "Summary statistics of the excess return and the market cap") %>% 
+  kable_paper("hover", full_width = T) 
+
+```
+
+Table 1 shows that the cross-section mean of the excess return and market capitalization is 0.0083 and 1815, respectively. On average the monthly excess return varies from -0.6906 to 2.6775 where the market capitalization on average varies from 0.7 to 242415. Furthermore, it is seen that the mean is larger than the median for both variables. This indicates that the distribution of the data is positively skewed (right-skewed). 
+
+
+# Excercise 2
+
+The reason why *crsp_monthly %>% group_by(permno) %>% mutate(ret_excess_lag = lag(ret_excess))* does not provide the correct result if there are non-explicit missing values in the time series is, that the lag function doesn't differentiate between one-month lag and just the closest lag available. If data for a specific month, lets say May, doesn't exist, then it just takes April as the lagged value instead, which would be wrong. Therefore, a better way to find the lagged excess return would be to copy the data to a new data frame (only including permno, month and excess return) where you overwrite the month to be the next month. This means that all the data in the new data frame is now depicted as being one month ahead of what it actually is. Then you re-name the excess return column to instead depict lagged excess return and lastly you drop all the NAs in the data frame. By now innerjoining this data frame to the original on month and permno you now get the lagged excess return variable as well.
+
+
+```{r summerise for autocorrelation, echo=FALSE}
+
+# Creating a new table where the month in crsp_monthly is moved 1 month ahead and then the excess return is renamed to ret_excess_lag and na dropped
+crsp_monthly_month_changed <- crsp_monthly %>% mutate(month = month %m+% months(1)) %>% 
+  select(permno, month, ret_excess_lag = ret_excess) %>% 
+  drop_na()
+
+# Using inner join on month and permno to add ret_excess_lag and only keep complete data where there is no na
+crsp_monthly_new <- crsp_monthly %>% inner_join(crsp_monthly_month_changed, by = c("permno", "month"))
+
+return_correlation <- cor(crsp_monthly_new$ret_excess,crsp_monthly_new$ret_excess_lag)
+
+```
+In order to investigate whether or not the returns exhibit autocorrelation of lag 1, then we can find the correlation between the excess return and the lagged excess return, which is: `r round(return_correlation, 4)`. This negative correlation implies that the returns move in opposite direction from the lagged returns. Therefore, if the returns have been positive last month, then they are likely to be negative this month and vice versa. 
+
+
+# Excercise 3
+We start by adding a new column showing the momentum of a company. The momentum is calculated as the growth of the market capitalization for a company over the past year. The market cap 12 with 12 months lag is calculated in the same way as described in excercise 2 with the lagged excess return:
+$$
+Mom_{i,t} = 100*\frac{(mc_{i,t-1}-mc_{i,t-12})}{mc_{i,t-12}}
+$$
+The difference between computing momentum as the relative change in prices or as the relative change in market capitalization is fundamentally identical. However when working with data over long time periods market capitalization has a profound edge over prices. When using prices the momentum will be affected by noise caused by operations in the financial market that has nothing to with the market valuation of the company. The issuing of new stocks will naturally dilute the value of a single stock causing prices to drop, but it will not affect the market capitalization. If a company for example decides to split up the stocks so each stock is made into two, this will cut the price of the stock in half but leave the market capitalization unchanged which promotes the use of market capitalization over prices.
+
+```{r lag for 12 months, echo=FALSE}
+
+# Creating a new table where the month in crsp_monthly is moved 1 month ahead and then the excess return is renamed to ret_excess_lag and na dropped
+crsp_monthly_month_changed_12 <- crsp_monthly %>% mutate(month = month %m+% months(12)) %>% 
+  select(permno, month, mktcap_lag_12 = mktcap) %>% 
+  drop_na()
+
+# Using inner join on month and permno to add ret_excess_lag and only keep complete data where there is no na
+crsp_monthly_mom <- crsp_monthly %>% inner_join(crsp_monthly_month_changed_12, by = c("permno", "month"))
+
+# calculation of mom and add to a new column
+crsp_monthly_mom <- crsp_monthly_mom %>% group_by(permno) %>% mutate(mom = 100*(mktcap_lag - mktcap_lag_12)/mktcap_lag_12) 
+
+# Generates an empty data frame, assigns columns for summary statistics
+summary2 <- data.frame(matrix(ncol=9, nrow=1)) #There are 9 summary statistics and one variable
+colnames(summary2) <- c("mean", "sd", "min", "5th", "25th","median", "75th", "95th", "max")
+
+# Calculates mean, sd, min, 5th percentile, 25th percentile, median, 75th percentile, 95th percentile and max for each month and then takes the average of those results.
+summary2[1,] <- crsp_monthly_mom %>%
+  group_by(month) %>%
+  summarise(across(mom,
+                   list(mean = mean, 
+                        sd = sd, 
+                        min = min,
+                        q05 = ~quantile(., 0.05),
+                        q25 = ~quantile(., 0.25),
+                        median = median,
+                        q75 = ~quantile(., 0.75),
+                        q95 = ~quantile(., 0.95),
+                        max = max),
+                   .names = "{.fn}  ")) %>%
+  summarise(across(-month, mean))
+
+#Assigns relevant row names
+rownames(summary2) <- "Momentum"
+
+#Prints the summary nicely in a table
+summary2 %>% knitr::kable(booktabs = T, digits = 4, caption = "Summary statistics of the momentum") %>% 
+  kable_paper("hover", full_width = T) 
+
+mom_mktcap_correlation <- cor(crsp_monthly_mom$mom, log(crsp_monthly_mom$mktcap))
+
+```
+Table 2 shows that the cross-section mean of momentum is 19 while the median is only 5.6. Just like in table 1, this indicates a positive skew (right-skew). There are therefore very large momentum values which have a big impact on the mean, which is also seen by the average maximum momentum being 3200. We can also notice that the standard deviation is 96 and therefore quite high (especially when comparing to a mean of 19). Another indication of the effect of the extreme large momentum-values is the difference between the 95th percentile and the maximum. Since the 95th percentile is "only" 118, then this means that only 5% of the observations have a momentum of 118 or larger.
+
+By calculating the correlation between momentum and $log(mc_{i,t})$ we get a value of `r round(mom_mktcap_correlation, 4)`. We therefore see a positive correlation between momentum and $log(mc_{i,t})$. If we can observe positive momentum over the past year, then we can to some degree expect a larger market cap next month.
+
+
+# Excercise 4
+Now we want to examine the relationship between momentum and future stock returns. First we start by dividing the stock into 10 portfolios based on the size of the momentum for a stock given each period. In the following, we have calculated the equal-weighted average values of the momentum and market capitalization for each of the 10 portfolios:
+
+```{r Relation, echo=FALSE}
+# Arranges data by month instead of permno
+crsp_monthly_mom <- crsp_monthly_mom %>% 
+  arrange(month)
+
+# Calculating the decile breakpoints for the mom for each months and defines which portfolio belongs to each month
+mom_portfolios <- crsp_monthly_mom %>%
+  group_by(month) %>%
+  mutate(
+    breakpoint_1 = quantile(mom, probs = .1),
+    breakpoint_2 = quantile(mom, probs = .2),
+    breakpoint_3 = quantile(mom, probs = .3),
+    breakpoint_4 = quantile(mom, probs = .4),
+    breakpoint_5 = quantile(mom, probs = .5),
+    breakpoint_6 = quantile(mom, probs = .6),
+    breakpoint_7 = quantile(mom, probs = .7),
+    breakpoint_8 = quantile(mom, probs = .8),
+    breakpoint_9 = quantile(mom, probs = .9),
+    portfolio = case_when(
+      mom <= breakpoint_1 ~ 10,
+      mom > breakpoint_1 & mom <= breakpoint_2 ~ 20,
+      mom > breakpoint_2 & mom <= breakpoint_3 ~ 30,
+      mom > breakpoint_3 & mom <= breakpoint_4 ~ 40,
+      mom > breakpoint_4 & mom <= breakpoint_5 ~ 50,
+      mom > breakpoint_5 & mom <= breakpoint_6 ~ 60,
+      mom > breakpoint_6 & mom <= breakpoint_7 ~ 70,
+      mom > breakpoint_7 & mom <= breakpoint_8 ~ 80,
+      mom > breakpoint_8 & mom <= breakpoint_9 ~ 90,
+      mom > breakpoint_9 ~ 100
+    )
+  )
+
+# Equal weighted
+mom_portfolios %>% group_by(portfolio) %>%
+  summarise('average momentum' = mean(mom),'average market capitalization' = mean(mktcap)) %>%
+  knitr::kable(digits = 4) #creates a table to view the data.
+
+```
+We now calculated the value-weighted monthly excess returns for each of the portfolios.
+
+```{r, echo=FALSE}
+# Value-weighted
+mom_portfolios <- mom_portfolios %>%
+  group_by(month, portfolio) %>%
+  summarize(ret_excess = weighted.mean(ret_excess, mktcap_lag), .groups = "drop")
+
+# Adds the Fama-French market excess return
+mom_portfolios <- mom_portfolios %>%
+  left_join(ff_monthly, by = "month")
+
+# Finding CAPM alpha by regressing the data onto the market excess return
+mom_portfolios_summary <- mom_portfolios %>%
+  group_by(portfolio) %>%
+  summarise(
+    alpha = as.numeric(lm(ret_excess ~ mkt_excess)$coefficients[1]),
+    beta = as.numeric(lm(ret_excess ~ mkt_excess)$coefficients[2]),
+    ret_excess = mean(ret_excess)
+  )
+
+# Printing the results (using tmp to adjust data for the table output)
+tmp <- mom_portfolios_summary
+tmp$portfolio <- as.character(mom_portfolios_summary$portfolio)
+tmp$alpha <- round(tmp$alpha,4)
+tmp$beta <- round(tmp$beta,4)
+tmp$ret_excess <- round(tmp$ret_excess,4)
+t(tmp) %>%
+knitr::kable(digits = 4) #creates a table to view the data.
+
+# Plot for CAPM alpha
+while (!is.null(dev.list()))  dev.off() # Nulstiller device settings (just in case, as it may cause problems)
+mom_portfolios_summary %>%
+  ggplot(aes(x = portfolio, y = alpha, fill = as.factor(portfolio))) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Alphas of momentum-sorted portfolios",
+    x = "Momentum decile portfolios",
+    y = "CAPM alpha",
+    fill = "Portfolio"
+  ) +
+  scale_y_continuous(labels = percent) +
+  theme(legend.position = "None")
+
+mean_return <- aggregate(ret_excess~portfolio, data = mom_portfolios, mean)
+
+sharp_ratio_e4 <- mean_return$ret_excess/sd(mom_portfolios$ret_excess) # Not sure about Sharpe Ratio, because they are very small
+```
+
+The momentum strategy seems to be neither market neutral nor deliver normal excess returns compared to the market exposure. Instead it exhibits both positive and negative CAPM alphas which suggests the opportunity to receive a higher return than what should be expected from the correlation with the market risk. As seen in the table or the graph visualizing the CAPM alphas, a momentum strategy would suggest to go long in past winners (high momentum) and short in past losers (low momentum).
+
+
+# Excercise 5
+In the following, we will calculate the CAPM alphas using the k-month-ahead excess returns for $k\in\{1,3,6,12\}$:
+
+```{r  Repeat the univariate portfolio, echo=FALSE}
+# Using a for-loop to create data for each of the k-month-ahead scenarios
+for(k in c(1,3,6,12)){
+  crsp_monthly_new_k <- crsp_monthly_new %>% group_by(permno) %>% 
+    mutate(mktcap_lag_long = lag(mktcap,12+k), 
+           mktcap_lag_short = lag(mktcap,1+k),
+           mom = 100*(mktcap_lag_short - mktcap_lag_long)/mktcap_lag_long) %>% 
+    filter(!is.na(mktcap_lag_long)) %>% 
+    filter(!is.na(ret_excess)) %>% 
+    filter(!is.na(mom)) %>%
+    arrange(desc(mom))
+  
+  mom_portfolios <- crsp_monthly_new_k %>%
+    group_by(month) %>%
+    mutate(
+      breakpoint_10 = quantile(mom, probs = .1),
+      breakpoint_20 = quantile(mom, probs = .2),
+      breakpoint_30 = quantile(mom, probs = .3),
+      breakpoint_40 = quantile(mom, probs = .4),
+      breakpoint_50 = quantile(mom, probs = .5),
+      breakpoint_60 = quantile(mom, probs = .6),
+      breakpoint_70 = quantile(mom, probs = .7),
+      breakpoint_80 = quantile(mom, probs = .8),
+      breakpoint_90 = quantile(mom, probs = .9),
+      portfolio = case_when(
+        mom <= breakpoint_10 ~ 10,
+        mom > breakpoint_10 & mom <= breakpoint_20 ~ 20,
+        mom > breakpoint_20 & mom <= breakpoint_30 ~ 30,
+        mom > breakpoint_30 & mom <= breakpoint_40 ~ 40,
+        mom > breakpoint_40 & mom <= breakpoint_50 ~ 50,
+        mom > breakpoint_50 & mom <= breakpoint_60 ~ 60,
+        mom > breakpoint_60 & mom <= breakpoint_70 ~ 70,
+        mom > breakpoint_70 & mom <= breakpoint_80 ~ 80,
+        mom > breakpoint_80 & mom <= breakpoint_90 ~ 90,
+        mom > breakpoint_90 ~ 100
+      )
+    ) %>%
+    group_by(month, portfolio) %>%
+    summarize(ret_excess = weighted.mean(ret_excess, mktcap_lag_short), .groups = "drop")
+  
+  
+  mom_portfolios <- mom_portfolios %>%
+    left_join(ff_monthly, by = "month")
+  
+  
+  # Finding CAPM alpha
+  mom_portfolios_summary <- mom_portfolios %>%
+    group_by(portfolio) %>%
+    summarise(
+      alpha = as.numeric(lm(ret_excess ~ mkt_excess)$coefficients[1]),
+      beta = as.numeric(lm(ret_excess ~ mkt_excess)$coefficients[2]),
+      ret_excess = mean(ret_excess)
+    )
+  
+  # Plot for CAPM alpha 
+  tmp <- mom_portfolios_summary %>%
+    ggplot(aes(x = portfolio, y = alpha, fill = as.factor(portfolio))) +
+    geom_bar(stat = "identity") +
+    labs(
+      title = paste0("Alphas of momentum-sorted portfolios (k=",k,")"),
+      x = "Momentum decile portfolios",
+      y = "CAPM alpha",
+      fill = "Portfolio"
+    ) +
+    scale_y_continuous(labels = percent) +
+    theme(legend.position = "None")
+  
+  #Saving the plots to be printed out after the for-loop
+  if(k==1){
+    plot1 <- tmp
+  } else if(k==3){
+    plot3 <- tmp
+  } else if(k==6){
+    plot6 <- tmp
+  } else{
+    plot12 <- tmp
+  }
+}
+
+plot1
+plot3
+plot6
+plot12
+
+```
+
+As seen in the graphs above, then it is the 1-month-ahead time horizon for the momentum that will deliver the highest expected returns. As explained in exercise 4, a strategy would then be to go long in past winners and short past losers.
+
+# Excercise 6
+
+```{r Finding from 1 and 3, echo=FALSE}
+unique_months <- unique(crsp_monthly_mom$month)
+half_months <- unique_months[seq(1, length(unique_months), 2)] # In order to delete every other month
+
+mom_portfolios <- crsp_monthly_mom %>%
+  group_by(month) %>%
+  mutate(
+    breakpoint_10 = quantile(mom, probs = .1),
+    breakpoint_20 = quantile(mom, probs = .2),
+    breakpoint_30 = quantile(mom, probs = .3),
+    breakpoint_40 = quantile(mom, probs = .4),
+    breakpoint_50 = quantile(mom, probs = .5),
+    breakpoint_60 = quantile(mom, probs = .6),
+    breakpoint_70 = quantile(mom, probs = .7),
+    breakpoint_80 = quantile(mom, probs = .8),
+    breakpoint_90 = quantile(mom, probs = .9),
+    portfolio = case_when(
+      mom <= breakpoint_10 ~ 10,
+      mom > breakpoint_10 & mom <= breakpoint_20 ~ 20,
+      mom > breakpoint_20 & mom <= breakpoint_30 ~ 30,
+      mom > breakpoint_30 & mom <= breakpoint_40 ~ 40,
+      mom > breakpoint_40 & mom <= breakpoint_50 ~ 50,
+      mom > breakpoint_50 & mom <= breakpoint_60 ~ 60,
+      mom > breakpoint_60 & mom <= breakpoint_70 ~ 70,
+      mom > breakpoint_70 & mom <= breakpoint_80 ~ 80,
+      mom > breakpoint_80 & mom <= breakpoint_90 ~ 90,
+      mom > breakpoint_90 ~ 100
+    )
+  ) %>%
+  mutate(ret_excess_lead = lead(ret_excess)) %>% # stores the excess return for the next periode, so it is not forgotten when that period is deleted
+  filter(month %in% half_months) %>% # Deleting every other month so we dont rebalance during these months
+  filter(!is.na(ret_excess_lead)) %>%
+  mutate(ret_excess_sum = ret_excess + ret_excess_lead) %>%
+  group_by(month, portfolio) %>%
+  summarize(ret_excess = weighted.mean(ret_excess_sum, mktcap_lag), .groups = "drop")
+
+mom_portfolios <- mom_portfolios %>%
+  left_join(ff_monthly, by = "month")
+
+# Finding CAPM alpha
+mom_portfolios_summary <- mom_portfolios %>%
+  group_by(portfolio) %>%
+  summarise(
+    alpha = as.numeric(lm(ret_excess ~ mkt_excess)$coefficients[1]),
+    beta = as.numeric(lm(ret_excess ~ mkt_excess)$coefficients[2]),
+    ret_excess = mean(ret_excess)
+  )
+
+mom_portfolios_summary %>%
+  ggplot(aes(x = portfolio, y = alpha/2, fill = as.factor(portfolio))) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Alphas of momentum-sorted portfolios (rebalancing every 2 months)",
+    x = "Momentum decile portfolios",
+    y = "CAPM alpha",
+    fill = "Portfolio"
+  ) +
+  scale_y_continuous(labels = percent) +
+  theme(legend.position = "None")
+
+mean_return1 <- aggregate(ret_excess ~ portfolio, data = mom_portfolios, mean)
+
+sharp_ratio_e6 <- mean_return1$ret_excess/sd(mom_portfolios$ret_excess) # Not sure about Sharpe Ratio, because they are very small
+
+sharp_ratio <- cbind(sharp_ratio_e4,sharp_ratio_e6)
+sharp_ratio %>%
+knitr::kable(digits = 4) #creates a table to view the data.
+
+```
+
+Causes for high trading cost:
+
+ - The portfolio created by the strategy changes often and drastically leading to an almost complete rebuild of the portfolio each time.
+ - The strategy has no regard for the liquidity of the assets. It can become costly if you have to buy and sell a not frequently traded asset often.
+ 
+
+This might be a little far fetched but most studies also assume assets to be completely divisible. This is obviously not the case in the real world and the strategy therefore requires a large amount of capital to be implemented.
+
+
+A way to lower trading cost would be to reduce the turnover by imposing a restriction on the holding period. This would mean that when the strategy buys an asset it must be held for at least x amount of time.
+
+
+We suggest a strategy where the assets are held for 2 months instead of 1. This should cause a noticeable drop in trading cost due to lower turnover.
+
+
+
+
+
