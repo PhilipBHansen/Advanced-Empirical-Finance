@@ -310,10 +310,22 @@ The momentum strategy seems to... And the average return if....
 In the following, we will calculate the CAPM alphas using the k-month-ahead excess returns for $k\in\{1,3,6,12\}$. Since we lose a few observations by having to find the k-months ahead returns, then in order to most efficiently compare all the results, we have chosen to only calculate the CAPM values for observations where we have found all the specific k-months ahead returns. The k-months ahead portfolio returns are calculated as value-weighted returns based on the lagged market cap value (since this is known at the time the portfolio is constructed). It is assumed that the 1-month ahead is just the standard excess return and therefore that 3-months ahead should be calculated as the excess return two months later. The reason for this assumption is that the lagged variables are meant to be known at the time we construct the portfolio, where the excess return is then the result of this. Hence, it must be the 1-month ahead return.
 
 ```{r  Repeat the univariate portfolio, echo=FALSE}
-# Creating the 3, 6, and 12 months ahead returns by moving back the respective month by 2, 5 or 11 months (since ret_excess is already 1-month ahead)
-excess_return_3_ahead <-  crsp_monthly_mom %>% mutate(month = month %m+% months(-2)) %>% select(permno, month, ret_excess_3 = ret_excess) %>% drop_na()
-excess_return_6_ahead <-  crsp_monthly_mom %>% mutate(month = month %m+% months(-5)) %>% select(permno, month, ret_excess_6 = ret_excess) %>% drop_na()
-excess_return_12_ahead <-  crsp_monthly_mom %>% mutate(month = month %m+% months(-11)) %>% select(permno, month, ret_excess_12 = ret_excess) %>% drop_na()
+# Creating the 3, 6, and 12 months ahead returns by moving back the respective month by 2, 5 or 11 months (since ret_excess is already 1-month ahead) and then adding the fama-french k-month-ahead market return for comparison
+excess_return_3_ahead <- crsp_monthly_mom %>% 
+  left_join(ff_monthly, by = "month") %>%
+  mutate(month = month %m+% months(-2)) %>% 
+  select(permno, month, ret_excess_3 = ret_excess, mkt_excess_3 = mkt_excess) %>% 
+  drop_na()
+excess_return_6_ahead <- crsp_monthly_mom %>% 
+  left_join(ff_monthly, by = "month") %>%
+  mutate(month = month %m+% months(-5)) %>%
+  select(permno, month, ret_excess_6 = ret_excess, mkt_excess_6 = mkt_excess) %>% 
+  drop_na()
+excess_return_12_ahead <- crsp_monthly_mom %>% 
+  left_join(ff_monthly, by = "month") %>%
+  mutate(month = month %m+% months(-11)) %>% 
+  select(permno, month, ret_excess_12 = ret_excess, mkt_excess_12 = mkt_excess) %>% 
+  drop_na()
 
 # Combining all the k-months-ahead returns in one data frame
 crsp_monthly_k_months <- crsp_monthly_mom %>%
@@ -363,166 +375,56 @@ mom_portfolios_k_ahead <- mom_portfolios_k_ahead %>%
             ret_excess_12 = weighted.mean(ret_excess_12, mktcap_lag),
             .groups = "drop")
 
-# Adds the Fama-French market excess return to the data frame
+# Adds the Fama-French k-months-ahead market excess return to the data frame
+excess_return_3_ahead <- excess_return_3_ahead %>% ungroup() %>% select(month, mkt_excess_3) %>% unique()
+excess_return_6_ahead <- excess_return_6_ahead %>% ungroup() %>% select(month, mkt_excess_6) %>% unique()
+excess_return_12_ahead <- excess_return_12_ahead %>% ungroup() %>% select(month, mkt_excess_12) %>% unique()
 mom_portfolios_k_ahead <- mom_portfolios_k_ahead %>%
-  left_join(ff_monthly, by = "month")
+  left_join(ff_monthly, by = "month") %>%
+  left_join(excess_return_3_ahead, by = "month") %>%
+  left_join(excess_return_6_ahead, by = "month") %>%
+  left_join(excess_return_12_ahead, by = "month")
 
 # Finding the CAPM alpha by regressing the data onto the market excess return
-mom_portfolios_k_ahead %>%
+k_months_ahead_alphas <- mom_portfolios_k_ahead %>%
   group_by(portfolio) %>%
   summarise(
     alpha_1 = as.numeric(lm(ret_excess ~ mkt_excess)$coefficients[1]),
-    alpha_3 = as.numeric(lm(ret_excess_3 ~ mkt_excess)$coefficients[1]),
-    alpha_6 = as.numeric(lm(ret_excess_6 ~ mkt_excess)$coefficients[1]),
-    alpha_12 = as.numeric(lm(ret_excess_12 ~ mkt_excess)$coefficients[1])
-  ) %>%
-  knitr::kable(booktabs = T, digits = 4, col.names = c("Portfolio number", "CAPM alpha", "Market beta", "Average value-weighted excess return"), caption = "CAPM alpha, beta and excess return for the value-weighted momentum-sorted portfolios") %>%
+    alpha_3 = as.numeric(lm(ret_excess_3 ~ mkt_excess_3)$coefficients[1]),
+    alpha_6 = as.numeric(lm(ret_excess_6 ~ mkt_excess_6)$coefficients[1]),
+    alpha_12 = as.numeric(lm(ret_excess_12 ~ mkt_excess_12)$coefficients[1])
+  )
+k_months_ahead_alphas %>%
+  knitr::kable(booktabs = T, digits = 4, col.names = c("Portfolio number", "Alpha 1 month ahead", "Alpha 3 months ahead", "Alpha 6 months ahead", "Alpha 12 months ahead"), caption = "CAPM alphas for the value-weighted momentum-sorted portfolios") %>%
   kable_paper("hover", full_width = T)
 
 
+# Creating a tall table with all k-months-ahead aplhas together in order to create combined plot
+k_months_ahead_alphas_tall <- k_months_ahead_alphas %>% 
+  gather(key = alphas, value = Value, alpha_1:alpha_12) %>%
+  mutate(alphas = case_when( # Below is used alpha1, alpha2, alpha3, alpha4 so that they have the right order in the plot
+    alphas == "alpha_1" ~ "Alpha1",
+    alphas == "alpha_3" ~ "Alpha2",
+    alphas == "alpha_6" ~ "Alpha3",
+    alphas == "alpha_12" ~ "Alpha4",
+  ))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # Finding the CAPM alpha by regressing the data onto the market excess return
-# mom_portfolios_k_ahead %>%
-#   group_by(portfolio) %>%
-#   summarise(
-#     alpha = as.numeric(lm(ret_excess ~ mkt_excess)$coefficients[1]),
-#     beta = as.numeric(lm(ret_excess ~ mkt_excess)$coefficients[2]),
-#     ret_excess = mean(ret_excess)
-#   ) %>%
-#   knitr::kable(booktabs = T, digits = 4, col.names = c("Portfolio number", "CAPM alpha", "Market beta", "Average value-weighted excess return"), caption = "CAPM alpha, beta and excess return for the value-weighted momentum-sorted portfolios") %>%
-#   kable_paper("hover", full_width = T)
-# 
-
-# # Plot for CAPM alpha
-# while (!is.null(dev.list()))  dev.off() # Resets device settings (just in case, as it may cause problems)
-# mom_portfolios_summary %>%
-#   ggplot(aes(x = as.factor(portfolio), y = alpha, fill = as.factor(portfolio))) +
-#   geom_bar(stat = "identity") +
-#   labs(
-#     title = "CAPM alphas of the momentum-sorted portfolios",
-#     x = "Momentum-sorted portfolios",
-#     y = "CAPM alpha",
-#     fill = "Portfolio"
-#   ) +
-#   scale_y_continuous(labels = percent) +
-#   theme(legend.position = "None") + 
-#   theme_bw()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 
-# 
-# # Using a for-loop to create data for each of the k-month-ahead scenarios
-# for(k in c(1,3,6,12)){
-#   crsp_monthly_new_k <- crsp_monthly_new %>% group_by(permno) %>% 
-#     mutate(mktcap_lag_long = lag(mktcap,12+k), 
-#            mktcap_lag_short = lag(mktcap,1+k),
-#            mom = 100*(mktcap_lag_short - mktcap_lag_long)/mktcap_lag_long) %>% 
-#     filter(!is.na(mktcap_lag_long)) %>% 
-#     filter(!is.na(ret_excess)) %>% 
-#     filter(!is.na(mom)) %>%
-#     arrange(desc(mom))
-#   
-#   mom_portfolios <- crsp_monthly_new_k %>%
-#     group_by(month) %>%
-#     mutate(
-#       breakpoint_10 = quantile(mom, probs = .1),
-#       breakpoint_20 = quantile(mom, probs = .2),
-#       breakpoint_30 = quantile(mom, probs = .3),
-#       breakpoint_40 = quantile(mom, probs = .4),
-#       breakpoint_50 = quantile(mom, probs = .5),
-#       breakpoint_60 = quantile(mom, probs = .6),
-#       breakpoint_70 = quantile(mom, probs = .7),
-#       breakpoint_80 = quantile(mom, probs = .8),
-#       breakpoint_90 = quantile(mom, probs = .9),
-#       portfolio = case_when(
-#         mom <= breakpoint_10 ~ 10,
-#         mom > breakpoint_10 & mom <= breakpoint_20 ~ 20,
-#         mom > breakpoint_20 & mom <= breakpoint_30 ~ 30,
-#         mom > breakpoint_30 & mom <= breakpoint_40 ~ 40,
-#         mom > breakpoint_40 & mom <= breakpoint_50 ~ 50,
-#         mom > breakpoint_50 & mom <= breakpoint_60 ~ 60,
-#         mom > breakpoint_60 & mom <= breakpoint_70 ~ 70,
-#         mom > breakpoint_70 & mom <= breakpoint_80 ~ 80,
-#         mom > breakpoint_80 & mom <= breakpoint_90 ~ 90,
-#         mom > breakpoint_90 ~ 100
-#       )
-#     ) %>%
-#     group_by(month, portfolio) %>%
-#     summarize(ret_excess = weighted.mean(ret_excess, mktcap_lag_short), .groups = "drop")
-#   
-#   
-#   mom_portfolios <- mom_portfolios %>%
-#     left_join(ff_monthly, by = "month")
-#   
-#   
-#   # Finding CAPM alpha
-#   mom_portfolios_summary <- mom_portfolios %>%
-#     group_by(portfolio) %>%
-#     summarise(
-#       alpha = as.numeric(lm(ret_excess ~ mkt_excess)$coefficients[1]),
-#       beta = as.numeric(lm(ret_excess ~ mkt_excess)$coefficients[2]),
-#       ret_excess = mean(ret_excess)
-#     )
-#   
-#   # Plot for CAPM alpha 
-#   tmp <- mom_portfolios_summary %>%
-#     ggplot(aes(x = portfolio, y = alpha, fill = as.factor(portfolio))) +
-#     geom_bar(stat = "identity") +
-#     labs(
-#       title = paste0("Alphas of momentum-sorted portfolios (k=",k,")"),
-#       x = "Momentum decile portfolios",
-#       y = "CAPM alpha",
-#       fill = "Portfolio"
-#     ) +
-#     scale_y_continuous(labels = percent) +
-#     theme(legend.position = "None")
-#   
-#   #Saving the plots to be printed out after the for-loop
-#   if(k==1){
-#     plot1 <- tmp
-#   } else if(k==3){
-#     plot3 <- tmp
-#   } else if(k==6){
-#     plot6 <- tmp
-#   } else{
-#     plot12 <- tmp
-#   }
-# }
-# 
-# plot1
-# plot3
-# plot6
-# plot12
+# Plot for CAPM alphas
+while (!is.null(dev.list()))  dev.off() # Resets device settings (just in case, as it may cause problems)
+k_months_ahead_alphas_tall %>%
+  ggplot(aes(x = as.factor(portfolio), y = Value, fill = alphas)) +
+  geom_col(position = "dodge") +
+  
+  labs(
+    title = "CAPM alphas of the momentum-sorted portfolios",
+    x = "Momentum-sorted portfolios",
+    y = "CAPM alpha",
+    fill = "Portfolio"
+  ) +
+  scale_fill_discrete(labels = c("Alpha 1-month-ahead", "Alpha 3-months-ahead", "Alpha 6-months-ahead", "Alpha 12-months-ahead")) +
+  scale_y_continuous(labels = percent) +
+  theme(legend.position = "None") + 
+  theme_bw()
 
 ```
 
