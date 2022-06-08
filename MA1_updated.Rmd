@@ -231,7 +231,9 @@ mom_portfolios %>% group_by(portfolio) %>%
   kable_paper("hover", full_width = T) 
 
 ```
-We now calculated the value-weighted monthly excess returns for each of the portfolios.
+In table **MISSING** we see that the momentum is increasing with the portfolio number (which makes sense as per the creation of the portfolios). We also notice that the average market capitalization in increasing from portfolio 1-7 and then begins to fall back down for the last three portfolios with the highest momentum.
+
+We now calculate the value-weighted monthly excess returns for each of the portfolios which is depicted in the table below.
 
 ```{r, echo=FALSE}
 # Creating monthly portfolio value-weighted excess returns
@@ -399,7 +401,7 @@ k_months_ahead_alphas %>%
   kable_paper("hover", full_width = T)
 
 
-# Creating a tall table with all k-months-ahead aplhas together in order to create combined plot
+# Creating a tall table with all k-months-ahead alphas together in order to create combined plot
 k_months_ahead_alphas_tall <- k_months_ahead_alphas %>% 
   gather(key = alphas, value = Value, alpha_1:alpha_12) %>%
   mutate(alphas = case_when( # Below is used alpha1, alpha2, alpha3, alpha4 so that they have the right order in the plot
@@ -416,7 +418,7 @@ k_months_ahead_alphas_tall %>%
   geom_col(position = "dodge") +
   
   labs(
-    title = "CAPM alphas of the momentum-sorted portfolios",
+    title = "CAPM alphas of the momentum-sorted portfolios with the k-months-ahead returns",
     x = "Momentum-sorted portfolios",
     y = "CAPM alpha",
     fill = "Portfolio"
