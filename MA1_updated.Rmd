@@ -275,9 +275,10 @@ mean_return <- aggregate(ret_excess~portfolio, data = mom_portfolios, mean)
 sharp_ratio_e4 <- mean_return$ret_excess/sd(mom_portfolios$ret_excess) # Not sure about Sharpe Ratio, because they are very small
 ```
 
-Write about momentum stretegy...
+Write about momentum strategy...
 
 ```{r}
+# Creating the returns for the long-short portfolio
 long_short_portfolio <- mom_portfolios %>%
   filter(portfolio %in% c(1, 10)) %>%
   mutate(portfolio = case_when(
@@ -287,20 +288,22 @@ long_short_portfolio <- mom_portfolios %>%
   mutate(long_short = high - low) %>%
   left_join(ff_monthly, by = "month")
 
-# Finding the CAPM alpha for the long_short portfolio by regressing the data onto the market excess return
-long_short_portfolio %>%
-  summarise(
-    alpha = as.numeric(lm(long_short ~ mkt_excess)$coefficients[1]),
-    beta = as.numeric(lm(long_short ~ mkt_excess)$coefficients[2]),
-    ret_excess = mean(long_short)
-  ) %>%
-  knitr::kable(booktabs = T, digits = 4, col.names = c("CAPM alpha", "Market beta", "Average excess return"), caption = "CAPM alpha, beta and excess return for the long-short portfolio based on value-weighted momentum-sorted portfolios") %>% 
-  kable_paper("hover", full_width = T) 
+# Making a linear regression of the portfolio return om the market return in order to get the CAPM values (and then renaming the rows)
+long_short_summary <- summary(lm(long_short ~ mkt_excess, data=long_short_portfolio))$coefficients
+row.names(long_short_summary) <- c("CAPM alpha", "Market beta")
+
+# Using the linear regression values to depict as a table
+long_short_summary %>%
+  knitr::kable(booktabs = T, digits = 4, caption = "CAPM alpha, beta and excess return for the long-short portfolio based on value-weighted momentum-sorted portfolios") %>%
+  kable_paper("hover", full_width = T)
+
+# Finding the average return of the long-short portfolio
+long_short_return <- mean(long_short_portfolio$long_short)
 
 ```
 
 
-The momentum strategy seems to be neither market neutral nor deliver normal excess returns compared to the market exposure. Instead it exhibits both positive and negative CAPM alphas which suggests the opportunity to receive a higher return than what should be expected from the correlation with the market risk. As seen in the table or the graph visualizing the CAPM alphas, a momentum strategy would suggest to go long in past winners (high momentum) and short in past losers (low momentum).
+The momentum strategy seems to... And the average return if....
 
 
 # Excercise 5
