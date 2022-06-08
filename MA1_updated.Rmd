@@ -209,73 +209,96 @@ mom_portfolios <- crsp_monthly_mom %>%
     breakpoint_8 = quantile(mom, probs = .8),
     breakpoint_9 = quantile(mom, probs = .9),
     portfolio = case_when(
-      mom <= breakpoint_1 ~ 10,
-      mom > breakpoint_1 & mom <= breakpoint_2 ~ 20,
-      mom > breakpoint_2 & mom <= breakpoint_3 ~ 30,
-      mom > breakpoint_3 & mom <= breakpoint_4 ~ 40,
-      mom > breakpoint_4 & mom <= breakpoint_5 ~ 50,
-      mom > breakpoint_5 & mom <= breakpoint_6 ~ 60,
-      mom > breakpoint_6 & mom <= breakpoint_7 ~ 70,
-      mom > breakpoint_7 & mom <= breakpoint_8 ~ 80,
-      mom > breakpoint_8 & mom <= breakpoint_9 ~ 90,
-      mom > breakpoint_9 ~ 100
+      mom <= breakpoint_1 ~ 1,
+      mom > breakpoint_1 & mom <= breakpoint_2 ~ 2,
+      mom > breakpoint_2 & mom <= breakpoint_3 ~ 3,
+      mom > breakpoint_3 & mom <= breakpoint_4 ~ 4,
+      mom > breakpoint_4 & mom <= breakpoint_5 ~ 5,
+      mom > breakpoint_5 & mom <= breakpoint_6 ~ 6,
+      mom > breakpoint_6 & mom <= breakpoint_7 ~ 7,
+      mom > breakpoint_7 & mom <= breakpoint_8 ~ 8,
+      mom > breakpoint_8 & mom <= breakpoint_9 ~ 9,
+      mom > breakpoint_9 ~ 10
     )
-  )
+  ) %>%
+  select("permno", "month", "ret_excess", "mktcap", "mktcap_lag", "mktcap_lag_12", "mom", "portfolio") %>%
+  mutate(portfolio = as.factor(portfolio))
 
-# Equal weighted
+# Creating table of equal weighted average of momentum and market cap
 mom_portfolios %>% group_by(portfolio) %>%
   summarise('average momentum' = mean(mom),'average market capitalization' = mean(mktcap)) %>%
-  knitr::kable(digits = 4) #creates a table to view the data.
+  knitr::kable(booktabs = T, digits = 4, col.names = c("Portfolio number", "Average momentum", "Average market capitalization"), caption = "Equal weighted momentum-sorted portfolios with average momentum and market capitalization for each") %>% 
+  kable_paper("hover", full_width = T) 
 
 ```
 We now calculated the value-weighted monthly excess returns for each of the portfolios.
 
 ```{r, echo=FALSE}
-# Value-weighted
+# Creating monthly portfolio value-weighted excess returns
 mom_portfolios <- mom_portfolios %>%
   group_by(month, portfolio) %>%
   summarize(ret_excess = weighted.mean(ret_excess, mktcap_lag), .groups = "drop")
 
-# Adds the Fama-French market excess return
+# Adds the Fama-French market excess return to the data frame
 mom_portfolios <- mom_portfolios %>%
   left_join(ff_monthly, by = "month")
 
-# Finding CAPM alpha by regressing the data onto the market excess return
-mom_portfolios_summary <- mom_portfolios %>%
+# Finding the CAPM alpha by regressing the data onto the market excess return
+mom_portfolios %>%
   group_by(portfolio) %>%
   summarise(
     alpha = as.numeric(lm(ret_excess ~ mkt_excess)$coefficients[1]),
     beta = as.numeric(lm(ret_excess ~ mkt_excess)$coefficients[2]),
     ret_excess = mean(ret_excess)
-  )
+  ) %>%
+  knitr::kable(booktabs = T, digits = 4, col.names = c("Portfolio number", "CAPM alpha", "Market beta", "Average value-weighted excess return"), caption = "CAPM alpha, beta and excess return for the value-weighted momentum-sorted portfolios") %>% 
+  kable_paper("hover", full_width = T) 
 
-# Printing the results (using tmp to adjust data for the table output)
-tmp <- mom_portfolios_summary
-tmp$portfolio <- as.character(mom_portfolios_summary$portfolio)
-tmp$alpha <- round(tmp$alpha,4)
-tmp$beta <- round(tmp$beta,4)
-tmp$ret_excess <- round(tmp$ret_excess,4)
-t(tmp) %>%
-knitr::kable(digits = 4) #creates a table to view the data.
-
+ 
 # Plot for CAPM alpha
-while (!is.null(dev.list()))  dev.off() # Nulstiller device settings (just in case, as it may cause problems)
+while (!is.null(dev.list()))  dev.off() # Resets device settings (just in case, as it may cause problems)
 mom_portfolios_summary %>%
-  ggplot(aes(x = portfolio, y = alpha, fill = as.factor(portfolio))) +
+  ggplot(aes(x = as.factor(portfolio), y = alpha, fill = as.factor(portfolio))) +
   geom_bar(stat = "identity") +
   labs(
-    title = "Alphas of momentum-sorted portfolios",
-    x = "Momentum decile portfolios",
+    title = "CAPM alphas of the momentum-sorted portfolios",
+    x = "Momentum-sorted portfolios",
     y = "CAPM alpha",
     fill = "Portfolio"
   ) +
   scale_y_continuous(labels = percent) +
-  theme(legend.position = "None")
+  theme(legend.position = "None") + 
+  theme_bw()
 
 mean_return <- aggregate(ret_excess~portfolio, data = mom_portfolios, mean)
 
 sharp_ratio_e4 <- mean_return$ret_excess/sd(mom_portfolios$ret_excess) # Not sure about Sharpe Ratio, because they are very small
 ```
+
+Write about momentum stretegy...
+
+```{r}
+long_short_portfolio <- mom_portfolios %>%
+  filter(portfolio %in% c(1, 10)) %>%
+  mutate(portfolio = case_when(
+      portfolio == 10 ~ "high",
+      portfolio == 1 ~ "low")) %>%
+  pivot_wider(month, names_from = portfolio, values_from = ret_excess) %>%
+  mutate(long_short = high - low) %>%
+  left_join(ff_monthly, by = "month")
+
+# Finding the CAPM alpha for the long_short portfolio by regressing the data onto the market excess return
+long_short_portfolio %>%
+  summarise(
+    alpha = as.numeric(lm(long_short ~ mkt_excess)$coefficients[1]),
+    beta = as.numeric(lm(long_short ~ mkt_excess)$coefficients[2]),
+    ret_excess = mean(long_short)
+  ) %>%
+  knitr::kable(booktabs = T, digits = 4, col.names = c("CAPM alpha", "Market beta", "Average excess return"), caption = "CAPM alpha, beta and excess return for the long-short portfolio based on value-weighted momentum-sorted portfolios") %>% 
+  kable_paper("hover", full_width = T) 
+
+```
+
 
 The momentum strategy seems to be neither market neutral nor deliver normal excess returns compared to the market exposure. Instead it exhibits both positive and negative CAPM alphas which suggests the opportunity to receive a higher return than what should be expected from the correlation with the market risk. As seen in the table or the graph visualizing the CAPM alphas, a momentum strategy would suggest to go long in past winners (high momentum) and short in past losers (low momentum).
 
