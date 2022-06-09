@@ -127,11 +127,11 @@ In order to find a closed form solution, we start by rewriting the function to b
      &= \omega^{\prime} \mu-\lambda\left(\omega^{\prime}\Sigma\omega - 2\omega^{\prime}\Sigma\omega_{t^+} + \underset{\text{constant}}{\omega_{t^+}^{\prime}\Sigma\omega_{t^+}}\right) -\frac{\gamma}{2} \omega^{\prime} \Sigma \omega \\
      &= \omega^{\prime} \mu-\lambda\left(\omega^{\prime}\Sigma\omega - 2\omega^{\prime}\Sigma\omega_{t^+}\right) -\frac{\gamma}{2} \omega^{\prime} \Sigma \omega \\
      &= \omega^{\prime} \left(\mu + 2\lambda \Sigma \omega_{t^+}\right) - \frac{\gamma}{2} \omega^{\prime} \left(\Sigma + \frac{2\lambda}{\gamma}\Sigma\right)\omega \\
-     &= \omega^{\prime} \left(\mu + 2\lambda \Sigma \omega_{t^+}\right) - \frac{\gamma}{2}\left(\gamma + 2\lambda\right) \omega^{\prime}\Sigma\omega \\
+     &= \omega^{\prime} \left(\mu + 2\lambda \Sigma \omega_{t^+}\right) - \frac{\gamma}{2}\left(\frac{\gamma + 2\lambda\right}{\gamma}) \omega^{\prime}\Sigma\omega \\
      &= \omega^{\prime} \mu^{*} - \frac{\gamma}{2} \omega^{\prime}\Sigma^{*}\omega 
 \end{align*}
 
-Where we have defined and used that $\mu^{*}=\mu + 2\lambda \Sigma \omega_{t^+}$ and $\Sigma^{*}=\left(\frac{\gamma + 2\lambda}{\gamma}\right)\Sigma$. We can now use this to find a closed-form solution. To maximize a function is the same as minimizing the negative function:
+Where we have defined and used that $\mu^{*}=\mu + 2\lambda \Sigma \omega_{t^+}$ and $\Sigma^{*}=\left(\frac{\gamma + 2\lambda\right)\Sigma$. We can now use this to find a closed-form solution. To maximize a function is the same as minimizing the negative function:
 \begin{align}
     \omega_{t+1}^{*}=\arg \min _{\omega \in \mathbb{R}^{N}, \iota^{\prime} \omega=1} \frac{\gamma}{2} \omega^{\prime} \Sigma^{*} \omega - \omega^{\prime} \mu^{*}
 \label{eq:3} 
