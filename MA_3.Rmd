@@ -107,7 +107,7 @@ We see that on average an equally weighted portfolio with all assets in our inve
 
 ### Exercise 2
 
-When trying to find the optimal portfolio, it can be important to include transaction cost when rebalancing since this obviously affect the return. If the cost of rebalancing the portfolio outweighs the expected excess return from the new portfolio, then it would be more efficient to keep the original portfolio. We can therefore look at the following portfolio choice problem for transaction-cost[^1]:
+When trying to find the optimal portfolio, it can be important to include transaction cost when rebalancing since this obviously affects the return. If the cost of rebalancing the portfolio outweighs the expected gained excess return from the new portfolio, then it would be more efficient to keep the original portfolio. We can therefore look at the following portfolio choice problem for transaction-cost[^1]:
 \begin{align}
     \omega_{t+1}^{*}=\arg \max _{\omega \in \mathbb{R}^{N}, \iota^{\prime} \omega=1} \omega^{\prime} \mu-\nu_{t}\left(\omega, \omega_{t^{+}}, \lambda\right)-\frac{\gamma}{2} \omega^{\prime} \Sigma \omega 
 \label{eq:1} 
@@ -131,7 +131,7 @@ In order to find a closed form solution, we start by rewriting the function to b
      &= \omega^{\prime} \mu^{*} - \frac{\gamma}{2} \omega^{\prime}\Sigma^{*}\omega 
 \end{align*}
 
-Where we have defined and used that $\mu^{*}=\mu + 2\lambda \Sigma \omega_{t^+}$ and $\Sigma^{*}=\left(\frac{\gamma + 2\lambda\right)\Sigma$. We can now use this to find a closed-form solution. To maximize a function is the same as minimizing the negative function:
+Where we have defined and used that $\mu^{*}=\mu + 2\lambda \Sigma \omega_{t^+}$ and $\Sigma^{*}=\left(\frac{\gamma + 2\lambda\right)\Sigma$. We can now use this to find a closed-form solution. Maximizing a function is the same as minimizing the negative function:
 \begin{align}
     \omega_{t+1}^{*}=\arg \min _{\omega \in \mathbb{R}^{N}, \iota^{\prime} \omega=1} \frac{\gamma}{2} \omega^{\prime} \Sigma^{*} \omega - \omega^{\prime} \mu^{*}
 \label{eq:3} 
@@ -238,7 +238,7 @@ for(i in 1:length(lambda_vector)){
 # Creating a plot of the distance between portfolio weights
 as.data.frame(cbind(lambda_vector, dist)) %>%
   ggplot(aes(x = lambda_vector, y = dist)) + 
-  geom_line() +
+  geom_line(color="darkorchid",size=1.2) +
   #scale_x_sqrt() +
   labs(x = "Transaction cost parameter", 
        y = "Distance from the optimal portfolio without transaction cost",
@@ -247,9 +247,7 @@ as.data.frame(cbind(lambda_vector, dist)) %>%
 
 
 ```
-
-
-
+The shape of the curve is what we would expect in this setup. With a transaction cost of 0 the optimal portfolio is perfectly rebalanced to match the efficient portfolio. As transaction cost increases the distance converges towards the distance between the naive portfolio and the efficient portfolio. This makes perfect sense, when transaction cost gets too high the investor simply sticks with the naive portfolio as it becomes impossible to generate a extra excess return large enough to compensate for the cost of moving away from the naive portfolio.
 
 
 ```{r excersise 3: Backtesting, echo=FALSE}
