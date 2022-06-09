@@ -80,6 +80,7 @@ crsp_monthly_reduced <- crsp_monthly_reduced %>%
 
 ```
 
+### Excercise 1
 The data used for this assignment is collected from the CRSP universe and consists of data from 1962 until 2020. We only select the stocks that are traded each month during this time period. This is done by counting the number of months in this interval, counting the number of times each stock (permno) is traded and then filtering on the stocks that are traded the same amount of times as there exists of month (which for this interval is `r n_months`). This results in an investment universe consisting of 119 stocks. We then create the following summary of the excess return by finding the cross-sectional values for each month and then averaging over all month:
 
 ```{r Exercise 1 summary, echo=FALSE}
@@ -254,6 +255,9 @@ as.data.frame(cbind(lambda_vector, dist)) %>%
 ```
 
 The shape of the curve is what we would expect in this setup. With a transaction cost of 0 the optimal portfolio is perfectly rebalanced to match the efficient portfolio (which is defined as having no transaction cost). As transaction cost increases the distance converges towards the distance between the naive portfolio and the efficient portfolio. This makes perfect sense, because when transaction cost gets too high the investor simply sticks with the naive portfolio as it becomes impossible to generate an extra excess return large enough to compensate for the cost of moving away from the naive portfolio.
+
+
+### Excercise 3
 
 
 ```{r excersise 3: Backtesting, echo=FALSE}
