@@ -80,7 +80,7 @@ crsp_monthly_reduced <- crsp_monthly_reduced %>%
 
 ```
 
-We find the stocks that are traded each month from 1962 until 2020, by counting the number of months in this interval, counting the number of times each stock (permno) is traded and then filtering on the stocks that are traded the same amount of times as there exists of month (which for this interval is `r n_months`). This results in an investment universe consisting of 119 stocks. We then create the following summary of the excess return.
+The data used for this assignment is collected from the CRSP universe and consists of data from 1962 until 2020. We only select the stocks that are traded each month during this time period. This is done by counting the number of months in this interval, counting the number of times each stock (permno) is traded and then filtering on the stocks that are traded the same amount of times as there exists of month (which for this interval is `r n_months`). This results in an investment universe consisting of 119 stocks. We then create the following summary of the excess return.
 
 ```{r Exercise 1 summary, echo=FALSE}
 # Creating summary statistics
