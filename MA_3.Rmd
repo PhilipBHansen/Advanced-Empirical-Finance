@@ -188,7 +188,8 @@ optimal_weights <- function(w_prev, mu, Sigma, lambda, gamma = gamma_default){
   mu_star <- mu + 2 * lambda * Sigma %*% w_prev # Cost-adjusted mu
   Sigma_star <- (gamma + 2 * lambda) / gamma * Sigma # Cost-adjusted sigma
   
-  Sigma_inv <- solve(Sigma_star) # invert Sigma 
+  # Invert Sigma 
+  Sigma_inv <- solve(Sigma_star) 
   
   # Calculates the optimal portfolio weights
   w_mvp <- Sigma_inv %*% iota
@@ -197,16 +198,15 @@ optimal_weights <- function(w_prev, mu, Sigma, lambda, gamma = gamma_default){
   return(w_opt)
 }
 
+
 ```
 
-```{r excersise 2: compute sample mean and variance-covariance matrix, echo=FALSE}
+```{r excersise 2: compute sample mean and variance-covariance matrix and distance between optimal portfolio weights, echo=FALSE}
 
 # Computes sample mean excess return
 mu <- (crsp_monthly_reduced %>%
   group_by(permno) %>%
   summarise(across(ret_excess, mean)))$ret_excess
-
-
 
 # Computes sample variance-covariance matrix
 stocks <- unique(crsp_monthly_reduced$permno)
@@ -215,11 +215,40 @@ colnames(returns) <- stocks
 for(i in 1:length(stocks)){
   returns[,i] <- (crsp_monthly_reduced %>% filter(permno == stocks[i]))$ret_excess
 }
-
 Sigma <- returns %>% cov() %>% as.matrix()
+
+# Creates the naive portfolio
+naive <- 1/ncol(Sigma) * rep(1, ncol(Sigma))
+
+# Creates a vector with different values of lambda
+lambda_vector <- 20 * qexp((1:99)/100) 
+
+# Computes the efficient portfolio without transaction costs
+efficient_no_trans <- optimal_weights(w_prev = naive, mu, Sigma, lambda = 0)
+
+# Creates a vector in order to save the distance between the portfolios with and without transaction cost
+dist <- rep(data = NA, length(lambda_vector))
+
+# Loops through the different values of lambda and calculates the distance between the portfolios
+for(i in 1:length(lambda_vector)){
+  optimal_with_trans <- optimal_weights(w_prev = naive, mu, Sigma, lambda = lambda_vector[i])
+  dist[i] <- sum(abs(optimal_with_trans - efficient_no_trans))
+}
+
+# Creating a plot of the distance between portfolio weights
+as.data.frame(cbind(lambda_vector, dist)) %>%
+  ggplot(aes(x = lambda_vector, y = dist)) + 
+  geom_line() +
+  #scale_x_sqrt() +
+  labs(x = "Transaction cost parameter", 
+       y = "Distance from the optimal portfolio without transaction cost",
+       title = "Distance between optimal portfolio weights for different transaction costs") +
+  theme_bw()
 
 
 ```
+
+
 
 
 
