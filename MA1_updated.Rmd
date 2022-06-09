@@ -256,14 +256,24 @@ mom_portfolios %>%
   knitr::kable(booktabs = T, digits = 4, col.names = c("Portfolio number", "CAPM alpha", "Market beta", "Average value-weighted excess return"), caption = "CAPM alpha, beta and excess return for the value-weighted momentum-sorted portfolios") %>% 
   kable_paper("hover", full_width = T) 
 
- 
+```
+
+In table **MISSING** we see that the average value-weighted returns and the CAPM alphas are increasing in the portfolios (with the exception of portfolio 6 and 7). We also see that all of the portfolios are very correlated with the market return which is depicted in the Market beta. Most of the portfolios have a Market beta around 1 which indicates that they move more or less like the market. Portfolio 1 is however extremely correlated with the market returns, so whenever the market moves a little bit in one direction, then this portfolio moves a lot in the same direction, making the fluctuations very large. Since we are interested in looking at the CAPM alphas of the different portfolios, we have depicted them in the graph below, so they are easier to compare to each other.
+
+```{r}
+mom_portfolios_summary <- mom_portfolios %>%
+  group_by(portfolio) %>%
+  summarise(
+    alpha = summary(lm(ret_excess ~ mkt_excess))$coefficients[1]
+  )
+
 # Plot for CAPM alpha
 while (!is.null(dev.list()))  dev.off() # Resets device settings (just in case, as it may cause problems)
 mom_portfolios_summary %>%
   ggplot(aes(x = as.factor(portfolio), y = alpha, fill = as.factor(portfolio))) +
   geom_bar(stat = "identity") +
   labs(
-    title = "CAPM alphas of the momentum-sorted portfolios",
+    title = "CAPM alphas of the momentum-sorted portfolios with value-weighted returns",
     x = "Momentum-sorted portfolios",
     y = "CAPM alpha",
     fill = "Portfolio"
@@ -276,6 +286,7 @@ mean_return <- aggregate(ret_excess~portfolio, data = mom_portfolios, mean)
 
 sharp_ratio_e4 <- mean_return$ret_excess/sd(mom_portfolios$ret_excess) # Not sure about Sharpe Ratio, because they are very small
 ```
+
 
 Write about momentum strategy...
 
@@ -292,7 +303,9 @@ long_short_portfolio <- mom_portfolios %>%
 
 # Making a linear regression of the portfolio return om the market return in order to get the CAPM values (and then renaming the rows)
 long_short_summary <- summary(lm(long_short ~ mkt_excess, data=long_short_portfolio))$coefficients
-row.names(long_short_summary) <- c("CAPM alpha", "Market beta")
+tmp <- t.test(long_short_portfolio$long_short) # Creating a t.test for the return estimate
+long_short_summary <- rbind(long_short_summary, c(tmp$estimate, sd(long_short_portfolio$long_short), tmp$statistic, tmp$p.value))
+row.names(long_short_summary) <- c("CAPM alpha", "Market beta", "Portfolio return")
 
 # Using the linear regression values to depict as a table
 long_short_summary %>%
