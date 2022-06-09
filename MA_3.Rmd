@@ -201,6 +201,11 @@ optimal_weights <- function(w_prev, mu, Sigma, lambda, gamma = gamma_default){
 
 ```
 
+We now use this closed-form solution in order to find the optimal portfolio weights. We start by calculating the sample $\mu$ and $\Sigma$ in the standard ways where $\hat{\mu}$ is found as the mean of the excess return for each stock over the whole sample period and $\hat{\Sigma}$ is found by creating a matrix of all the excess returns for all stocks for each month and then finding the covariance of these returns. We also compute the naive portfolio, which we will use as $\omega_{t^+}$ in the closed-form solution. Since we are interested in understanding how transaction cost affects optimal portfolio choice, we now do the following steps:
+1. Firstly, we create a vector of different values of $\lambda$ along with computing the efficient portfolio in the case of no transaction cost $\omega_{\gamma=4}\left(\hat{\mu},\hat{\Sigma}\right)$. In this assignment we have chosen the vector of $\lambda$-values to range from 0 to 100.
+2. Secondly, for each value of $\lambda$ we find the optimal portfolio weights using the closed-form solution (and the fact that we start in the naive portfolio). When we have found the optimal weights, we find the absolute difference for these weights compared to the weights of the efficient portfolio without transaction cost. We then sum all these differences of the portfolio weights and store this for later.
+3. Lastly, we plot all the differences for the respective values of $\lambda$. This is the plot which is shown below.
+
 ```{r excersise 2: compute sample mean and variance-covariance matrix and distance between optimal portfolio weights, echo=FALSE}
 
 # Computes sample mean excess return
@@ -221,7 +226,7 @@ Sigma <- returns %>% cov() %>% as.matrix()
 naive <- 1/ncol(Sigma) * rep(1, ncol(Sigma))
 
 # Creates a vector with different values of lambda
-lambda_vector <- 20 * qexp((1:99)/100) 
+lambda_vector <- c(0:100)
 
 # Computes the efficient portfolio without transaction costs
 efficient_no_trans <- optimal_weights(w_prev = naive, mu, Sigma, lambda = 0)
@@ -247,7 +252,8 @@ as.data.frame(cbind(lambda_vector, dist)) %>%
 
 
 ```
-The shape of the curve is what we would expect in this setup. With a transaction cost of 0 the optimal portfolio is perfectly rebalanced to match the efficient portfolio. As transaction cost increases the distance converges towards the distance between the naive portfolio and the efficient portfolio. This makes perfect sense, when transaction cost gets too high the investor simply sticks with the naive portfolio as it becomes impossible to generate a extra excess return large enough to compensate for the cost of moving away from the naive portfolio.
+
+The shape of the curve is what we would expect in this setup. With a transaction cost of 0 the optimal portfolio is perfectly rebalanced to match the efficient portfolio (which is defined as having no transaction cost). As transaction cost increases the distance converges towards the distance between the naive portfolio and the efficient portfolio. This makes perfect sense, because when transaction cost gets too high the investor simply sticks with the naive portfolio as it becomes impossible to generate an extra excess return large enough to compensate for the cost of moving away from the naive portfolio.
 
 
 ```{r excersise 3: Backtesting, echo=FALSE}
