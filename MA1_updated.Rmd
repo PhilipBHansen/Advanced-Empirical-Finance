@@ -287,8 +287,8 @@ mean_return <- aggregate(ret_excess~portfolio, data = mom_portfolios, mean)
 sharp_ratio_e4 <- mean_return$ret_excess/sd(mom_portfolios$ret_excess) # Not sure about Sharpe Ratio, because they are very small
 ```
 
+As seen in the graph above, it looks like there is a large negative CAPM alpha for portfolio 1 and  a fairly large positive CAPM alpha for portfolio 10. We therefore try to analyse the momentum strategy where we go long in portfolio 10 (which has the highest momentum) and go short in portfolio 1 (which has the lowest momentum). So for each month we compute the return of this long-short portfolio by taking the value-weighted return for portfolio 10 and subtracting the value-weighted return for portfolio 1. Running a linear regression of the long-short return on the market return gives us the following table. The last row in the table is computed as a t-test to investigate if the true mean of the return could be 0.
 
-Write about momentum strategy...
 
 ```{r}
 # Creating the returns for the long-short portfolio
@@ -304,7 +304,7 @@ long_short_portfolio <- mom_portfolios %>%
 # Making a linear regression of the portfolio return om the market return in order to get the CAPM values (and then renaming the rows)
 long_short_summary <- summary(lm(long_short ~ mkt_excess, data=long_short_portfolio))$coefficients
 tmp <- t.test(long_short_portfolio$long_short) # Creating a t.test for the return estimate
-long_short_summary <- rbind(long_short_summary, c(tmp$estimate, sd(long_short_portfolio$long_short), tmp$statistic, tmp$p.value))
+long_short_summary <- rbind(long_short_summary, c(tmp$estimate, tmp$stderr, tmp$statistic, tmp$p.value))
 row.names(long_short_summary) <- c("CAPM alpha", "Market beta", "Portfolio return")
 
 # Using the linear regression values to depict as a table
@@ -317,8 +317,7 @@ long_short_return <- mean(long_short_portfolio$long_short)
 
 ```
 
-
-The momentum strategy seems to... And the average return if....
+If we start by looking at the bottom row which depict the results for the return, we see that the portfolio does in fact deliver an average return above 0. Wee see this by creating a t-test where the null hypothesis is that the true mean is 0. By looking at the p-value we can reject this on a 5% confidence interval. From the CAPM regression we also see that we get a positive alpha
 
 
 # Excercise 5
