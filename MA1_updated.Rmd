@@ -102,9 +102,16 @@ summary1[i,] <- crsp_monthly %>%
 #Assigns relevant row names
 rownames(summary1) <- c("Excess return", "Market cap")
 
+# Rounding the excess return values to 4 for the output
+summary1[1,] <- round(summary1[1,], 4)
+
+# Rounding the market cap values (since they are so large that decimals have no real significance)
+summary1[2,c(1:2, 4:7)] <- round(summary1[2,c(1:2, 4:7)], 0)
+
 #Prints the summary nicely in a table
 summary1 %>% knitr::kable(booktabs = T, digits = 4, caption = "Summary statistics of the excess return and the market cap") %>% 
-  kable_paper("hover", full_width = T) 
+  kable_paper("hover", full_width = T) %>% 
+  kable_styling(latex_options = "HOLD_position")
 
 ```
 
@@ -176,8 +183,9 @@ summary2[1,] <- crsp_monthly_mom %>%
 rownames(summary2) <- "Momentum"
 
 #Prints the summary nicely in a table
-summary2 %>% knitr::kable(booktabs = T, digits = 4, caption = "Summary statistics of the momentum") %>% 
-  kable_paper("hover", full_width = T) 
+summary2 %>% knitr::kable(booktabs = T, digits = 2, caption = "Summary statistics of the momentum") %>% 
+  kable_paper("hover", full_width = T) %>% 
+  kable_styling(latex_options = "HOLD_position")
 
 mom_mktcap_correlation <- cor(crsp_monthly_mom$mom, log(crsp_monthly_mom$mktcap))
 
@@ -227,8 +235,9 @@ mom_portfolios <- crsp_monthly_mom %>%
 # Creating table of equal weighted average of momentum and market cap
 mom_portfolios %>% group_by(portfolio) %>%
   summarise('average momentum' = mean(mom),'average market capitalization' = mean(mktcap)) %>%
-  knitr::kable(booktabs = T, digits = 4, col.names = c("Portfolio number", "Average momentum", "Average market capitalization"), caption = "Equal weighted momentum-sorted portfolios with average momentum and market capitalization for each") %>% 
-  kable_paper("hover", full_width = T) 
+  knitr::kable(booktabs = T, digits = 2, col.names = c("Portfolio number", "Average momentum", "Average market capitalization"), caption = "Equal weighted momentum-sorted portfolios with average momentum and market capitalization for each") %>% 
+  kable_paper("hover", full_width = T) %>% 
+  kable_styling(latex_options = "HOLD_position")
 
 ```
 In table **MISSING** we see that the momentum is increasing with the portfolio number (which makes sense as per the creation of the portfolios). We also notice that the average market capitalization in increasing from portfolio 1-7 and then begins to fall back down for the last three portfolios with the highest momentum.
@@ -254,13 +263,14 @@ mom_portfolios %>%
     ret_excess = mean(ret_excess)
   ) %>%
   knitr::kable(booktabs = T, digits = 4, col.names = c("Portfolio number", "CAPM alpha", "Market beta", "Average value-weighted excess return"), caption = "CAPM alpha, beta and excess return for the value-weighted momentum-sorted portfolios") %>% 
-  kable_paper("hover", full_width = T) 
+  kable_paper("hover", full_width = T) %>% 
+  kable_styling(latex_options = "HOLD_position")
 
 ```
 
-In table **MISSING** we see that the average value-weighted returns and the CAPM alphas are increasing in the portfolios (with the exception of portfolio 6 and 7). We also see that all of the portfolios are very correlated with the market return which is depicted in the Market beta. Most of the portfolios have a Market beta around 1 which indicates that they move more or less like the market. Portfolio 1 is however extremely correlated with the market returns, so whenever the market moves a little bit in one direction, then this portfolio moves a lot in the same direction, making the fluctuations very large. Since we are interested in looking at the CAPM alphas of the different portfolios, we have depicted them in the graph below, so they are easier to compare to each other.
+In table **MISSING** we see that the average value-weighted returns and the CAPM alphas (risk-adjusted performance) are increasing in the portfolios (with the exception of portfolio 6 and 7). We also see that all of the portfolios are very correlated with the market return which is depicted in the Market beta. Most of the portfolios have a Market beta around 1 which indicates that they move more or less like the market. Portfolio 1 is however extremely correlated with the market returns, so whenever the market moves a little bit in one direction, then this portfolio moves a lot in the same direction, making the fluctuations very large. Since we are interested in looking at the CAPM alphas of the different portfolios, we have depicted them in the graph below, so they are easier to compare to each other.
 
-```{r}
+```{r, echo=FALSE}
 mom_portfolios_summary <- mom_portfolios %>%
   group_by(portfolio) %>%
   summarise(
@@ -268,7 +278,7 @@ mom_portfolios_summary <- mom_portfolios %>%
   )
 
 # Plot for CAPM alpha
-while (!is.null(dev.list()))  dev.off() # Resets device settings (just in case, as it may cause problems)
+#while (!is.null(dev.list()))  dev.off() # Resets device settings (just in case, as it may cause problems)
 mom_portfolios_summary %>%
   ggplot(aes(x = as.factor(portfolio), y = alpha, fill = as.factor(portfolio))) +
   geom_bar(stat = "identity") +
@@ -290,7 +300,7 @@ sharp_ratio_e4 <- mean_return$ret_excess/sd(mom_portfolios$ret_excess) # Not sur
 As seen in the graph above, it looks like there is a large negative CAPM alpha for portfolio 1 and  a fairly large positive CAPM alpha for portfolio 10. We therefore try to analyse the momentum strategy where we go long in portfolio 10 (which has the highest momentum) and go short in portfolio 1 (which has the lowest momentum). So for each month we compute the return of this long-short portfolio by taking the value-weighted return for portfolio 10 and subtracting the value-weighted return for portfolio 1. Running a linear regression of the long-short return on the market return gives us the following table. The last row in the table is computed as a t-test to investigate if the true mean of the return could be 0.
 
 
-```{r}
+```{r, echo=FALSE}
 # Creating the returns for the long-short portfolio
 long_short_portfolio <- mom_portfolios %>%
   filter(portfolio %in% c(1, 10)) %>%
@@ -310,7 +320,8 @@ row.names(long_short_summary) <- c("CAPM alpha", "Market beta", "Portfolio retur
 # Using the linear regression values to depict as a table
 long_short_summary %>%
   knitr::kable(booktabs = T, digits = 4, caption = "CAPM alpha, beta and excess return for the long-short portfolio based on value-weighted momentum-sorted portfolios") %>%
-  kable_paper("hover", full_width = T)
+  kable_paper("hover", full_width = T) %>% 
+  kable_styling(latex_options = "HOLD_position")
 
 # Finding the average return of the long-short portfolio
 long_short_return <- mean(long_short_portfolio$long_short)
@@ -410,8 +421,15 @@ k_months_ahead_alphas <- mom_portfolios_k_ahead %>%
   )
 k_months_ahead_alphas %>%
   knitr::kable(booktabs = T, digits = 4, col.names = c("Portfolio number", "Alpha 1 month ahead", "Alpha 3 months ahead", "Alpha 6 months ahead", "Alpha 12 months ahead"), caption = "CAPM alphas for the value-weighted momentum-sorted portfolios") %>%
-  kable_paper("hover", full_width = T)
+  kable_paper("hover", full_width = T) %>% 
+  kable_styling(latex_options = "HOLD_position")
 
+
+```
+
+The graph below shows the CAPM alphas for all the k-months-ahead returns (with $k=1,3,6,12$) for all 10 momentum-sorted portfolios. Something that is very noticeable is that the CAPM alpha for the 12-months-ahead returns has opposite signs for most of the portfolios. For portfolio 1 it shows a positive CAPM alpha, where the shorter returns show a negative alpha. As we move into the middle portfolios then the alpha value becomes smaller for all the k-months-ahead returns. According to this investigation, portfolio 1 with a time horizon of 12 months seems to predict the highest risk-adjusted performance. This horizon also continues to deliver positive CAPM alphas for all portfolios except portfolio 9 and 10. However, by looking at the 3-months-ahead CAPM alphas, then we see the same movements as for the original 1-month-ahead just larger. It could therefore suggest that creating the long-short portfolio as we did in exercise 4 would result in an even larger risk-adjusted performance.
+
+```{r, echo=FALSE}
 
 # Creating a tall table with all k-months-ahead alphas together in order to create combined plot
 k_months_ahead_alphas_tall <- k_months_ahead_alphas %>% 
@@ -424,7 +442,7 @@ k_months_ahead_alphas_tall <- k_months_ahead_alphas %>%
   ))
 
 # Plot for CAPM alphas
-while (!is.null(dev.list()))  dev.off() # Resets device settings (just in case, as it may cause problems)
+#while (!is.null(dev.list()))  dev.off() # Resets device settings (just in case, as it may cause problems)
 k_months_ahead_alphas_tall %>%
   ggplot(aes(x = as.factor(portfolio), y = Value, fill = alphas)) +
   geom_col(position = "dodge") +
@@ -435,14 +453,14 @@ k_months_ahead_alphas_tall %>%
     y = "CAPM alpha",
     fill = "Portfolio"
   ) +
-  scale_fill_discrete(labels = c("Alpha 1-month-ahead", "Alpha 3-months-ahead", "Alpha 6-months-ahead", "Alpha 12-months-ahead")) +
+  scale_fill_discrete(labels = c("1-month-ahead", "3-months-ahead", "6-months-ahead", "12-months-ahead")) +
   scale_y_continuous(labels = percent) +
-  theme(legend.position = "None") + 
-  theme_bw()
+  theme_bw() +
+  theme(legend.position = "bottom") + 
+  theme(plot.title = element_text(size=10))
 
 ```
 
-As seen in the graphs above, then it is the 1-month-ahead time horizon for the momentum that will deliver the highest expected returns. As explained in exercise 4, a strategy would then be to go long in past winners and short past losers.
 
 # Excercise 6
 
