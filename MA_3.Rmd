@@ -80,11 +80,11 @@ crsp_monthly_reduced <- crsp_monthly_reduced %>%
 
 ```
 
-We find the stocks that are traded each month from 1962 until 2020, by counting the number of months in this interval, counting the number of times each stock (permno) is traded and then filtering on the stocks that are traded the same amount of times as there exists of month (which for this interval is `r n_months`). This results in an investment universe consisting of 119 stocks. We then create the following summary of the excess return.
+The data used for this assignment is collected from the CRSP universe and consists of data from 1962 until 2020. We only select the stocks that are traded each month during this time period. This is done by counting the number of months in this interval, counting the number of times each stock (permno) is traded and then filtering on the stocks that are traded the same amount of times as there exists of month (which for this interval is `r n_months`). This results in an investment universe consisting of 119 stocks. We then create the following summary of the excess return by finding the cross-sectional values for each month and then averaging over all month:
 
 ```{r Exercise 1 summary, echo=FALSE}
 # Creating summary statistics
-crsp_monthly_reduced %>%
+summary1 <- crsp_monthly_reduced %>%
   group_by(month) %>%
   summarise(across(ret_excess, #Creating list of summarize statistics
                    list(mean = mean, sd = sd, min = min,
@@ -92,12 +92,18 @@ crsp_monthly_reduced %>%
                         median = median,
                         q75 = ~quantile(., 0.75), max = max),
                    .names = "{.fn} excess_ret")) %>% #Adds the name to every element in the list
-  summarise(across(-month, mean)) %>%
-knitr::kable(digits = 4)%>% kable_paper("hover", full_width = T) #creates a table to view the data.
+  summarise(across(-month, mean)) 
+
+row.names(summary1) <- "Excess return"
+
+summary1 %>%
+  knitr::kable(booktabs = T, digits = 4, caption = "Summary statistics of the excess return", col.names = c("mean", "sd", "min", "Q1", "median", "Q3", "max")) %>% 
+  kable_paper("hover", full_width = T) %>% 
+  kable_styling(latex_options = "HOLD_position")
 
 ```
 
-We see that on average a equally weighted portfolio with all assets in our investment universe would have generated a 0.78% monthly return. We also see that on average the 25% worst performing stocks have generated a negative excess return of -3.38% or worse. While the 25% best performing stocks have generated a excess return of 4.57% or more.
+We see that on average an equally weighted portfolio with all assets in our investment universe would have generated a `r round(as.numeric(summary1[1,1])*100,2)`% monthly excess return. We also see that on average the 25% worst performing stocks (Q1) have generated a negative excess return of `r round(as.numeric(summary1[1,4])*100,2)`% or worse, while the 25% best performing stocks (Q3) have generated an excess return of `r round(as.numeric(summary1[1,6])*100,2)`% or more. Furthermore, we see that the mean and the median are fairly close to each other which indicates a symmetrical distribution for the excess return.
 
 ### Exercise 2
 
