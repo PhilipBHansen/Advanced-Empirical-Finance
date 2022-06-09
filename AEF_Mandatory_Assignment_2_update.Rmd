@@ -31,7 +31,7 @@ library(hardhat)
 library(kableExtra)
 library(data.table)
 library(ranger)
-
+library(knitr)
 
 
 
@@ -47,23 +47,40 @@ options(scipen = 999)
 The following analysis is based on a data set with 744088 observations with different variables which describe industry and macro characteristics. This paper focuses on 9 variables where 5 are industry specific and 4 are macroeconomic. These are: 
 ```{r indutry variables, echo=FALSE}
 tibble(
-  Kind = c("Initial", "Stock", "Macro"),
+  Classifications = c("Initial", "Stock", "Macro"),
   Variables = c(
     paste(c('permno', 'month', 'sic2', 'ret_excess', 'mktcap_lag'), collapse = ",  "),
     paste(c('mom1m', 'mom12m', 'mvel1', 'chmom', 'maxret'), collapse = ",   "),
-    paste(c('bm', 'tbl', 'ntis', 'dfy'), collapse = ",   ")
+    paste(c('bm', 'ntis', 'tbl', 'dfy'), collapse = ",   ")
     )
   )%>% knitr::kable(booktabs = T, digits = 4, caption = "Overview of the choosen variables") %>%                                  kable_paper("hover", full_width = T)
 
+tibble(
+  Variables = c("permno", "month", "sic2", "ret_excess", "mktcap_lag","mom1m", "mom12m", "mvel1", "chmom", "maxret", "bm", "ntis", "tbl", "dfy"),
+  Description = c(
+    paste(c('The security identifier'), collapse = ",  "),
+    paste(c('The month data relevents to the the stock'), collapse = ",   "),
+    paste(c('The Standard Industrial Classification codes to identify each industry'), collapse = ",   "),
+    paste(c('The excess return'), collapse = ",   "),
+    paste(c('The market capitalization lagged in one month'), collapse = ",   "),
+    paste(c('1-month momentum'), collapse = ",   "),
+    paste(c('12-month momentum'), collapse = ",   "),
+    paste(c('Logged market equity, or stock size'), collapse = ",   "),
+    paste(c('change in 6-month momentum'), collapse = ",   "),
+    paste(c('Maximum daily returns, from returns during calendar month t-1'), collapse = ",   "),
+    paste(c('The book-to-market ratio'), collapse = ",   "),
+    paste(c('Net Equity Expansion'), collapse = ",   "),
+    paste(c('Treasury-bill rate'), collapse = ",   "),
+    paste(c('Default spread'), collapse = ",   ")
+    )
+  )%>% knitr::kable(booktabs = T, digits = 4, caption = "Overview of the choosen variables") %>%                                  kable_paper("hover", full_width = T)
+
+
 ```
  
- The data set includes observations from January 1st 2005 until November 30th 2020.
+
+The data set includes observations from January 1st 2005 until November 30th 2020.
 By using the sic2 variable to divide each stock into different industry classifications, we can in the following plot see how many stocks are included in each industry:
-
- characteristic_mom1m: 1-month momentum  -characteristic_mvel1: Logged market equity, or stock size   - characteristic_chmom: change in 6-monthmomentum  - characteristic_maxret: Maximum daily returns, from retruns during calendar month t-1  -characteristic_indmom: Industry momentum•macro_bm: The book-to-market ratio generally did well from 1940–1975, after which it did ratherpoorly•macro_ntis: Net Equity Expansion, poor performance in 1973–1974, zero performance otherwise.•macro_tbl: T-bill,the short-term rate had consistently good performance until around 1973, afterwhich it had consistently bad performance.•macro_tms: Term-Spread, the term-spread has mostly zero performance. In Panel A, it had a tinypositive drift until around 2000, in Panel C, it collapsed in the late 1970s.Our dataset also contains the following variables:•permno: The security identifier•month: The month data relevents to the the stock•ret_excess: The excess return•mktcap_lag: The market capitalization lagged in one month•sic2: The Standard Industrial Classification codes to identify each industry
- 
- By using the sic2 variable to divide each stock into different industry classifications, we can in the following plot see how many stocks are included in each industry:
-
 ```{r plot of indutry, echo=FALSE}
 
 reduced_scm <- scm %>% select( permno, month, sic2, ret_excess, mktcap_lag, 
@@ -98,23 +115,6 @@ ggplot(tmp_industry, aes(fill=sic2, y=n, x=month)) +
 #   group_by(month) %>%
 #   summarise(n = n())
 
-reduced_scm %>% 
-  group_by(sic2) %>% 
-  summarise(
-    n_permno = n_distinct(permno)
-  ) %>% 
-  mutate(sic2 = factor(sic2)) %>% 
-  filter(n_permno >= 75) %>% 
-  ggplot(aes(x = reorder(sic2, n_permno), y = n_permno)) +
-  geom_bar(stat = "identity") +
-  labs(
-    x = "Industry classifications (sic2)",
-    y = "Number of firms (permno)",
-    title = "Number of firms per industry classification",
-    subtitle = "Top industry classifications"
-  ) +
-  coord_flip()
-
 
 ```
 
@@ -147,7 +147,7 @@ rec <- recipe(ret_excess ~., data = reduced_scm) %>% step_rm(permno:month) %>% s
 
 
 ```
-
+Here in our summary statistics, we see a big difference between max and min value for excess return. This is especially compared to the median which is closer to the minimum value, and this indicates that we may have very few high values compared to the lower values. 
 
 ## Excercise 2
 
@@ -160,12 +160,7 @@ Using this kind of model allows for a very flexible and high-dimensional model. 
 Another framework of modeling expected asset’s excess returns is the Arbitrage Pricing Theory (APT). This framework assumes a linear relationship between the explanatory variables and the output variable (the excess return). The APT framework uses OLS estimation:
 
 
-OBS: We are lost on how to answer the second half of exercise 2 (the part about using Asset Pricing Theory and what would be $z_{i,t}$ and the g-function. If you have any idea, please let us know, thanks.
-
-- __What would be $z_{i,t}$?__ 
-  - Macroeconomic factors.
-- __What would be the functional form of $g(\cdot)$?__
-  - To capture systematic risk.
+$z_{i,t}$ is the defined baseline set of stock-level covariates. Therefore $z_{i,t}$ is a Px1 vector of features for predicting individual stock returns and include interactions between stock-level characteristics and macroeconomic state variables. $g(\cdot)$ is the conditional expected return and assume that the function is a flexible function of the predictors $z_{i,t}$. This function those not depend on neither i nor t. $g(\cdot)$ depeds on z only through $z_{i,t}$ and this means that our prediction does not use information from the history prior to t, or from individual stocks other than the *i*th.
 
 
 # Excercise 3
@@ -183,23 +178,21 @@ This assignment focuses on the parameter tuning which only has a static validati
 
 ```{r split data, echo=FALSE}
 # Filtering the data into 3 subsets with 20% of total data in the test set and 20% of the training set in the validation set
-scm_test <- reduced_scm %>% filter(month > "2017-02-01")
-scm_validation <- reduced_scm %>% filter(month >= "2014-07-01") %>% filter(month <= "2017-02-01")
-scm_train <- reduced_scm %>% filter(month < "2014-07-01")
+#Here we split the function in to a training and test dataset
+split <- reduced_scm %>% initial_time_split(prop = 4/5)
+#To make the validation dataset, we split the training set. 
+split_validation <-initial_time_split(training(split), prop = 3/5)
 
-scm_mini <- reduced_scm %>% filter(month < "2019-07-01")
+scm_test <- testing(split)
+scm_validation <-testing(split_validation)
+scm_train <- training(split)
 
 train <- bake(prep(rec,scm_train), new_data = scm_train)
 validation <- bake(prep(rec, scm_train), new_data = scm_validation)
 test<- bake(prep(rec, scm_train), new_data = scm_test)
 
-
+scm_mini <- reduced_scm %>% filter(month < "2019-07-01")
 mini <- bake(prep(rec, scm_train), new_data = scm_mini)
-
-
-# To test for 20% in test subset and validation subset (uncomment for testing)
-# nrow(scm_test) / nrow(reduced_scm) * 100
-# nrow(scm_validation) / (nrow(scm_validation) + nrow(scm_train)) * 100
 
 
 ```
