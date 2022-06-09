@@ -26,8 +26,8 @@ if(substr(tmp,1,12) == "C:/Users/Mie"){
 }
 
 gamma_default <- 4
-window_length<-240
-lambda<-200/10000
+window_length <- 240
+lambda <- 200/10000
 
 ######################
 ### END USER INPUT ###
