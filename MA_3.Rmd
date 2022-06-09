@@ -97,13 +97,13 @@ summary1 <- crsp_monthly_reduced %>%
 row.names(summary1) <- "Excess return"
 
 summary1 %>%
-  knitr::kable(booktabs = T, digits = 4, caption = "Summary statistics of the excess return", col.names = c("mean", "sd", "min", "Q1", "meadian", "Q3", "max")) %>% 
+  knitr::kable(booktabs = T, digits = 4, caption = "Summary statistics of the excess return", col.names = c("mean", "sd", "min", "Q1", "median", "Q3", "max")) %>% 
   kable_paper("hover", full_width = T) %>% 
   kable_styling(latex_options = "HOLD_position")
 
 ```
 
-We see that on average a equally weighted portfolio with all assets in our investment universe would have generated a 0.78% monthly return. We also see that on average the 25% worst performing stocks have generated a negative excess return of -3.38% or worse. While the 25% best performing stocks have generated a excess return of 4.57% or more.
+We see that on average an equally weighted portfolio with all assets in our investment universe would have generated a `r round(as.numeric(summary1[1,1])*100,2)`% monthly excess return. We also see that on average the 25% worst performing stocks (Q1) have generated a negative excess return of `r round(as.numeric(summary1[1,4])*100,2)`% or worse, while the 25% best performing stocks (Q3) have generated an excess return of `r round(as.numeric(summary1[1,6])*100,2)`% or more. Furthermore, we see that the mean and the median are fairly close to each other which indicates a symmetrical distribution for the excess return.
 
 ### Exercise 2
 
