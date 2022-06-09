@@ -279,8 +279,8 @@ NSS_TC<-rep(0,periods)
 
 # Define function to determine no short sell optimal portfolio
  No_short_sale_weight <- function(mu,
-                                          Sigma,
-                                          gamma = gamma_default){
+                                  Sigma,
+                                  gamma = gamma_default){
    N <- ncol(Sigma)
    A <- diag(N)
    out <- quadprog::solve.QP(Dmat = gamma * Sigma,
@@ -393,23 +393,18 @@ We would not describe this as a "true" out of sample experiment. The used rollin
 ```{r excersise 3: Sandbox, echo=FALSE}
 
 #window_length <- 120 
-periods<-n_months-window_length #Number of periods
+periods <- n_months - window_length #Number of periods
 months<-sort(unique(crsp_monthly_reduced$month))
 stocks <- unique(crsp_monthly_reduced$permno)
-#periods <- nrow(industry_returns) - window_length 
-
-
-#beta <- 50
-#gamma <- 2
 
 performance_values <- matrix(NA, 
                              nrow = periods, 
                              ncol = 3) # A matrix to collect all returns
 colnames(performance_values) <- c("raw_return", "turnover", "net_return") 
 
-performance_values <- list("Mean_Var_(TC)" = performance_values, 
+performance_values <- list("Mean-variance with TC" = performance_values, 
                            "Naive" = performance_values, 
-                           "No_short_sale" = performance_values)
+                           "Mean-variance with no short-selling" = performance_values)
 
 w_prev_1 <- w_prev_2 <- w_prev_3 <- rep(1 /nrow(stocks_traded), nrow(stocks_traded))
 
@@ -432,9 +427,7 @@ evaluate_performance <- function(w, w_previous, next_return, lambda){
 }
 
 # Define function to determine no short sell optimal portfolio
- No_short_sale_weight <- function(mu,
-                                          Sigma,
-                                          gamma = gamma_default){
+ No_short_sale_weight <- function(mu, Sigma, gamma = gamma_default){
    N <- ncol(Sigma)
    A <- diag(N)
    out <- quadprog::solve.QP(Dmat = gamma * Sigma,
@@ -459,8 +452,8 @@ for(i in 1:periods){
   
   # Computes sample mean excess return
   mu_hat <- (returns_window %>%
-  group_by(permno) %>%
-  summarise(across(ret_excess, mean)))$ret_excess
+               group_by(permno) %>%
+               summarise(across(ret_excess, mean)))$ret_excess
   
   # Computes sample variance-covariance matrix
   returns <- matrix(ncol = length(stocks), nrow = window_length)
@@ -523,62 +516,10 @@ performance <- lapply(performance_values, as_tibble) %>%
   bind_rows(.id = "strategy")
 
 performance %>%
-  group_by(strategy) %>% summarise(across(c(raw_return,turnover,net_return), list(mean=mean,sd=sd)))
-
-
-
-
-
-
-# Generates an empty data frame, assigns columns for summary statistics and loads a vector with the variables we wish to summarise
-summary1 <- data.frame(matrix(ncol=3, nrow=3)) #There are 7 summary statistics and two variables
-colnames(summary1) <- c("mean", "sd", "min", "Q1","median", "Q3", "max")
-var_names<- c("raw_return","turnover","net_return")
-
-# Loops through all the chosen variables and calculates mean, sd, min, Q1, median, Q3 and max for each month then takes the average of those results.  
-for(i in 1:2){  
-summary1[i,] <- crsp_monthly %>%
-    group_by(month) %>%
-  summarise(across(var_names[i],
-                   list(mean = mean, 
-                        sd = sd, 
-                        min = min,
-                        q25 = ~quantile(., 0.25),
-                        median = median,
-                        q75 = ~quantile(., 0.75), 
-                        max = max),
-                   .names = "{.fn}  ")) %>%
-  summarise(across(-month, mean))
-}
-
-#Assigns relevant row names
-rownames(summary1) <- c("Excess return", "Market cap")
-
-# Rounding the excess return values to 4 for the output
-summary1[1,] <- round(summary1[1,], 4)
-
-# Rounding the market cap values (since they are so large that decimals have no real significance)
-summary1[2,c(1:2, 4:7)] <- round(summary1[2,c(1:2, 4:7)], 0)
-
-#Prints the summary nicely in a table
-summary1 %>% knitr::kable(booktabs = T, digits = 4, caption = "Summary statistics of the excess return and the market cap") %>% 
+  group_by(strategy) %>% summarise(across(c(raw_return, turnover, net_return), list(mean=mean,sd=sd))) %>%
+  knitr::kable(booktabs = T, digits = 4, col.names = c("strategy", "mean_rr", "sd_rr", "mean_to", "sd_to", "mean_nr", "sd_nr"), caption = "MISSING") %>% 
   kable_paper("hover", full_width = T) %>% 
   kable_styling(latex_options = "HOLD_position")
-
-
-
-
-
-
-  # summarize(Mean = 12 * mean(100 * net_return),
-  #           SD = sqrt(12) * sd(100 * net_return), 
-  #           `Sharpe ratio` = if_else(Mean > 0, Mean / SD, NA_real_),
-  #           Turnover = 100 * mean(turnover))
-
-
-
-
-
 
 
 
