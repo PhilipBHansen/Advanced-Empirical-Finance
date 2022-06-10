@@ -566,6 +566,8 @@ performance %>%
 
 ```
 
+The naive portfolio severly outperforms the other strategies with an average monthly excess return after transaction cost of 0.8%. The no short sale deliverede a small loss of 1.1% and the mean variance trans action cost portfolio deliverede an astounding loss of 14%. So all in all it does not look good for our portfolio optimization strategies.
+
 We define the sharpe ratio according to equation 42-44 in Hautsch et al. (2019) as 
 $$SR=\frac{\frac{1}{T}\sum_{t=1}^T r_t}{ \sqrt{\frac{1}{T-1} \sum_{t=1}^T(r_t-\frac{1}{T}\sum_{t=1}^T r_t)^2}}$$
 We then define a function to calculate the sharpe ratio and use it on the monthly out of sample returns for each of the 3 strategies.
@@ -596,6 +598,5 @@ knitr::kable(booktabs = T, digits = 4, caption = "Sharpe ratio") %>%
 
 ```
 
-The naive portfolio severly outperforms the other strategies with an average monthly excess return after transaction cost of 0.8%. The no short sale deliverede a small loss of 1.1% and the mean variance trans action cost portfolio deliverede an astounding loss of 14%. So all in all it does not look good for our portfolio optimization strategies.
 
 While the naive portfolio does not deliver a particularly impressive return, it does deliver a decent sharpe ratio as its return standard deviation is also low. The 2 other strategies have negative expected returns and therefore also negative sharpe ratios which is quite worrying.
