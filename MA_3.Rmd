@@ -25,6 +25,7 @@ if(substr(tmp,1,12) == "C:/Users/Mie"){
   setwd("C:/Users/phili/OneDrive - CBS - Copenhagen Business School/Desktop/Code/R - code/AEF")
 }
 
+alpha<-1  #alpha for ledoit shrinkage
 gamma_default <- 4
 window_length <- 240
 lambda <- 200/10000
@@ -184,11 +185,12 @@ By using $\mu^{*}$ and $\Sigma^{*}$ we have now found the closed-form solution i
 optimal_weights <- function(w_prev, mu, Sigma, lambda, gamma = gamma_default){
   N <- ncol(Sigma)
   iota <- rep(1, N)
- 
+   Sigma<-alpha*diag(N)+(1-alpha)*Sigma ################################################################OBS Ledoit!!!
+
+  
   #Define mu_star and sigma_star according to the previously found close form solution 
   mu_star <- mu + 2 * lambda * Sigma %*% w_prev # Cost-adjusted mu
   Sigma_star <- (gamma + 2 * lambda) / gamma * Sigma # Cost-adjusted sigma
-  
   # Invert Sigma 
   Sigma_inv <- solve(Sigma_star) 
   
@@ -396,9 +398,11 @@ We would not describe this as a "true" out of sample experiment. The used rollin
 ```{r excersise 3: Sandbox, echo=FALSE}
 
 #window_length <- 120 
-periods <- n_months - window_length #Number of periods
+# periods <- n_months - window_length #Number of periods
 months<-sort(unique(crsp_monthly_reduced$month))
 stocks <- unique(crsp_monthly_reduced$permno)
+
+
 
 performance_values <- matrix(NA, 
                              nrow = periods, 
@@ -415,11 +419,22 @@ w_prev_1 <- w_prev_2 <- w_prev_3 <- rep(1 /nrow(stocks_traded), nrow(stocks_trad
 #######################################################################
 
 
+# # Define function to adjust weights after returns have been realized
+# adjust_weights <- function(w, next_return){
+#   w_prev <- 1 +  w * next_return
+#   as.numeric(w_prev / sum(as.vector(w_prev)))
+# }
+
+
+
 # Define function to adjust weights after returns have been realized
 adjust_weights <- function(w, next_return){
-  w_prev <- 1 + w * next_return
+  w_prev <- w *(1+ next_return)
   as.numeric(w_prev / sum(as.vector(w_prev)))
 }
+
+
+
 
 # Define function to evaluate performance before and after transaction cost
 evaluate_performance <- function(w, w_previous, next_return, lambda){
@@ -486,27 +501,28 @@ for(i in 1:periods){
                                                        next_return, 
                                                        lambda = lambda)
   
+  
   w_prev_1 <- adjust_weights(w_1, next_return)
   
-  # Naive portfolio
-  w_2 <- rep(1 /nrow(stocks_traded), nrow(stocks_traded))
-  
-  performance_values[[2]][i, ] <- evaluate_performance(w_2, 
-                                                       w_prev_2, 
-                                                       next_return,
-                                                       lambda = lambda)
-  
-  w_prev_2 <- adjust_weights(w_2, next_return)
-  
-  # No short sale portfolio
-  w_3 <- No_short_sale_weight(mu_hat,Sigma_hat)
-  
-  performance_values[[3]][i, ] <- evaluate_performance(w_3, 
-                                                       w_prev_3, 
-                                                       next_return,
-                                                       lambda = lambda)
-  
-  w_prev_3 <- adjust_weights(w_3, next_return)
+#   # Naive portfolio
+#   w_2 <- rep(1 /nrow(stocks_traded), nrow(stocks_traded))
+#   
+#   performance_values[[2]][i, ] <- evaluate_performance(w_2, 
+#                                                        w_prev_2, 
+#                                                        next_return,
+#                                                        lambda = lambda)
+#   
+#   w_prev_2 <- adjust_weights(w_2, next_return)
+#   
+#   # No short sale portfolio
+#   w_3 <- No_short_sale_weight(mu_hat,Sigma_hat)
+# 
+#   performance_values[[3]][i, ] <- evaluate_performance(w_3,
+#                                                        w_prev_3,
+#                                                        next_return,
+#                                                        lambda = lambda)
+# 
+#   w_prev_3 <- adjust_weights(w_3, next_return)
 }
 
 
@@ -524,6 +540,17 @@ performance %>%
   add_header_above(c(" " = 1, "Raw return" = 2, "Turnover" = 2, "Net return" = 2)) %>%
   kable_paper("hover", full_width = T) %>% 
   kable_styling(latex_options = "HOLD_position")
+
+
+
+```
+
+
+```{r excersise 3: Sandbox 2, echo=FALSE}
+performance %>% filter
+
+
+NP_SR<-mean(NP_return)/sqrt(1/(periods-1)*sum((NP_return-mean(NP_return))^2))
 
 
 
