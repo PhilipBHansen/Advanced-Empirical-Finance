@@ -69,34 +69,30 @@ options(scipen = 999)
 The following analysis is based on a data set with 744088 observations with different variables which describe industry and macro characteristics. This paper focuses on 9 variables where 5 are industry specific and 4 are macroeconomic. These are: 
 ```{r indutry variables, echo=FALSE}
 tibble(
-  Classifications = c("Initial", "Stock", "Macro"),
-  Variables = c(
-    paste(c('permno', 'month', 'sic2', 'ret_excess', 'mktcap_lag'), collapse = ",  "),
-    paste(c('mom1m', 'mom12m', 'mvel1', 'chmom', 'maxret'), collapse = ",   "),
-    paste(c('bm', 'ntis', 'tbl', 'dfy'), collapse = ",   ")
-    )
-  )%>% knitr::kable(booktabs = T, digits = 4, caption = "Overview of the choosen variables") %>%                                  kable_paper("hover", full_width = T)
+       Classifications = c("Initial", "Stock", "Macro"),
+       Variables = c(paste(c('permno', 'month', 'sic2', 'ret_excess', 'mktcap_lag'), collapse = ",  "),
+                     paste(c('bm', 'ntis', 'tbl', 'dfy'), collapse = ",   "),
+                     paste(c('mom1m', 'mom12m', 'mvel1', 'chmom', 'maxret'), collapse = ",   ")))%>% 
+       knitr::kable(booktabs = T, digits = 4, caption = "Overview of the choosen variables") %>%                                      kable_paper("hover", full_width = T)
 
-tibble(
-  Variables = c("permno", "month", "sic2", "ret_excess", "mktcap_lag","mom1m", "mom12m", "mvel1", "chmom", "maxret", "bm", "ntis", "tbl", "dfy"),
-  Description = c(
-    paste(c('The security identifier'), collapse = ",  "),
-    paste(c('The month data relevents to the the stock'), collapse = ",   "),
-    paste(c('The Standard Industrial Classification codes to identify each industry'), collapse = ",   "),
-    paste(c('The excess return'), collapse = ",   "),
-    paste(c('The market capitalization lagged in one month'), collapse = ",   "),
-    paste(c('1-month momentum'), collapse = ",   "),
-    paste(c('12-month momentum'), collapse = ",   "),
-    paste(c('Logged market equity, or stock size'), collapse = ",   "),
-    paste(c('change in 6-month momentum'), collapse = ",   "),
-    paste(c('Maximum daily returns, from returns during calendar month t-1'), collapse = ",   "),
-    paste(c('The book-to-market ratio'), collapse = ",   "),
-    paste(c('Net Equity Expansion'), collapse = ",   "),
-    paste(c('Treasury-bill rate'), collapse = ",   "),
-    paste(c('Default spread'), collapse = ",   ")
-    )
-  )%>% knitr::kable(booktabs = T, digits = 4, caption = "Overview of the choosen variables") %>%                                  kable_paper("hover", full_width = T)
-
+tibble(Variables = c("permno", "month", "sic2", "ret_excess", "mktcap_lag",
+                     "mom1m", "mom12m", "mvel1", "chmom", "maxret", "bm",
+                     "ntis", "tbl", "dfy"),
+       Description = c(paste(c('The security identifier'), collapse = ",  "),
+                       paste(c('The month data relevents to the the stock'), collapse = ",   "),
+                       paste(c('The Standard Industrial Classification codes to identify each industry'), collapse = ",   "),
+                       paste(c('The excess return'), collapse = ",   "),
+                       paste(c('The market capitalization lagged in one month'), collapse = ",   "),
+                       paste(c('1-month momentum'), collapse = ",   "),
+                       paste(c('12-month momentum'), collapse = ",   "),
+                       paste(c('Logged market equity, or stock size'), collapse = ",   "),
+                       paste(c('change in 6-month momentum'), collapse = ",   "),
+                       paste(c('Maximum daily returns, from returns during calendar month t-1'), collapse = ",   "),
+                       paste(c('The book-to-market ratio'), collapse = ",   "),
+                       paste(c('Net Equity Expansion'), collapse = ",   "),
+                       paste(c('Treasury-bill rate'), collapse = ",   "),
+                       paste(c('Default spread'), collapse = ",   ")))%>% 
+      knitr::kable(booktabs = T, digits = 4, caption = "Overview of the choosen variables") %>%                                      kable_paper("hover", full_width = T)
 
 ```
  
@@ -105,20 +101,27 @@ The data set includes observations from January 1st 2005 until November 30th 202
 By using the sic2 variable to divide each stock into different industry classifications, we can in the following plot see how many stocks are included in each industry:
 ```{r plot of indutry, echo=FALSE}
 
-reduced_scm <- scm %>% select( permno, month, sic2, ret_excess, mktcap_lag, 
-                               macro_bm, macro_ntis, macro_tbl, macro_dfy, 
-                               characteristic_mvel1, characteristic_chmom, characteristic_mom1m, characteristic_mom12m, characteristic_maxret) %>%      filter(month >= "2005-01-01")    %>% na.omit()
+reduced_scm <- scm %>% 
+               select(permno, month, sic2, ret_excess, mktcap_lag, 
+                      macro_bm, macro_ntis, macro_tbl, macro_dfy, 
+                      characteristic_mvel1, characteristic_chmom, characteristic_mom1m, characteristic_mom12m,                                       characteristic_maxret) %>%      
+               filter(month >= "2005-01-01")%>% 
+               na.omit()
+
 reduced_scm$sic2 <- as.factor(reduced_scm$sic2)
 
 
 # Renaming the colomn values
-colnames(reduced_scm) <- c("permno", "month", "sic2", "ret_excess",  "mktcap_lag","m_bm", "m_ntis", "m_tbl", "m_dfy", "c_mvel1", "c_chmom", "c_mom1m", "c_mom12m", "c_maxret")
+colnames(reduced_scm) <- c("permno", "month", "sic2", "ret_excess",  "mktcap_lag",
+                           "m_bm", "m_ntis", "m_tbl", "m_dfy",
+                           "c_mvel1", "c_chmom", "c_mom1m", "c_mom12m", "c_maxret"
+                           )
 
 # Creating visual summary statistic over number of firms
 # Counting how many unique permno numbers (firms) are in each industry classification for each month
 tmp_industry <- select(reduced_scm, permno, month, sic2) %>% 
-  group_by(month, sic2) %>%
-  summarise(n = n())
+                group_by(month, sic2) %>%
+                summarise(n = n())
 
 # Changing the column to be factors instead of numbers (affects the colors in the plot)
 tmp_industry$sic2 <- as.factor(tmp_industry$sic2)
@@ -153,10 +156,8 @@ reduced_scm %>%
            sd = sd,
            min = min,
            median = median,
-           max = max
-          ),
-          .names = "{fn}"
-                  )
+           max = max),
+      .names = "{fn}")
            ) %>%
   knitr::kable(booktabs = T, digits = 4, caption = "Summary statistics of the predictors") %>% 
   kable_paper("hover", full_width = T) %>%  
@@ -165,7 +166,12 @@ reduced_scm %>%
   group_rows("Initial Variables", 10, 11) 
 
 
-rec <- recipe(ret_excess ~., data = reduced_scm) %>% step_rm(permno:month) %>% step_interact(terms = ~contains("c_"):contains("m_")) %>% step_dummy(sic2, one_hot = TRUE)  %>% step_normalize(all_predictors()) %>% step_center(ret_excess, skip=TRUE)
+rec <- recipe(ret_excess ~., data = reduced_scm) %>% 
+       step_rm(permno:month) %>% 
+       step_interact(terms = ~contains("c_"):contains("m_")) %>% 
+       step_dummy(sic2, one_hot = TRUE)  %>% 
+       step_normalize(all_predictors()) %>% 
+       step_center(ret_excess, skip=TRUE)
 
 
 ```
@@ -190,24 +196,21 @@ Hyperparameters (or tuning parameters) are widely used in machine learning as a 
 
 $$\hat{\text{MSPE}} = \frac{1}{N} \sum_{i=1}^{N}\left(\hat{y}_i − y_i\right)^2$$
 
-When building a forecasting model using machine learning, it is common to divide the data into two groups: a training set and a test set. The test set must under no circumstance be used to fit the model, but only to test how well the finalized model works. This is a safeguard in order to avoid overfitting of the data and to test the predictability of the model. The training set can often be divided into a smaller training set and a validation set. This allows the algorithms to try different tuning parameters on the smaller training set and then test the predictability on the validation set without compromising the true test set. Once the optimal tuning parameters have been selected (the ones that minimize the MSPE) then the final model can be tested on the true test set in order to check how well the model works for predicting future data points. 
+When building a forecasting model using machine learning, it is common to divide the data into two groups: a training set and a test set. The test set must under no circumstance be used to fit the model, but only to test how well the finalized model works. This is a safeguard to avoid overfitting the data and to test the predictability of the model. The training set can often be divided into a smaller training set and a validation set. This allows the algorithms to try different tuning parameters on the smaller training set and then test the predictability on the validation set without compromising the true test set. Once the optimal tuning parameters have been selected (the ones that minimize the MSPE) then the final model can be tested on the true test set to check how well the model works for predicting future data points. 
 
-If the whole dataset had been used in order to tune the hyperparameters, then there would be no data which the model could be tested upon and tehrefore no way of knowing the predictive power of the model. Had we only used the training set and validation set, but without a true test set, then we would possibly end up with an overfit of the model. Since the model is tuned to fit the validation set as good as possible, then that data has in some way been used for the model selection. It is therefore unlikely that the predictive power of this model will work as well on new data, since the model has been trained to reproduce the validation set rather than learning how to extract the most important information from the data.
+If the whole dataset had been used to tune the hyperparameters, then there would be no data for which the model could be tested and therefore no way of knowing the predictive power of the model. Had we only used the training set and validation set, but without a true test set, then we would possibly end up with an overfit of the model. Since the model is tuned to fit the validation set as well as possible, then that data has in some way been used for the model selection. It is therefore unlikely that the predictive power of this model will work as well on new data since the model has been trained to reproduce the validation set rather than learning how to extract the most important information from the data.
 
-So what is the best way of tuning the parameters in a model? Having split up the entire dataset into three subsets (training, validation and test) then we avoid some overfitting. Tuning the parameters only with one training set and one validation set can however result in an overfit as mentioned previously. One way to minimize this risk is by using the k-fold cross validation. This splits the entire training dataset into k groups where 1 group will act as a validation set and $k-1$ groups will be the training set. The model parameters will then be tuned by switching through which set acts as the validation set. The drawbacks of this however is that it takes a lot longer to estimate the final model.
+So what is the best way of tuning the parameters in a model? Having split up the entire dataset into three subsets (training, validation, and test) then we avoid some overfitting. Tuning the parameters only with one training set and one validation set can however result in an overfit as mentioned previously. One way to minimize this risk is by using k-fold cross-validation. This splits the entire training dataset into k groups where 1 group will act as a validation set and $k-1$ groups will be the training set. The model parameters will then be tuned by switching through which set acts as the validation set. The drawback of this however is that it takes a lot longer to estimate the final model.
 
-This assignment focuses on the parameter tuning which only has a static validation set. 20% of the newest data is allocated to the test set and the last 80% will be used to specify the model parameters. Since the split from training and test happens in the same month, it has been chosen to round up and take the full month from where the training and test set should divide. This has resulted in 14.9455 observations being used for the test set and 594.633 for the training set. Since the entire dataset goes from "01-02-2005" to "01-11-2020" then up until "01-02-2017" is used for training and hereafter is used for testing. Likewise, we have chosen to extract 20% from the training set to use as validation, meaning that data from "01-05-2014" until "01-07-2017" is used for validation and the rest for training. This is done in order to have a large sample to train the model with, but still have sufficient amount of data points for validating the model.
+This assignment focuses on parameter tuning which only has a static validation set. 20% of the newest data is allocated to the test set and the last 80% will be used to specify the model parameters. Since the split from training and test happens in the same month, it has been chosen to round up and take the full month from where the training and test set should divide. This has resulted in 14.9455 observations being used for the test set and 594.633 for the training set. Since the entire dataset goes from "01-02-2005" to "01-11-2020" then up until "01-02-2017" is used for training and hereafter is used for testing. Likewise, we have chosen to extract 20% from the training set to use as validation, meaning that data from "01-05-2014" until "01-07-2017" is used for validation and the rest for training. This is done to have a large sample to train the model with, but still have a sufficient amount of data points for validating the model.
+
 
 ```{r split data, echo=FALSE}
 # Filtering the data into 3 subsets with 20% of total data in the test set and 20% of the training set in the validation set
 #Here we split the function in to a training and test dataset
-split <- reduced_scm %>% initial_time_split(prop = 4/5)
-#To make the validation dataset, we split the training set. 
-split_validation <-initial_time_split(training(split), prop = 3/5)
-
-scm_test <- testing(split)
-scm_validation <-testing(split_validation)
-scm_train <- training(split)
+scm_test <- reduced_scm %>% filter(month > "2017-02-01")
+scm_validation <- reduced_scm %>% filter(month >= "2014-07-01", month <="2017-02-01")
+scm_train <- reduced_scm %>% filter(month < "2014-07-01")
 
 train <- bake(prep(rec,scm_train), new_data = scm_train)
 validation <- bake(prep(rec, scm_train), new_data = scm_validation)
@@ -230,35 +233,42 @@ Neural Network is a method where you try to replicate the way the human brain pr
 ```{r Neural Networks, echo=FALSE}
 #Define the Neural network
 model <- keras_model_sequential() %>%
-layer_flatten(input_shape = 100) %>% #vector of 100 predictors
-layer_dense(units = 64, activation = "relu") %>%
-layer_dropout(0.1) %>% #to avoid overfitting drops irrelevant obs.
-layer_dense(units = 16, activation = "relu", kernel_regularizer = regularizer_l2(l = 0.001)) %>% #regularizer helps with overfitting issues
-layer_dense(units = 32, activation = "relu", kernel_regularizer = regularizer_l2(l = 0.0001)) %>%
-layer_dense(1)
+         layer_flatten(input_shape = 100) %>% #vector of 100 predictors
+         layer_dense(units = 64, activation = "relu") %>%
+         layer_dropout(0.1) %>% #to avoid overfitting drops irrelevant obs.
+         layer_dense(units = 16, activation = "relu", 
+                     kernel_regularizer = regularizer_l2(l = 0.001)) %>% #regularizer helps with overfitting issues
+         layer_dense(units = 32, activation = "relu", 
+                     kernel_regularizer = regularizer_l2(l = 0.0001)) %>%
+         layer_dense(1)
 
 
 
 #Compiling the neural network
 model %>% compile(
-loss="mse",
-optimizer = optimizer_rmsprop(learning_rate=0.01)
-)
+                  loss="mse",
+                  optimizer = optimizer_rmsprop(learning_rate=0.01)
+                  )
 
 
 
 # Training the model
-nn_fit<-model %>% fit(
-x=train %>% select(-ret_excess)%>% as.matrix() ,
-y=train %>% pull(ret_excess),
-epochs=20,
-batch_size=10000,
-verbose = 2
-)
+nn_fit<-model %>% 
+        fit(x=train %>% 
+              select(-ret_excess)%>% 
+              as.matrix(),
+            y=train %>% 
+              pull(ret_excess), 
+            epochs=20, batch_size=10000, verbose = 2
+            )
 
 
 # Predicting on validation data
-nn_pred<-model %>% predict(validation%>% select(-ret_excess) %>% as.matrix())
+nn_pred<-model %>% 
+         predict(validation%>% 
+                 select(-ret_excess) %>% 
+                 as.matrix()
+                 )
 
 
 
@@ -266,16 +276,18 @@ nn_pred<-model %>% predict(validation%>% select(-ret_excess) %>% as.matrix())
 #sum((validation$ret_excess-nn_pred)^2)/nrow(validation)
 
 NN_tuning_summary<-matrix(c(
-104,16,32,0.7,0.001,0.0001,0.029271,
-64,16,32,0.7,0.001,0.0001,0.029009,
-64,16,32,0.8,0.003,0.0003,0.028911,
-64,16,32,0.8,0.009,0.0009,0.028895,
-64,16,32,0.8,0.001,0.0001,0.028786
-),ncol=5)
+                            104,16,32,0.7,0.001,0.0001,0.029271,
+                            64,16,32,0.7,0.001,0.0001,0.029009,
+                            64,16,32,0.8,0.003,0.0003,0.028911,
+                            64,16,32,0.8,0.009,0.0009,0.028895,
+                            64,16,32,0.8,0.001,0.0001,0.028786
+                            ),ncol=5)
 
 
+#Creating table for Test data
+rownames(NN_tuning_summary)<-c("Neurons 1st layer","Neurons 2nd layer","Neurons 3rd layer","Layer dropout 1st layer",                                         "L2 regularizer 2nd layer","L2 regularizer 3rd layer", "MSPE"
+                               )
 
-rownames(NN_tuning_summary)<-c("Neurons 1st layer","Neurons 2nd layer","Neurons 3rd layer","Layer dropout 1st layer","L2 regularizer 2nd layer","L2 regularizer 3rd layer", "MSPE")
 NN_tuning_summary %>% knitr::kable() %>% kable_paper("hover", full_width = T)
 
 ```
@@ -283,25 +295,28 @@ NN_tuning_summary %>% knitr::kable() %>% kable_paper("hover", full_width = T)
 
 ### Random forest
 
-Random Forest is form of non-parametric models that can be used for both classification and regression. Here we use the regression part, because we are interested in predicting the return for the different industries.
-A Random Forest model is build up of multiple decision trees, where each node is a logical test on a different attribute. Here it looks at whether the statement is true or false. This can be in the form of whether a value is smaller og larger than an arbitrary value. This is split up in different trees and in that sense you are making a forest. For tuning this model we have used different number of trees and  how many variables should be used when splitting a branch (logical test).
+Random Forest is a form of non-parametric model that can be used for both classification and regression. Here we use the regression part because we are interested in predicting the return for the different industries.
+A Random Forest model is built up of multiple decision trees, where each node is a logical test on a different attribute. Here it looks at whether the statement is true or false. This can be in the form of whether a value is smaller or larger than an arbitrary value. This is split up into different trees and in that sense, you are making a forest. For tuning, in this model we have used a different number of trees and how many variables should be used when splitting a branch (logical test).
 
-The second machine learning method is random forest. Firstly, we need to define the approach of regression trees. Trees are deigned to find groups of observations that behave similarly to each other. A tree grows in a sequence of steps. At each step, a new branch sorts the data leftover from the preceding step into binds based on one of the predictor variables. The sequential branching slices the space of predictors into rectangular partitions, and approximates the unknown function $f(x_i)$ with the average value of the outcome variable within each partition. We partition the predictor space into $J$ non-overlapping regions. For any predictor $x$ that falls withing region $R_j$ we estimate $f(x)$ with the average of the training observations. Once we select a partition $x$ to split in order to create the new partitions, we find a predictor $j$ and value $s$ that define two new partitions, called $R_1(j,s)$ and $R_2(j,s)$, which split our observations in the current partition by asking if $x_j$ is bigger than s. To pick $j$ and $s$, we find the pair that minimizes the residual sum of square (RSS):
+The second machine learning method is random forest. Firstly, we need to define the approach of regression trees. Trees are designed to find groups of observations that behave similarly to each other. A tree grows in a sequence of steps. At each step, a new branch sorts the data left over from the preceding step into binds based on one of the predictor variables. The sequential branching slices the space of predictors into rectangular partitions, and approximates the unknown function $f(x_i)$ with the average value of the outcome variable within each partition. We partition the predictor space into $J$ non-overlapping regions. For any predictor $x$ that falls within region $R_j$ we estimate $f(x)$ with the average of the training observations. Once we select a partition $x$ to split to create the new partitions, we find a predictor $j$ and value $s$ that define two new partitions, called $R_1(j,s)$ and $R_2(j,s)$, which split our observations in the current partition by asking if $x_j$ is bigger than s. To pick $j$ and $s$, we find the pair that minimizes the residual sum of the square (RSS):
+
 $$\sum_{i: x_i \in R_1(j,s)}(y_i-\hat{y}_{R_1})^2 +\sum_{i: x_i \in R_2(j,s)}(y_i-\hat{y}_{R_2})^2$$
 
 
 ```{r Random forrest, echo=FALSE}
 # Fitting the random Forrest model
 rf_fit <- ranger(ret_excess~.,
-data=train,
-num.trees = 64,
-min.node.size = 1,
-mtry = 1,
-max.depth = 1,
-importance='none')
+                 data=train,
+                 num.trees = 64,
+                 min.node.size = 1,
+                 mtry = 1,
+                 max.depth = 1,
+                 importance='none'
+                 )
 
 # Using the found model to predict on the validation set
-rf_pred<-rf_fit %>% predict(validation)
+rf_pred<-rf_fit %>% 
+         predict(validation)
 
 #Calculating the validation MSPE
 #sum((validation$ret_excess-rf_pred$predictions)^2)/nrow(validation)
@@ -310,32 +325,20 @@ rf_pred<-rf_fit %>% predict(validation)
 
 
 ```{r, echo=FALSE}
-RF_tuning_summary<-matrix(c(
-
-128,1,1,1,0.02847,
-64,1,1,1,0.028436,
-64,5,2,4,0.028475,
-64,10,2,4,0.028464,
-64,20,3,8,0.028589,
-64,20,1,8,0.028506,
-64,5,1,8,0.028461,
-64,1,10,1,0.028464
-),ncol=8)
+RF_tuning_summary<-matrix(c(128,1,1,1,0.02847,
+                            64,1,1,1,0.028436,
+                            64,5,2,4,0.028475,
+                            64,10,2,4,0.028464,
+                            64,20,3,8,0.028589,
+                            64,20,1,8,0.028506,
+                            64,5,1,8,0.028461,
+                            64,1,10,1,0.028464
+                            ),ncol=8
+                          )
 
 
 rownames(RF_tuning_summary)<-c("num.trees","min.node.size","mtry", "max.depth", "MSPE")
 RF_tuning_summary %>% knitr::kable() %>% kable_paper("hover", full_width = T)
-
-rf_pred %>% 
-  autoplot() +
-  labs(
-    x = "Min_n",
-    y = "RMSE",
-    color = "Mtry",
-    title = "RMSE for Manufacturing excess returns",
-    subtitle = "Random forest with different number of randomly selected predictors (mtry) and values of min_n."
-  ) + 
-  theme(legend.position = "right")
 
 ```
 
@@ -344,7 +347,10 @@ rf_pred %>%
 
 ```{r, echo=FALSE}
 #Using the neural network to predict on the test data
-Test_nn_pred<-model %>% predict(test%>% select(-ret_excess) %>% as.matrix())
+Test_nn_pred<-model %>% predict(test %>% 
+                                select(-ret_excess) %>% 
+                                as.matrix()
+                                )
 #Using the random forrest to predict on the test data
 Test_rf_pred<-rf_fit %>% predict(test)
 ```
@@ -354,18 +360,20 @@ Test_rf_pred<-rf_fit %>% predict(test)
 portfolio_returns <- function(k){ #function to compute portfolio returns for each model
 #Mutating predictions into the sample_testing dataset
 sample_testing <- scm_test %>%
-arrange(permno, month) %>%
-mutate(predictions=k) %>% #input position
-group_by(permno)
+                  arrange(permno, month) %>%
+                  mutate(predictions=k) %>% #input position
+                  group_by(permno)
 
 
 
 # Quantiles generated
 percentiles <- seq(0.1, 0.9, 0.1)
 percentiles_names <- map_chr(percentiles, ~paste0("q", .x*100))
+
 percentiles_funs <- map(percentiles,
-~partial(quantile, probs = .x, na.rm = TRUE)) %>%
-set_names(nm = percentiles_names)
+                        ~partial(quantile, probs = .x, na.rm = TRUE)
+                        ) %>%
+                    set_names(nm = percentiles_names)
 
 
 
@@ -373,52 +381,56 @@ set_names(nm = percentiles_names)
 
 #Heavy coding
 quantiles <- sample_testing %>%
-group_by(month) %>%
-summarise_at(vars(predictions), lst(!!!percentiles_funs))
+             group_by(month) %>%
+             summarise_at(vars(predictions), lst(!!!percentiles_funs))
 
 
 
 #### Specifying portfolios to each decile ####
 portfolios <- sample_testing %>%
-left_join(quantiles, by = "month") %>%
-mutate(portfolio = case_when(predictions <= q10 ~ 1L,
-predictions > q10 & predictions <= q20 ~ 2L,
-predictions > q20 & predictions <= q30 ~ 3L,
-predictions > q30 & predictions <= q40 ~ 4L,
-predictions > q40 & predictions <= q50 ~ 5L,
-predictions > q50 & predictions <= q60 ~ 6L,
-predictions > q60 & predictions <= q70 ~ 7L,
-predictions > q70 & predictions <= q80 ~ 8L,
-predictions > q80 & predictions <= q90 ~ 9L,
-predictions > q90 ~ 10L))
+              left_join(quantiles, by = "month") %>%
+              mutate(portfolio = case_when(predictions <= q10 ~ 1L,
+                                           predictions > q10 & predictions <= q20 ~ 2L,
+                                           predictions > q20 & predictions <= q30 ~ 3L,
+                                           predictions > q30 & predictions <= q40 ~ 4L,
+                                           predictions > q40 & predictions <= q50 ~ 5L,
+                                           predictions > q50 & predictions <= q60 ~ 6L,
+                                           predictions > q60 & predictions <= q70 ~ 7L,
+                                           predictions > q70 & predictions <= q80 ~ 8L,
+                                           predictions > q80 & predictions <= q90 ~ 9L,
+                                           predictions > q90 ~ 10L
+                                           ))
+
 
 
 
 
 portfolios_ts <- portfolios %>%
-mutate(portfolio = as.character(portfolio)) %>%
-group_by(portfolio, month) %>%
-summarize(ret_vw = weighted.mean(ret_excess, mktcap_lag, na.rm = TRUE)) %>%
-na.omit() %>%
-ungroup()
+                 mutate(portfolio = as.character(portfolio)) %>%
+                 group_by(portfolio, month) %>%
+                 summarize(ret_vw = weighted.mean(ret_excess, 
+                                                  mktcap_lag, na.rm = TRUE)) %>%
+                 na.omit() %>%
+                 ungroup()
 
 
 
 
-# 10-1 portfolio
+# Creating the 10-1 portfolio
 portfolios_ts_101 <- portfolios_ts %>%
-filter(portfolio %in% c("1", "10")) %>%
-pivot_wider(names_from = portfolio,
-values_from = ret_vw) %>%
-mutate(ret_vw = `10` - `1`,
-portfolio = "10-1") %>%
-select(portfolio, month, ret_vw)
+                     filter(portfolio %in% c("1", "10")) %>%
+                     pivot_wider(names_from = portfolio, 
+                                 values_from = ret_vw) %>%
+                     mutate(ret_vw = `10` - `1`, portfolio = "10-1") %>%
+                     select(portfolio, month, ret_vw)
 
 
 
 # combine everything
 portfolio_returns <- bind_rows(portfolios_ts, portfolios_ts_101) %>%
-mutate(portfolio = factor(portfolio, levels = c(as.character(seq(1, 10, 1)), "10-1")))
+                     mutate(portfolio = factor(portfolio, 
+                                               levels = c(as.character(seq(1, 10, 1)), "10-1")
+                                               ))
 } #the end of the function
 
 
@@ -431,59 +443,70 @@ portfolio_NN <- portfolio_returns(Test_nn_pred)
 
 #plotting the portfolios altogether
 ggplot(portfolio_randomforest, aes(x= portfolio, y=ret_vw )) +
-geom_point(data = portfolio_randomforest,
-color = "blue",
-size = 1) + labs(x = "Portfolio", y = "Return")+
-geom_point(data = portfolio_NN,
-color = "red",
-size = 1) + labs(x = "Portfolio", y = "Return")
+  geom_point(data = portfolio_randomforest,
+             color = "blue",
+             size = 1) + 
+    labs(x = "Portfolio", y = "Return")+
+  geom_point(data = portfolio_NN,
+             color = "red",
+             size = 1) + 
+    labs(x = "Portfolio", y = "Return")
 
 
 
 
 
 # Taking mean retrun 10-1 portfolios
-Test_ret_rf_101<-portfolio_randomforest %>% filter(portfolio=="10-1") %>% pull(ret_vw) %>% na.omit() %>% mean()
-Test_ret_NN_101<-portfolio_NN %>% filter(portfolio=="10-1") %>% pull(ret_vw) %>% na.omit() %>% mean()
+Test_ret_rf_101 <- portfolio_randomforest %>% 
+                 filter(portfolio=="10-1") %>% 
+                 pull(ret_vw) %>% 
+                 na.omit() %>% 
+                 mean()
 
+Test_ret_NN_101 <- portfolio_NN %>% 
+                   filter(portfolio=="10-1") %>% 
+                   pull(ret_vw) %>% 
+                   na.omit() %>% 
+                   mean()
 
-
-# Calculating alpha
-mkt_excess<-scm_test %>% group_by(month) %>%
-summarize(mkt_ret=weighted.mean(ret_excess, mktcap_lag, na.rm = TRUE)) %>% na.omit() %>% ungroup
-
+# Setup for calculating alpha
+mkt_excess<- scm_test %>% 
+             group_by(month) %>%
+             summarize(mkt_ret=weighted.mean(ret_excess, mktcap_lag, na.rm = TRUE)) %>% 
+             na.omit() %>% 
+             ungroup
 
 
 mkt_excess<-(mkt_excess %>%
-bind_cols(portfolio_randomforest %>% filter(portfolio=="10-1") %>% pull(ret_vw)) %>% rename("RF_ret"='...3') %>%
-bind_cols(portfolio_randomforest %>% filter(portfolio=="10-1") %>% pull(ret_vw)) %>% rename("NN_ret"='...4'))
+             bind_cols(portfolio_randomforest %>% 
+                       filter(portfolio=="10-1") %>% 
+                       pull(ret_vw)
+                       ) %>% 
+             rename("RF_ret"='...3') %>%
+             bind_cols(portfolio_randomforest %>% 
+                       filter(portfolio=="10-1") %>% 
+                       pull(ret_vw)
+                       ) %>% 
+               rename("NN_ret"='...4')
+             )
 
-
-
-
-alpha_RF<-as.numeric(lm(RF_ret ~ 1 + mkt_ret,data=mkt_excess)$coefficients[1])
-alpha_NN<-as.numeric(lm(NN_ret ~ 1 + mkt_ret,data=mkt_excess)$coefficients[1])
-
-
+#Calculating alpha
+alpha_RF <- as.numeric(lm(RF_ret ~ 1 + mkt_ret,data=mkt_excess)$coefficients[1])
+alpha_NN <- as.numeric(lm(NN_ret ~ 1 + mkt_ret,data=mkt_excess)$coefficients[1])
 
 # Calculating Test MSPE
-Test_RF_MSPE<-sum((test$ret_excess-Test_rf_pred$predictions)^2)/nrow(test)
-Test_NN_MSPE<-sum((test$ret_excess-Test_nn_pred)^2)/nrow(test)
-
+Test_RF_MSPE <- sum((test$ret_excess-Test_rf_pred$predictions)^2)/nrow(test)
+Test_NN_MSPE <- sum((test$ret_excess-Test_nn_pred)^2)/nrow(test)
 
 # Presenting mean and alpha in table
-performance_summary<-matrix(c(
-Test_ret_NN_101,alpha_NN,Test_NN_MSPE,
-Test_ret_rf_101,alpha_RF,Test_RF_MSPE
-),ncol = 2)
+performance_summary<-matrix(c(Test_ret_NN_101,alpha_NN,Test_NN_MSPE,
+                              Test_ret_rf_101,alpha_RF,Test_RF_MSPE
+                              ),ncol = 2
+                            )
 nrow(performance_summary)
-
-
 
 colnames(performance_summary)<-c("NN","RF")
 rownames(performance_summary)<-c("Mean value weighted return 10-1","Alpha", "MSPE")
-
-
 
 performance_summary %>% knitr::kable() %>% kable_paper("hover", full_width = F)
 
@@ -491,4 +514,24 @@ performance_summary %>% knitr::kable() %>% kable_paper("hover", full_width = F)
 
 ```
 
+The portfolios have been ranked from lowest to higest return. Here the first portfolio, represent the portfolio with the lowest prediced return, and so on. Here we have 10 portfolios in total, but we have also created an 11 portfolio that is holding both the 10 and the first portfolio. To do this, we go short in the lowest portfolio and buy the higest portfolio. We call this portfolio the 10-1 portfolio. 
+
+Here in figure, the blue color represents the Random Forest, red is the neural network. The return generated from the Random Forest model has a wide mix, where the lowest is around 0.35 and higest being just above 0.2, which is from portfolio 3, and based on this our 10-1 portfolio has a lower return from the random forest returns. 
+
+blue random forest
+red neural network
+
 Neither of the portfolios performed particularly well. And looking at the actual returns for each of the deciles it would seem, that the same results could be obtained by randomly assigning a portfolio number instead of basing it on returns predicted using the models.
+
+
+The portfolio returns generated from the Random Forests model is generally
+higher and the predictions are strictly positive. The maximum portfolio return is around 7pct. This is not
+reasonable as it cannot be expected to only have positive returns in the future. As a result hereof, the 10-1
+portfolio is worse than the highest earning portfolio. \ The portfolio returns generated by Neural Networks
+has a much larger spread than the other two. The portfolio returns spans from -8pct. to around 9pct.
+returns. This also fits the outlook from figure ?? where the NN model has the highest error measure and the
+two figures therefore confirms the uncertainty shown by each one. The 10-1 portfolio is really profitable with
+NN, the figure also shows. \ It is interesting that we get so different predictions from the three models, as
+they are generated from the same dataset. From what we have experienced here, it is too difficult to decide
+what model is preferable.
+
