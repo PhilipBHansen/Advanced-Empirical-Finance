@@ -578,13 +578,32 @@ performance %>%
 
 ```
 
-
+We define the sharpe ratio according to equation 42-44 in Hautsch et al. (2019) as 
+$$SR=\frac{\frac{1}{T}\sum_{t=1}^T r_t}{ \sqrt{\frac{1}{T-1} \sum_{t=1}^T(r_t-\frac{1}{T}\sum_{t=1}^T r_t)^2}}$$
+We then define a function to calculate the sharpe ratio and use it on the monthly out of sample returns for each of the 3 strategies.
 ```{r excersise 3: Sandbox 2, echo=FALSE}
-performance %>% filter
+#Define function to calculate the sharpe ratio
+Sharpe_ratio = function(x){
+  mu<-mean(x)
+  sigma<-sqrt( 1/(length(x)-1) *sum((x-mu)^2) )
+  return(mu/sigma)
+}
 
+SR<-matrix(c(
+                      performance %>% filter(strategy=="Mean-variance with no short-selling") %>% pull("net_return") %>% Sharpe_ratio(),
+                      performance %>% filter(strategy=="Mean-variance with TC") %>% pull("net_return") %>% Sharpe_ratio(),
+                      performance %>% filter(strategy=="Naive") %>% pull("net_return") %>% Sharpe_ratio()),
+                      ncol = 1)
 
-NP_SR<-mean(NP_return)/sqrt(1/(periods-1)*sum((NP_return-mean(NP_return))^2))
+#Adds row and column names
+colnames(SR)<-c("Sharp ratio")
+rownames(SR)<-c("Mean-variance with no short-selling","Mean-variance with TC","Naive")
 
+#Prints the table
+SR%>%
+knitr::kable(booktabs = T, digits = 4, caption = "Sharpe ratio") %>% 
+  kable_paper("hover", full_width = F) %>% 
+  kable_styling(latex_options = "HOLD_position")
 
 
 ```
