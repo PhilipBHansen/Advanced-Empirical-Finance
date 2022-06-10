@@ -254,7 +254,6 @@ NN_tuning_summary<-matrix(c(
 
 
 rownames(NN_tuning_summary)<-c("Neurons 1st layer","Neurons 2nd layer","Neurons 3rd layer","Layer dropout 1st layer","L2 regularizer 2nd layer","L2 regularizer 3rd layer", "MSPE")
-co
 NN_tuning_summary %>% knitr::kable() %>% kable_paper("hover", full_width = T)
 
 ```
@@ -398,7 +397,7 @@ select(portfolio, month, ret_vw)
 # combine everything
 portfolio_returns <- bind_rows(portfolios_ts, portfolios_ts_101) %>%
 mutate(portfolio = factor(portfolio, levels = c(as.character(seq(1, 10, 1)), "10-1")))
-}
+} #the end of the function
 
 
 
