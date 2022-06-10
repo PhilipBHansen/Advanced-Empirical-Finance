@@ -185,7 +185,7 @@ By using $\mu^{*}$ and $\Sigma^{*}$ we have now found the closed-form solution i
 optimal_weights <- function(w_prev, mu, Sigma, lambda, gamma = gamma_default){
   N <- ncol(Sigma)
   iota <- rep(1, N)
-   Sigma<-alpha*diag(N)+(1-alpha)*Sigma ################################################################OBS Ledoit!!!
+   #Sigma<-alpha*diag(N)+(1-alpha)*Sigma ################################################################OBS Ledoit!!!
 
   
   #Define mu_star and sigma_star according to the previously found close form solution 
@@ -391,14 +391,17 @@ The no short portfolio performed the best with a 1.5% average monthly return. Th
 We would not describe this as a "true" out of sample experiment. The used rolling window strategy has similarities with a out of sample experiment. In a way it is a series of smaller out of sample experiments, but we always only predict one month ahead which means the portion of data that is picked to be "out of sample" is really small.
 
 
-**NEW TEXT**
+**MAKE SURE TO INCLUDE**
+Briefly describe your chosen model, the forecasting procedure and discuss the effects on the out-of-sample portfolio performance.
 
+
+**NEW TEXT**
+We now implement a full-fledged portfolio backtesting strategy with transaction costs proportional to risk by using the closed-form solution from exercise 2 where we set the cost parameter $\lambda=\frac{200}{10000}$.
 
 
 ```{r excersise 3: Sandbox, echo=FALSE}
 
-#window_length <- 120 
-# periods <- n_months - window_length #Number of periods
+periods <- n_months - window_length #Number of periods
 months<-sort(unique(crsp_monthly_reduced$month))
 stocks <- unique(crsp_monthly_reduced$permno)
 
@@ -419,11 +422,49 @@ w_prev_1 <- w_prev_2 <- w_prev_3 <- rep(1 /nrow(stocks_traded), nrow(stocks_trad
 #######################################################################
 
 
-# # Define function to adjust weights after returns have been realized
-# adjust_weights <- function(w, next_return){
-#   w_prev <- 1 +  w * next_return
-#   as.numeric(w_prev / sum(as.vector(w_prev)))
-# }
+compute_ledoit_wolf <- function(x) {
+  # Computes Ledoit-Wolf shrinkage covariance estimator
+  # This function generates the Ledoit-Wolf covariance estimator  as proposed in Ledoit, Wolf 2004 (Honey, I shrunk the sample covariance matrix.)
+  # X is a (t x n) matrix of returns
+  t <- nrow(x)
+  n <- ncol(x)
+  x <- apply(x, 2, function(x) if (is.numeric(x)) # demean x
+    x - mean(x) else x)
+  sample <- (1/t) * (t(x) %*% x)
+  var <- diag(sample)
+  sqrtvar <- sqrt(var)
+  rBar <- (sum(sum(sample/(sqrtvar %*% t(sqrtvar)))) - n)/(n * (n - 1))
+  prior <- rBar * sqrtvar %*% t(sqrtvar)
+  diag(prior) <- var
+  y <- x^2
+  phiMat <- t(y) %*% y/t - 2 * (t(x) %*% x) * sample/t + sample^2
+  phi <- sum(phiMat)
+
+  repmat = function(X, m, n) {
+    X <- as.matrix(X)
+    mx = dim(X)[1]
+    nx = dim(X)[2]
+    matrix(t(matrix(X, mx, nx * n)), mx * m, nx * n, byrow = T)
+  }
+
+  term1 <- (t(x^3) %*% x)/t
+  help <- t(x) %*% x/t
+  helpDiag <- diag(help)
+  term2 <- repmat(helpDiag, 1, n) * sample
+  term3 <- help * repmat(var, 1, n)
+  term4 <- repmat(var, 1, n) * sample
+  thetaMat <- term1 - term2 - term3 + term4
+  diag(thetaMat) <- 0
+  rho <- sum(diag(phiMat)) + rBar * sum(sum(((1/sqrtvar) %*% t(sqrtvar)) * thetaMat))
+
+  gamma <- sum(diag(t(sample - prior) %*% (sample - prior)))
+  kappa <- (phi - rho)/gamma
+  shrinkage <- max(0, min(1, kappa/t))
+  if (is.nan(shrinkage))
+    shrinkage <- 1
+  sigma <- shrinkage * prior + (1 - shrinkage) * sample
+  return(sigma)
+}
 
 
 
@@ -432,9 +473,6 @@ adjust_weights <- function(w, next_return){
   w_prev <- w *(1+ next_return)
   as.numeric(w_prev / sum(as.vector(w_prev)))
 }
-
-
-
 
 # Define function to evaluate performance before and after transaction cost
 evaluate_performance <- function(w, w_previous, next_return, lambda){
@@ -455,17 +493,12 @@ evaluate_performance <- function(w, w_previous, next_return, lambda){
                              meq = 1)
    return(as.numeric(out$solution))
  }
-#######################################################################
-
 
 
 for(i in 1:periods){
   
   returns_window <- crsp_monthly_reduced %>% filter(month >= months[i]) %>% filter(month < months[i+window_length])
   
-  
-  #returns_window <- industry_returns[i : (i + window_length - 1), ]
-  # next_return <- industry_returns[i + window_length, ] 
   next_return <- (crsp_monthly_reduced %>% filter(month == months[i+window_length]) %>% select(ret_excess))$ret_excess
   
   # Computes sample mean excess return
@@ -474,55 +507,42 @@ for(i in 1:periods){
                summarise(across(ret_excess, mean)))$ret_excess
   
   # Computes sample variance-covariance matrix
-  returns <- matrix(ncol = length(stocks), nrow = window_length)
-  colnames(returns) <- stocks
-  for(j in 1:length(stocks)){
-    returns[,j] <- (returns_window %>% filter(permno == stocks[j]))$ret_excess
-  }
-  Sigma_hat <- returns %>% cov() %>% as.matrix()
+  # returns <- matrix(ncol = length(stocks), nrow = window_length)
+  # colnames(returns) <- stocks
+  # for(j in 1:length(stocks)){
+  #   returns[,j] <- (returns_window %>% filter(permno == stocks[j]))$ret_excess
+  # }
+  # Sigma_hat <- returns %>% cov() %>% as.matrix()
+  # 
   
-  # Sigma_hat <- cov(returns_window) 
-  # mu <- 0 * colMeans(returns_window) 
+  # Computes sample variance-covariance matrix with Ledoit shrinkage
+  Sigma_hat <- returns_window %>% 
+    select("permno", "month", "ret_excess") %>% 
+    pivot_wider(names_from = "permno", values_from = "ret_excess") %>% 
+    select(-"month") %>%
+    compute_ledoit_wolf()
   
   # Transaction-cost adjusted portfolio
-  # w_1 <- compute_efficient_weight_L1_TC(mu = mu_hat, 
-  #                                       Sigma = Sigma_hat, 
-  #                                       lambda = lambda, 
-  #                                       gamma = gamma,
-  #                                       w_prev = w_prev_1)
-  
-  
-  # (w_prev, mu, Sigma, lambda, gamma = gamma_default)
-  
   w_1 <-optimal_weights(w_prev_1, mu_hat, Sigma_hat, lambda, gamma_default)
 
-  performance_values[[1]][i, ] <- evaluate_performance(w_1, 
-                                                       w_prev_1, 
-                                                       next_return, 
-                                                       lambda = lambda)
+  performance_values[[1]][i, ] <- evaluate_performance(w_1, w_prev_1, next_return, lambda = lambda)
   
   
   w_prev_1 <- adjust_weights(w_1, next_return)
   
-#   # Naive portfolio
-#   w_2 <- rep(1 /nrow(stocks_traded), nrow(stocks_traded))
-#   
-#   performance_values[[2]][i, ] <- evaluate_performance(w_2, 
-#                                                        w_prev_2, 
-#                                                        next_return,
-#                                                        lambda = lambda)
-#   
-#   w_prev_2 <- adjust_weights(w_2, next_return)
-#   
-#   # No short sale portfolio
-#   w_3 <- No_short_sale_weight(mu_hat,Sigma_hat)
-# 
-#   performance_values[[3]][i, ] <- evaluate_performance(w_3,
-#                                                        w_prev_3,
-#                                                        next_return,
-#                                                        lambda = lambda)
-# 
-#   w_prev_3 <- adjust_weights(w_3, next_return)
+  # Naive portfolio
+  w_2 <- rep(1 /nrow(stocks_traded), nrow(stocks_traded))
+
+  performance_values[[2]][i, ] <- evaluate_performance(w_2, w_prev_2, next_return, lambda = lambda)
+
+  w_prev_2 <- adjust_weights(w_2, next_return)
+
+  # No short sale portfolio
+  w_3 <- No_short_sale_weight(mu_hat,Sigma_hat)
+
+  performance_values[[3]][i, ] <- evaluate_performance(w_3, w_prev_3, next_return, lambda = lambda)
+
+  w_prev_3 <- adjust_weights(w_3, next_return)
 }
 
 
