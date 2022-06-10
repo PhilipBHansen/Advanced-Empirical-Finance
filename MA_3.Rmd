@@ -396,7 +396,29 @@ Briefly describe your chosen model, the forecasting procedure and discuss the ef
 
 
 **NEW TEXT**
-We now implement a full-fledged portfolio backtesting strategy with transaction costs proportional to risk by using the closed-form solution from exercise 2 where we set the cost parameter $\lambda=\frac{200}{10000}$. In order to limit the estimation error from the covariance matrix, we transform it by using a shrinkage factor. This tends to penalize extreme values and hereby dragging the most extreme values toward a numerically lower value. This helps reduce some of the estimation error and improve usage of the covariance matrix for portfolio optimization. 
+The aim of this exercise is to generate a strong out-of-sample portfolio performance after adjusting for the transaction cost. To do this, we implement a full-fledged portfolio backtesting strategy with transaction costs proportional to risk by using the closed-form solution from exercise 2 where we set the cost parameter $\lambda=\frac{200}{10000}$. In order to limit the estimation error from the covariance matrix, we transform it by using a shrinkage factor. This tends to penalize extreme values and hereby dragging the most extreme values toward a numerically lower value. This helps reduce some of the estimation error and improve usage of the covariance matrix for portfolio optimization. For this exercise we have implemented the shrinkage method as proposed by Ledoit and Wolf (2003) and coded by Stefan Voigt. For our out-of-sample portfolio performance we have used a window-length of 240 with 456 periods. We therefore continuously use 240 months to create $\hat{\mu}$ and $\hat{\Sigma}$ and then use the next month as the out-of-sample return. 
+
+We define three portfolio strategies for which we will calculate their performance based of the out-of-sample rolling window setup as explained above. The three strategies are:
+1. The naive portfolio which rebalances daily to $\omega=\frac{1}{N}\iota$.
+2. The portfolio which computes the theoretical optimal portfolio weights with optimal ex-ante adjustment for transaction costs in the spirit of Hautsch et al. (2019). We will further on call this portfolio "Mean-variance with TC". These portfolio weights are calculated by the closed-form solution derived in exercise 2.
+3. The mean-variance efficient portfolio with a no short-selling constraint in the spirit of Jagannathan and Ma (2003). We will further on call this portfolio "Mean-variance with TC". These portfolio weights are calculated by the *quadprog::solve.QP* function in R.
+
+Before starting the rolling window out-of-sample estimation we start by defining the original portfolio as the naive portfolio along with defining a list of matrices where we can save the performance result for each strategy for each out-of-sample period. We now begin the rolling window out-of-sample estimation where we for each of the 459 periods start by filtering the data to only include the 240 months starting from the specified period (which continuously moves one month ahead). Then we also select the out-of-sample returns from the next month which wasn't included in the aforementioned data selection. From the data set consisting of 240 monthly observation we now calculate the standard $\hat{\mu}$ and the covariance matrix with shrinkage $\hat{\Sigma}$. These estimates are used to find the new optimal portfolio weights for  
+
+
+
+  
+  # Transaction-cost adjusted portfolio
+  w_1 <-optimal_weights(w_prev_1, mu_hat, Sigma_hat, lambda, gamma_default)
+
+  performance_values[[1]][i, ] <- evaluate_performance(w_1, w_prev_1, next_return, lambda = lambda)
+  
+  
+  w_prev_1 <- adjust_weights(w_1, next_return)
+
+
+
+
 
 
 
@@ -481,17 +503,17 @@ evaluate_performance <- function(w, w_previous, next_return, lambda){
   c(raw_return, turnover, net_return)
 }
 
-# This function determines the no short selling optimal portfolio
- No_short_sale_weight <- function(mu, Sigma, gamma = gamma_default){
-   N <- ncol(Sigma)
-   A <- diag(N)
-   out <- quadprog::solve.QP(Dmat = gamma * Sigma,
-                             dvec = mu,
-                             Amat = A,
-                             bvec = c(rep(0, N)),
-                             meq = 1)
-   return(as.numeric(out$solution))
- }
+# This function determines the no short-selling optimal portfolio
+No_short_sale_weight <- function(mu, Sigma, gamma = gamma_default){
+  N <- ncol(Sigma)
+  A <- diag(N)
+  out <- quadprog::solve.QP(Dmat = gamma * Sigma,
+                            dvec = mu,
+                            Amat = A,
+                            bvec = c(rep(0, N)),
+                            meq = 1)
+  return(as.numeric(out$solution))
+}
  
 ################################################################
 ### End functions to be used in th rolling window (for-loop) ###
@@ -510,15 +532,6 @@ for(i in 1:periods){
   mu_hat <- (returns_window %>%
                group_by(permno) %>%
                summarise(across(ret_excess, mean)))$ret_excess
-  
-  # Computes sample variance-covariance matrix
-  # returns <- matrix(ncol = length(stocks), nrow = window_length)
-  # colnames(returns) <- stocks
-  # for(j in 1:length(stocks)){
-  #   returns[,j] <- (returns_window %>% filter(permno == stocks[j]))$ret_excess
-  # }
-  # Sigma_hat <- returns %>% cov() %>% as.matrix()
-  # 
   
   # Computes sample variance-covariance matrix with Ledoit shrinkage
   Sigma_hat <- returns_window %>% 
@@ -550,11 +563,6 @@ for(i in 1:periods){
   w_prev_3 <- adjust_weights(w_3, next_return)
 }
 
-
-
-#######################################################################
-
-
 # Combines the lists to the same data table
 performance <- lapply(performance_values, as_tibble) %>% 
   bind_rows(.id = "strategy")
@@ -566,7 +574,6 @@ performance %>%
   add_header_above(c(" " = 1, "Raw return" = 2, "Turnover" = 2, "Net return" = 2)) %>%
   kable_paper("hover", full_width = T) %>% 
   kable_styling(latex_options = "HOLD_position")
-
 
 
 ```
