@@ -129,11 +129,11 @@ In order to find a closed form solution, we start by rewriting the function to b
      &= \omega^{\prime} \mu-\lambda\left(\omega^{\prime}\Sigma\omega - 2\omega^{\prime}\Sigma\omega_{t^+} + \underset{\text{constant}}{\omega_{t^+}^{\prime}\Sigma\omega_{t^+}}\right) -\frac{\gamma}{2} \omega^{\prime} \Sigma \omega \\
      &= \omega^{\prime} \mu-\lambda\left(\omega^{\prime}\Sigma\omega - 2\omega^{\prime}\Sigma\omega_{t^+}\right) -\frac{\gamma}{2} \omega^{\prime} \Sigma \omega \\
      &= \omega^{\prime} \left(\mu + 2\lambda \Sigma \omega_{t^+}\right) - \frac{\gamma}{2} \omega^{\prime} \left(\Sigma + \frac{2\lambda}{\gamma}\Sigma\right)\omega \\
-     &= \omega^{\prime} \left(\mu + 2\lambda \Sigma \omega_{t^+}\right) - \frac{\gamma}{2}\left(\frac{\gamma + 2\lambda\right}{\gamma}) \omega^{\prime}\Sigma\omega \\
+     &= \omega^{\prime} \left(\mu + 2\lambda \Sigma \omega_{t^+}\right) - \frac{\gamma}{2}\left(\frac{\gamma + 2\lambda}{\gamma}\right) \omega^{\prime}\Sigma\omega \\
      &= \omega^{\prime} \mu^{*} - \frac{\gamma}{2} \omega^{\prime}\Sigma^{*}\omega 
 \end{align*}
 
-Where we have defined and used that $\mu^{*}=\mu + 2\lambda \Sigma \omega_{t^+}$ and $\Sigma^{*}=\left(\frac{\gamma + 2\lambda\right)\Sigma$. We can now use this to find a closed-form solution. Maximizing a function is the same as minimizing the negative function:
+Where we have defined and used that $\mu^{*}=\mu + 2\lambda \Sigma \omega_{t^+}$ and $\Sigma^{*}=\left(\frac{\gamma + 2\lambda}{\gamma}\right)\Sigma$. We can now use this to find a closed-form solution. Maximizing a function is the same as minimizing the negative function:
 \begin{align}
     \omega_{t+1}^{*}=\arg \min _{\omega \in \mathbb{R}^{N}, \iota^{\prime} \omega=1} \frac{\gamma}{2} \omega^{\prime} \Sigma^{*} \omega - \omega^{\prime} \mu^{*}
 \label{eq:3} 
@@ -399,11 +399,13 @@ Briefly describe your chosen model, the forecasting procedure and discuss the ef
 The aim of this exercise is to generate a strong out-of-sample portfolio performance after adjusting for the transaction cost. To do this, we implement a full-fledged portfolio backtesting strategy with transaction costs proportional to risk by using the closed-form solution from exercise 2 where we set the cost parameter $\lambda=\frac{200}{10000}$. In order to limit the estimation error from the covariance matrix, we transform it by using a shrinkage factor. This tends to penalize extreme values and hereby dragging the most extreme values toward a numerically lower value. This helps reduce some of the estimation error and improve usage of the covariance matrix for portfolio optimization. For this exercise we have implemented the shrinkage method as proposed by Ledoit and Wolf (2003) and coded by Stefan Voigt. For our out-of-sample portfolio performance we have used a window-length of 240 with 456 periods. We therefore continuously use 240 months to create $\hat{\mu}$ and $\hat{\Sigma}$ and then use the next month as the out-of-sample return. 
 
 We define three portfolio strategies for which we will calculate their performance based of the out-of-sample rolling window setup as explained above. The three strategies are:
-1. The naive portfolio which rebalances daily to $\omega=\frac{1}{N}\iota$.
+1. The naive portfolio which rebalances monthly to $\omega=\frac{1}{N}\iota$.
 2. The portfolio which computes the theoretical optimal portfolio weights with optimal ex-ante adjustment for transaction costs in the spirit of Hautsch et al. (2019). We will further on call this portfolio "Mean-variance with TC". These portfolio weights are calculated by the closed-form solution derived in exercise 2.
-3. The mean-variance efficient portfolio with a no short-selling constraint in the spirit of Jagannathan and Ma (2003). We will further on call this portfolio "Mean-variance with TC". These portfolio weights are calculated by the *quadprog::solve.QP* function in R.
+3. The mean-variance efficient portfolio with a no short-selling constraint in the spirit of Jagannathan and Ma (2003). We will further on call this portfolio "Mean-variance with no short-selling". These portfolio weights are calculated by the *quadprog::solve.QP* function in R.
 
-Before starting the rolling window out-of-sample estimation we start by defining the original portfolio as the naive portfolio along with defining a list of matrices where we can save the performance result for each strategy for each out-of-sample period. We now begin the rolling window out-of-sample estimation where we for each of the 459 periods start by filtering the data to only include the 240 months starting from the specified period (which continuously moves one month ahead). Then we also select the out-of-sample returns from the next month which wasn't included in the aforementioned data selection. From the data set consisting of 240 monthly observation we now calculate the standard $\hat{\mu}$ and the covariance matrix with shrinkage $\hat{\Sigma}$. These estimates are used to find the new optimal portfolio weights for  
+Before starting the rolling window out-of-sample estimation we start by defining the original portfolio as the naive portfolio along with defining a list of matrices where we can save the performance result for each strategy for each out-of-sample period. We now begin the rolling window out-of-sample estimation where we for each of the 459 periods start by filtering the data to only include the 240 months starting from the specified period (which continuously moves one month ahead). Then we also select the out-of-sample returns from the next month which was not included in the aforementioned data selection. From the data set consisting of 240 monthly observation we now calculate the standard $\hat{\mu}$ and the covariance matrix with shrinkage $\hat{\Sigma}$. These estimates are used to find the new optimal portfolio weights for both of the mean-variance portfolios. The new optimal weights for the naive portfolio is just set to have equal weights. Once these new optimal weights have been calculated, we evaluate their performance against the out-of-sample return. We calculate three parameters:
+1. The raw return: $\omega_{t-1}^\prime r_t$, where $\omega_{t-1}^\prime$ is the portfolio weights from period $t-1$ and $r_t$ is the returns from period $t$.
+2. The portfolio turnover: $\sum_{i=1}^{N}\left(|\omega_{i,t}-\omega_{i,t-1}|\right)$. 
 
 
 
@@ -415,6 +417,20 @@ Before starting the rolling window out-of-sample estimation we start by defining
   
   
   w_prev_1 <- adjust_weights(w_1, next_return)
+  
+  # This function adjusts the weights after returns have been realized
+adjust_weights <- function(w, next_return){
+  w_prev <- w *(1+ next_return)
+  as.numeric(w_prev / sum(as.vector(w_prev)))
+}
+
+# This function evaluates the performance before and after transaction cost
+evaluate_performance <- function(w, w_previous, next_return, lambda){
+  raw_return <- as.numeric(t(as.matrix(next_return)) %*% w)
+  turnover <- sum(abs(w - w_previous))
+  net_return <- raw_return - lambda * turnover
+  c(raw_return, turnover, net_return)
+}
 
 
 
@@ -607,3 +623,7 @@ knitr::kable(booktabs = T, digits = 4, caption = "Sharpe ratio") %>%
 
 
 ```
+
+The naive portfolio severly outperforms the other strategies with an average monthly excess return after transaction cost of 0.8%. The no short sale deliverede a small loss of 1.1% and the mean variance trans action cost portfolio deliverede an astounding loss of 14%. So all in all it does not look good for our portfolio optimization strategies.
+
+While the naive portfolio does not deliver a particularly impressive return, it does deliver a decent sharpe ratio as its return standard deviation is also low. The 2 other strategies have negative expected returns and therefore also negative sharpe ratios which is quite worrying.
