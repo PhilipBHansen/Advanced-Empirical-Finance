@@ -261,124 +261,126 @@ The shape of the curve is what we would expect in this setup. With a transaction
 
 
 ```{r excersise 3: Backtesting, echo=FALSE}
-#Prepare vectors that contain results
-N<-nrow(Sigma)
-months<-sort(unique(crsp_monthly_reduced$month))   #Overflødig
-periods<-n_months-window_length #Number of periods
-NP_return<-rep(0,periods)
-HEA_return<-rep(0,periods)
-NSS_return<-rep(0,periods)
-
-NP_turnover<-rep(0,periods)
-HEA_turnover<-rep(0,periods)
-NSS_turnover<-rep(0,periods)
-
-NP_TC<-rep(0,periods)
-HEA_TC<-rep(0,periods)
-NSS_TC<-rep(0,periods)
-
-# Define function to determine no short sell optimal portfolio
- No_short_sale_weight <- function(mu,
-                                  Sigma,
-                                  gamma = gamma_default){
-   N <- ncol(Sigma)
-   A <- diag(N)
-   out <- quadprog::solve.QP(Dmat = gamma * Sigma,
-                             dvec = mu,
-                             Amat = A,
-                             bvec = c(rep(0, N)),
-                             meq = 1)
-   return(as.numeric(out$solution))
- }
- 
-
-for(i in 1:periods){ #Begin for loop for monthly portfolio estimation
-
-  if(i>1){ 
-    #Calculate development in lagged portfolio
-    NP_lagged_developed<-NP_lagged*(1+r)/as.numeric(1+t(NP_lagged)%*%r)
-    HEA_lagged_developed<-HEA_lagged*(1+r)/as.numeric(1+t(HEA_lagged)%*%r)
-    NSS_lagged_developed<-NSS_lagged*(1+r)/as.numeric(1+t(NSS_lagged)%*%r)
-  } else{
-    HEA_lagged<-rep(1/N,N)
-  }
-  
-  #Chosse the part of the data frame that matches our window
-  crsp_monthly_reduced_tmp<-crsp_monthly_reduced %>% filter(month>=months[i]) %>% filter(month<months[i+window_length])
-  # Computes sample mean excess return
-  mu_hat <- (crsp_monthly_reduced_tmp %>%
-  group_by(permno) %>%
-  summarise(across(ret_excess, mean)))$ret_excess
-  
-  # Generate a vector with returns for current month
-  r<-((crsp_monthly_reduced %>% filter(month == months[i+window_length]))$ret_excess)
-
-  # Computes sample variance-covariance matrix
-  stocks <- unique(crsp_monthly_reduced$permno)
-  returns <- matrix(ncol = length(stocks), nrow = window_length)
-  colnames(returns) <- stocks
-  for(j in 1:length(stocks)){
-    returns[,j] <- (crsp_monthly_reduced_tmp %>% filter(permno == stocks[j]))$ret_excess
-  }
-  
-  Sigma_hat <- returns %>% cov() %>% as.matrix()
-
-  #Calculate portfolio weights
-
-  #Naive portfolio
-   NP<-rep(1/N,N)
-   NP_return_tmp<-t(NP) %*% r
-  # Hautsch et al. portfolio
-    HEA<-optimal_weights(HEA_lagged,mu_hat,Sigma_hat,lambda)
-    HEA_return_tmp<-t(HEA) %*% r
-  # Jagannathan portfolion
-    NSS<-No_short_sale_weight(mu_hat,Sigma_hat)
-    NSS_return_tmp<-t(NSS) %*% r
-
-  if(i>1){ 
-
-    #calculate Transaction cost and turnover. Save them
-    NP_turnover[i]<- sqrt(t(NP-NP_lagged_developed) %*% (NP-NP_lagged_developed))
-    HEA_turnover[i]<- sqrt(t(HEA-HEA_lagged*(1+r)/as.numeric(1+t(HEA_lagged)%*%r)) %*% (HEA-HEA_lagged*(1+r)/as.numeric(1+t(HEA_lagged)%*%r)))
-    NSS_turnover[i]<- sqrt(t(NSS-NSS_lagged_developed) %*% (NSS-NSS_lagged_developed))
-
-    # Calculate transaction cost
-    NP_TC[i]<- lambda %*% t(NP-NP_lagged_developed)%*% Sigma_hat %*% (NP-NP_lagged_developed)
-    HEA_TC[i]<- lambda %*% t(HEA - HEA_lagged)%*% Sigma_hat %*% (HEA - HEA_lagged)
-    NSS_TC[i]<- lambda %*% t(NSS - NSS_lagged_developed)%*% Sigma_hat %*% (NSS - NSS_lagged_developed)
-    
-    #Calculate returns adjusted for transaction cost
-    NP_return[i]<-as.numeric(NP_return_tmp)-NP_TC[i]
-    HEA_return[i]<-as.numeric(HEA_return_tmp)-HEA_TC[i]
-    NSS_return[i]<-as.numeric(NSS_return_tmp)-NSS_TC[i]
-    }
-
-  #Save portolio weigths lagged for turnover calculation in next month  
-  NP_lagged<-NP
-  HEA_lagged<-HEA
-  NSS_lagged<-NSS
-     
-} #End loop
-
-#Average turnover
-
-#Sharpe ratio
-NP_SR<-mean(NP_return)/sqrt(1/(periods-1)*sum((NP_return-mean(NP_return))^2))
-HEA_SR<-mean(HEA_return)/sqrt(1/(periods-1)*sum((HEA_return-mean(HEA_return))^2))
-NSS_SR<-mean(NSS_return)/sqrt(1/(periods-1)*sum((NSS_return-mean(NSS_return))^2))
-
-#Generates a matrix with the results to display them.
-Turnover_SR<-matrix(c(mean(NP_return),sd(NP_return),mean(NP_turnover),sd(NP_turnover),NP_SR,
-                      mean(HEA_return),sd(HEA_return),mean(HEA_turnover),sd(HEA_turnover),HEA_SR,
-                      mean(NSS_return),sd(NSS_return),mean(NSS_turnover),sd(NSS_turnover),NSS_SR),
-                      ncol = 3)
-#Adds row and column names
-colnames(Turnover_SR)<-c("NP","HEA","NSS")
-rownames(Turnover_SR)<-c("Average return","Return standard deviation","Average Turnover","Turnover standard deviation", "Sharpe ratio")
-#Prints the table
-Turnover_SR %>% knitr::kable() %>% kable_paper("hover", full_width = T)
+# #Prepare vectors that contain results
+# N<-nrow(Sigma)
+# months<-sort(unique(crsp_monthly_reduced$month))   #Overflødig
+# periods<-n_months-window_length #Number of periods
+# NP_return<-rep(0,periods)
+# HEA_return<-rep(0,periods)
+# NSS_return<-rep(0,periods)
+# 
+# NP_turnover<-rep(0,periods)
+# HEA_turnover<-rep(0,periods)
+# NSS_turnover<-rep(0,periods)
+# 
+# NP_TC<-rep(0,periods)
+# HEA_TC<-rep(0,periods)
+# NSS_TC<-rep(0,periods)
+# 
+# # Define function to determine no short sell optimal portfolio
+#  No_short_sale_weight <- function(mu,
+#                                   Sigma,
+#                                   gamma = gamma_default){
+#    N <- ncol(Sigma)
+#    A <- diag(N)
+#    out <- quadprog::solve.QP(Dmat = gamma * Sigma,
+#                              dvec = mu,
+#                              Amat = A,
+#                              bvec = c(rep(0, N)),
+#                              meq = 1)
+#    return(as.numeric(out$solution))
+#  }
+#  
+# 
+# for(i in 1:periods){ #Begin for loop for monthly portfolio estimation
+# 
+#   if(i>1){ 
+#     #Calculate development in lagged portfolio
+#     NP_lagged_developed<-NP_lagged*(1+r)/as.numeric(1+t(NP_lagged)%*%r)
+#     HEA_lagged_developed<-HEA_lagged*(1+r)/as.numeric(1+t(HEA_lagged)%*%r)
+#     NSS_lagged_developed<-NSS_lagged*(1+r)/as.numeric(1+t(NSS_lagged)%*%r)
+#   } else{
+#     HEA_lagged<-rep(1/N,N)
+#   }
+#   
+#   #Chosse the part of the data frame that matches our window
+#   crsp_monthly_reduced_tmp<-crsp_monthly_reduced %>% filter(month>=months[i]) %>% filter(month<months[i+window_length])
+#   # Computes sample mean excess return
+#   mu_hat <- (crsp_monthly_reduced_tmp %>%
+#   group_by(permno) %>%
+#   summarise(across(ret_excess, mean)))$ret_excess
+#   
+#   # Generate a vector with returns for current month
+#   r<-((crsp_monthly_reduced %>% filter(month == months[i+window_length]))$ret_excess)
+# 
+#   # Computes sample variance-covariance matrix
+#   stocks <- unique(crsp_monthly_reduced$permno)
+#   returns <- matrix(ncol = length(stocks), nrow = window_length)
+#   colnames(returns) <- stocks
+#   for(j in 1:length(stocks)){
+#     returns[,j] <- (crsp_monthly_reduced_tmp %>% filter(permno == stocks[j]))$ret_excess
+#   }
+#   
+#   Sigma_hat <- returns %>% cov() %>% as.matrix()
+# 
+#   #Calculate portfolio weights
+# 
+#   #Naive portfolio
+#    NP<-rep(1/N,N)
+#    NP_return_tmp<-t(NP) %*% r
+#   # Hautsch et al. portfolio
+#     HEA<-optimal_weights(HEA_lagged,mu_hat,Sigma_hat,lambda)
+#     HEA_return_tmp<-t(HEA) %*% r
+#   # Jagannathan portfolion
+#     NSS<-No_short_sale_weight(mu_hat,Sigma_hat)
+#     NSS_return_tmp<-t(NSS) %*% r
+# 
+#   if(i>1){ 
+# 
+#     #calculate Transaction cost and turnover. Save them
+#     NP_turnover[i]<- sqrt(t(NP-NP_lagged_developed) %*% (NP-NP_lagged_developed))
+#     HEA_turnover[i]<- sqrt(t(HEA-HEA_lagged*(1+r)/as.numeric(1+t(HEA_lagged)%*%r)) %*% (HEA-HEA_lagged*(1+r)/as.numeric(1+t(HEA_lagged)%*%r)))
+#     NSS_turnover[i]<- sqrt(t(NSS-NSS_lagged_developed) %*% (NSS-NSS_lagged_developed))
+# 
+#     # Calculate transaction cost
+#     NP_TC[i]<- lambda %*% t(NP-NP_lagged_developed)%*% Sigma_hat %*% (NP-NP_lagged_developed)
+#     HEA_TC[i]<- lambda %*% t(HEA - HEA_lagged)%*% Sigma_hat %*% (HEA - HEA_lagged)
+#     NSS_TC[i]<- lambda %*% t(NSS - NSS_lagged_developed)%*% Sigma_hat %*% (NSS - NSS_lagged_developed)
+#     
+#     #Calculate returns adjusted for transaction cost
+#     NP_return[i]<-as.numeric(NP_return_tmp)-NP_TC[i]
+#     HEA_return[i]<-as.numeric(HEA_return_tmp)-HEA_TC[i]
+#     NSS_return[i]<-as.numeric(NSS_return_tmp)-NSS_TC[i]
+#     }
+# 
+#   #Save portolio weigths lagged for turnover calculation in next month  
+#   NP_lagged<-NP
+#   HEA_lagged<-HEA
+#   NSS_lagged<-NSS
+#      
+# } #End loop
+# 
+# #Average turnover
+# 
+# #Sharpe ratio
+# NP_SR<-mean(NP_return)/sqrt(1/(periods-1)*sum((NP_return-mean(NP_return))^2))
+# HEA_SR<-mean(HEA_return)/sqrt(1/(periods-1)*sum((HEA_return-mean(HEA_return))^2))
+# NSS_SR<-mean(NSS_return)/sqrt(1/(periods-1)*sum((NSS_return-mean(NSS_return))^2))
+# 
+# #Generates a matrix with the results to display them.
+# Turnover_SR<-matrix(c(mean(NP_return),sd(NP_return),mean(NP_turnover),sd(NP_turnover),NP_SR,
+#                       mean(HEA_return),sd(HEA_return),mean(HEA_turnover),sd(HEA_turnover),HEA_SR,
+#                       mean(NSS_return),sd(NSS_return),mean(NSS_turnover),sd(NSS_turnover),NSS_SR),
+#                       ncol = 3)
+# #Adds row and column names
+# colnames(Turnover_SR)<-c("NP","HEA","NSS")
+# rownames(Turnover_SR)<-c("Average return","Return standard deviation","Average Turnover","Turnover standard deviation", "Sharpe ratio")
+# #Prints the table
+# Turnover_SR %>% knitr::kable() %>% kable_paper("hover", full_width = T)
 
 ```
+
+**OLD TEXT***
 NP is the naive portfolio, HAE is the Hautsch et al. portfolio and NSS is the no short sale portfolio.
 
 
@@ -387,6 +389,7 @@ The no short portfolio performed the best with a 1.5% average monthly return. Th
 We would not describe this as a "true" out of sample experiment. The used rolling window strategy has similarities with a out of sample experiment. In a way it is a series of smaller out of sample experiments, but we always only predict one month ahead which means the portion of data that is picked to be "out of sample" is really small.
 
 
+**NEW TEXT**
 
 
 
@@ -516,8 +519,9 @@ performance <- lapply(performance_values, as_tibble) %>%
   bind_rows(.id = "strategy")
 
 performance %>%
-  group_by(strategy) %>% summarise(across(c(raw_return, turnover, net_return), list(mean=mean,sd=sd))) %>%
-  knitr::kable(booktabs = T, digits = 4, col.names = c("strategy", "mean_rr", "sd_rr", "mean_to", "sd_to", "mean_nr", "sd_nr"), caption = "MISSING") %>% 
+  group_by(strategy) %>% summarise(across(c(raw_return, turnover, net_return), list(mean = mean, sd = sd))) %>%
+  knitr::kable(booktabs = T, digits = 4, col.names = c("strategy", "mean", "sd", "mean", "sd", "mean", "sd"), caption = "MISSING") %>% 
+  add_header_above(c(" " = 1, "Raw return" = 2, "Turnover" = 2, "Net return" = 2)) %>%
   kable_paper("hover", full_width = T) %>% 
   kable_styling(latex_options = "HOLD_position")
 

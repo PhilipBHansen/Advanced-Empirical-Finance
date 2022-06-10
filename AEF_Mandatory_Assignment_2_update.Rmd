@@ -15,6 +15,27 @@ knitr::opts_chunk$set(
   out.width = ".65\\linewidth"
 )
 
+########################
+### BEGIN USER INPUT ###
+######################## 
+
+# Automatic setup for working directory for authors of this file
+tmp <- getwd()
+if(substr(tmp,1,12) == "C:/Users/Mie"){
+  # Mie
+  setwd("C:/Users/Mie/OneDrive/CBS/Kandidat/data")
+} else if(substr(tmp,1,14) == "C:/Users/Alexm"){
+  # Alexander
+  setwd("C:/Users/Alexm/Documents")
+} else{
+  # Philip
+  setwd("C:/Users/phili/OneDrive - CBS - Copenhagen Business School/Desktop/Code/R - code/AEF")
+}
+
+######################
+### END USER INPUT ###
+######################
+
 library(lubridate)
 library(sandwich)
 library(lmtest)
@@ -34,10 +55,11 @@ library(ranger)
 library(knitr)
 
 
-
+# Loading the data
 tidy_finance_ML <- dbConnect(SQLite(), "tidy_finance_ML.sqlite",extended_types = TRUE)
 scm <- tbl(tidy_finance_ML, "stock_characteristics_monthly") %>% collect() 
 
+# Changes decimals from having e to having 0s
 options(scipen = 999)
 
 ```
