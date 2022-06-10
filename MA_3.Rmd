@@ -396,7 +396,8 @@ Briefly describe your chosen model, the forecasting procedure and discuss the ef
 
 
 **NEW TEXT**
-We now implement a full-fledged portfolio backtesting strategy with transaction costs proportional to risk by using the closed-form solution from exercise 2 where we set the cost parameter $\lambda=\frac{200}{10000}$.
+We now implement a full-fledged portfolio backtesting strategy with transaction costs proportional to risk by using the closed-form solution from exercise 2 where we set the cost parameter $\lambda=\frac{200}{10000}$. In order to limit the estimation error from the covariance matrix, we transform it by using a shrinkage factor. This tends to penalize extreme values and hereby dragging the most extreme values toward a numerically lower value. This helps reduce some of the estimation error and improve usage of the covariance matrix for portfolio optimization. 
+
 
 
 ```{r excersise 3: Sandbox, echo=FALSE}
