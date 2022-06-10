@@ -467,11 +467,6 @@ compute_ledoit_wolf <- function(x) {
   return(sigma)
 }
 
-################################################################
-### End functions to be used in th rolling window (for-loop) ###
-################################################################
-
-
 # This function adjusts the weights after returns have been realized
 adjust_weights <- function(w, next_return){
   w_prev <- w *(1+ next_return)
@@ -497,6 +492,10 @@ evaluate_performance <- function(w, w_previous, next_return, lambda){
                              meq = 1)
    return(as.numeric(out$solution))
  }
+ 
+################################################################
+### End functions to be used in th rolling window (for-loop) ###
+################################################################
 
 # This is the rolling window for the backtesting strategy
 for(i in 1:periods){
