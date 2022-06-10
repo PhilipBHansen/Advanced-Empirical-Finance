@@ -405,37 +405,9 @@ We define three portfolio strategies for which we will calculate their performan
 
 Before starting the rolling window out-of-sample estimation we start by defining the original portfolio as the naive portfolio along with defining a list of matrices where we can save the performance result for each strategy for each out-of-sample period. We now begin the rolling window out-of-sample estimation where we for each of the 459 periods start by filtering the data to only include the 240 months starting from the specified period (which continuously moves one month ahead). Then we also select the out-of-sample returns from the next month which was not included in the aforementioned data selection. From the data set consisting of 240 monthly observation we now calculate the standard $\hat{\mu}$ and the covariance matrix with shrinkage $\hat{\Sigma}$. These estimates are used to find the new optimal portfolio weights for both of the mean-variance portfolios. The new optimal weights for the naive portfolio is just set to have equal weights. Once these new optimal weights have been calculated, we evaluate their performance against the out-of-sample return. We calculate three parameters:
 1. The raw return: $\omega_{t-1}^\prime r_t$, where $\omega_{t-1}^\prime$ is the portfolio weights from period $t-1$ and $r_t$ is the returns from period $t$.
-2. The portfolio turnover: $\sum_{i=1}^{N}\left(|\omega_{i,t}-\omega_{i,t-1}|\right)$. 
-
-
-
-  
-  # Transaction-cost adjusted portfolio
-  w_1 <-optimal_weights(w_prev_1, mu_hat, Sigma_hat, lambda, gamma_default)
-
-  performance_values[[1]][i, ] <- evaluate_performance(w_1, w_prev_1, next_return, lambda = lambda)
-  
-  
-  w_prev_1 <- adjust_weights(w_1, next_return)
-  
-  # This function adjusts the weights after returns have been realized
-adjust_weights <- function(w, next_return){
-  w_prev <- w *(1+ next_return)
-  as.numeric(w_prev / sum(as.vector(w_prev)))
-}
-
-# This function evaluates the performance before and after transaction cost
-evaluate_performance <- function(w, w_previous, next_return, lambda){
-  raw_return <- as.numeric(t(as.matrix(next_return)) %*% w)
-  turnover <- sum(abs(w - w_previous))
-  net_return <- raw_return - lambda * turnover
-  c(raw_return, turnover, net_return)
-}
-
-
-
-
-
+2. The portfolio turnover: $\sum_{i=1}^{N}\left(|\omega_{i,t}-\omega_{i,t-1}|\right)$. So it takes the sum of the absolute differences of each portfolio weight.
+3. Net return: Takes the raw return and subtracts the cost parameter, $\lambda$, times the turnover.
+Finally we update update the optimal portfolio weights so they now change according to the realized returns and saves them as the previous period weights. 
 
 
 ```{r excersise 3: Sandbox, echo=FALSE}
