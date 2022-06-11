@@ -654,8 +654,20 @@ US_Stocks %>%
 
 The parameter vector $\theta$ is a vector coefficient that we estimate. Here we don’t estimate one weight for each stock, for the different points in time, we would rather estimate weights as a single function for the chosen characteristics that will apply to all stocks over time, and this is called a portfolio policy.
 
+We have the function for the investor problem, and it is chosing the portfolio weights $\omega_{i,t}$ and then to maximize the conditional expected utility of the portfolio's return:
+$$\max\limits_{N_t} E_t[u(r_{p,t+1})] = E_t\bigg[u\bigg(\displaystyle\sum_{i=1}^{N_t}\omega_{i,t} r_{i,t+1} \bigg)\bigg]$$
+We then have the parameteraization of the optimal portfolio weights as a function the characteristics for the stock's, with the simple linear specifications for the weights:
+
+$$\omega_{i,t}=f(x_{i,t};\theta)=\bar\omega_{i,t}+\frac{1}{N_t}\theta^{\intercal}\hat x_{i,t} $$
+We can the then rewrite the function for the conditional expected utility, with an unconditional optimization with respect to the coefficients $\theta$:
+$$\max\limits_{\theta} E_t[u(r_{p,t+1})] = E_t\bigg[u\bigg(\displaystyle\sum_{i=1}^{N_t}f(x_{i,t};\theta) r_{i,t+1} \bigg)\bigg]$$
+
+We can then estimate $\theta$ by maximizing the corresponding sample analog
+
+$$\max\limits_{\theta} \frac{1}{T}\displaystyle\sum_{i=0}^{T-1}u(r_{p,t+1}) =\frac{1}{N}\displaystyle\sum_{i=0}^{T-1} u \bigg(\displaystyle\sum_{i=1}^{N_t}f(x_{i,t};\theta) r_{i,t+1} \bigg)$$
+
 To estimate $\theta$ we maximize the linear policy case  fucntion:
-$$\max\limits_{\theta} E_t(u(r_{p,t+1})) =\frac{1}{N}\displaystyle\sum_{i=0}^{T-1} \bigg(\displaystyle\sum_{i=1}^{N_t}\bigg (\bar\omega_{i,t}+\frac{1}{N_t}\theta^{\intercal}\hat x_{i,t} \bigg) r_{i,t+1} \bigg)$$
+$$\max\limits_{\theta} \frac{1}{N}\displaystyle\sum_{i=0}^{T-1} \bigg(\displaystyle\sum_{i=1}^{N_t}\bigg (\bar\omega_{i,t}+\frac{1}{N_t}\theta^{\intercal}\hat x_{i,t} \bigg) r_{i,t+1} \bigg)$$
 
 The most important aspect of the coefficient $\theta$ is that the parameterization is constant across assets through time. If we have a constant coefficient across assets, then the weight in the portfolio for each stock will depend on the characteristics of the stock and not on the history of the return on the stock. 
 And based on this, if we have two stocks that are close to each other in characteristics, which are related to the expected return and risk, with different sample returns, should even then have the same weight in the portfolio.
