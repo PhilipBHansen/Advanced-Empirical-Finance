@@ -692,7 +692,7 @@ compute_portfolio_weights <- function(theta,
   data %>%
     # group_by(month) %>%
     mutate(
-      characteristic_tilt = size
+      characteristic_tilt = beta*theta[1]+size*theta[2]+bm*theta[3]
     )%>%
     mutate(
       # Definition of benchmark weight
@@ -708,16 +708,6 @@ compute_portfolio_weights <- function(theta,
 
 
 view(compute_portfolio_weights(theta,US_Stocks))
-
-
-
-
-
-
-
-
-
-
 
 
 
