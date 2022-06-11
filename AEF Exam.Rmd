@@ -555,13 +555,106 @@ We suggest a strategy where the assets are held for 2 months instead of 1. This 
 # Exam part 2
 ## Problem 1
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```{r}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ```
 
+
 ## Problem 2
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```{r}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ```
 
