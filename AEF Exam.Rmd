@@ -65,11 +65,11 @@ USStock <- read.csv(file = 'data_exam2022.csv')
 
 ```
 
-#Excercise 1
+# Exam part 1
 
-# Excercise 1
 
-## Excercise 1.1
+
+## Excercise 1
 The financial stock data for this assignment comes from the CRSP-universe and includes stock data from "1989-02-01" to "2020-12-01). We load the variables *permno*, *month*, *ret_excess*, *mktcap* and *mktcap_lag*. Furthermore, we also use the monthly Fama-French data which includes the variables *month* and *mkt_excess*. Below is the definition of the variables used in the assignment:
 1. *Permno*: Permno is a security identification number. Each security has its own unique PERMNO. A permno belongs to permco and a permco is CRPS's company identifier. One permco is not locked to only one permno, but can have more than one. 
 2. *ret_excess*: This is the excess return, which is the return on the stock minus the return we get on the risk-free asset over the same period. So the excess return shows the extra return you get by investing in a risky asset compared to just putting your money in the bank (investing in the risk-free asset).
@@ -131,7 +131,7 @@ summary1 %>% knitr::kable(booktabs = T, digits = 4, caption = "Summary statistic
 Table 1 shows that the cross-section mean of the excess return and market capitalization is 0.0083 and 1815, respectively. On average the monthly excess return varies from -0.6906 to 2.6775 where the market capitalization on average varies from 0.7 to 242415. Furthermore, it is seen that the mean is larger than the median for both variables. This indicates that the distribution of the data is positively skewed (right-skewed). 
 
 
-## Excercise 1.2
+## Excercise 1
 
 The reason why *crsp_monthly %>% group_by(permno) %>% mutate(ret_excess_lag = lag(ret_excess))* does not provide the correct result if there are non-explicit missing values in the time series is, that the lag function doesn't differentiate between one-month lag and just the closest lag available. If data for a specific month, lets say May, doesn't exist, then it just takes April as the lagged value instead, which would be wrong. Therefore, a better way to find the lagged excess return would be to copy the data to a new data frame (only including permno, month and excess return) where you overwrite the month to be the next month. This means that all the data in the new data frame is now depicted as being one month ahead of what it actually is. Then you re-name the excess return column to instead depict lagged excess return and lastly you drop all the NAs in the data frame. By now innerjoining this data frame to the original on month and permno you now get the lagged excess return variable as well.
 
@@ -215,7 +215,7 @@ Table 2 shows that the cross-section mean of momentum is 19 while the median is 
 By calculating the correlation between momentum and $log(mc_{i,t})$ we get a value of `r round(mom_mktcap_correlation, 4)`. We therefore see a positive correlation between momentum and $log(mc_{i,t})$. If we can observe positive momentum over the past year, then we can to some degree expect a larger market cap next month.
 
 
-## Excercise 1.4
+## Excercise 1
 Now we want to examine the relationship between momentum and future stock returns. First we start by dividing the stock into 10 portfolios based on the size of the momentum for a stock given each period. In the following, we have calculated the equal-weighted average values of the momentum and market capitalization for each of the 10 portfolios:
 
 ```{r Relation, echo=FALSE}
@@ -343,7 +343,7 @@ long_short_return <- mean(long_short_portfolio$long_short)
 If we start by looking at the bottom row which depict the results for the return, we see that the portfolio does in fact deliver an average return above 0. Wee see this by creating a t-test where the null hypothesis is that the true mean is 0. By looking at the p-value we can reject this on a 5% confidence interval. From the CAPM regression we also see that we get a positive alpha, where we likewise can reject a null hypothesis of the true alpha being 0. By comparing the long-short portfolio alpha with the alphas for portfolio 1 og 10 from table **MISSING** we see that the alpha has now increased. Instead of just going long in portfolio 10, we now get a higher alpha by investing in the long-short portfolio.
 
 
-## Excercise 1.5
+## Excercise 1
 In the following, we will calculate the CAPM alphas using the k-month-ahead excess returns for $k\in\{1,3,6,12\}$. Since we lose a few observations by having to find the k-months ahead returns, then in order to most efficiently compare all the results, we have chosen to only calculate the CAPM values for observations where we have found all the specific k-months ahead returns. The k-months ahead portfolio returns are calculated as value-weighted returns based on the lagged market cap value (since this is known at the time the portfolio is constructed). It is assumed that the 1-month ahead is just the standard excess return and therefore that 3-months ahead should be calculated as the excess return two months later. The reason for this assumption is that the lagged variables are meant to be known at the time we construct the portfolio, where the excess return is then the result of this. Hence, it must be the 1-month ahead return.
 
 ```{r  Repeat the univariate portfolio, echo=FALSE}
@@ -470,7 +470,7 @@ k_months_ahead_alphas_tall %>% ggplot(aes(x = as.factor(portfolio), y = Value, f
 ```
 
 
-## Excercise 1.6
+## Excercise 1
 
 ```{r Finding from 1 and 3, echo=FALSE}
 unique_months <- unique(crsp_monthly_mom$month)
@@ -552,15 +552,24 @@ We suggest a strategy where the assets are held for 2 months instead of 1. This 
 
 
 
-#Excercise 2
+# Exam part 2
+## Problem 1
+
+```{r}
+
+```
+
+## Problem 2
+
+```{r}
+
+```
+
+## Problem 3
 
 ```{r}
 
 ```
 
 
-
-```{r}
-
-```
 
