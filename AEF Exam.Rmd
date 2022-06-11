@@ -61,6 +61,8 @@ crsp_monthly <- tbl(tidy_finance, "crsp_monthly") %>% collect() %>% select("perm
 
 ff_monthly <- tbl(tidy_finance, "factors_ff_monthly") %>% collect() %>% select("month", "mkt_excess")
 
+USStock <- read.csv(file = 'data_exam2022.csv')
+
 ```
 
 #Excercise 1
