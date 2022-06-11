@@ -35,6 +35,8 @@ if(substr(tmp,1,12) == "C:/Users/Mie"){
 # If NON-AUTHOR runs this code, please insert your own path to the working directory where you store tidy_finance.sqlite and uncomment the line below:
 # setwd("INSERT PATH TO YOUR TIDY_FINANCE FILE")
 
+
+# The following input is used in part 2 of the exam
 gamma_default <- 4
 
 ######################
@@ -56,13 +58,15 @@ library(kableExtra)
 # Changes decimals from having e to having 0s
 options(scipen = 999)
 
-# Loading relevant data
+# Loading relevant data for part 1 of the exam
 tidy_finance <- dbConnect(SQLite(), "tidy_finance.sqlite", extended_types = TRUE) # Connect to sql
 
 crsp_monthly <- tbl(tidy_finance, "crsp_monthly") %>% collect() %>% select("permno", "month", "ret_excess", "mktcap",                                                                                     "mktcap_lag")
 
 ff_monthly <- tbl(tidy_finance, "factors_ff_monthly") %>% collect() %>% select("month", "mkt_excess")
 
+
+# Loading relevant data for part 2 of the exam
 US_Stocks <- read.csv(file = "data_exam2022.csv")
 
 ```
@@ -650,10 +654,13 @@ US_Stocks %>%
 
 The parameter vector $\theta$ is a vector coefficient that we estimate. Here we don’t estimate one weight for each stock, for the different points in time, we would rather estimate weights as a single function for the chosen characteristics that will apply to all stocks over time, and this is called a portfolio policy.
 
+To estimate $\theta$ we maximize the linear policy case  fucntion:
+$$\max\limits_{\theta} E_t(u(r_{p,t+1})) =\frac{1}{N}\displaystyle\sum_{i=0}^{T-1} \bigg(\displaystyle\sum_{i=1}^{N_t}\bigg (\bar\omega_{i,t}+\frac{1}{N_t}\theta^{\intercal}\hat x_{i,t} \bigg) r_{i,t+1} \bigg)$$
+
 The most important aspect of the coefficient $\theta$ is that the parameterization is constant across assets through time. If we have a constant coefficient across assets, then the weight in the portfolio for each stock will depend on the characteristics of the stock and not on the history of the return on the stock. 
 And based on this, if we have two stocks that are close to each other in characteristics, which are related to the expected return and risk, with different sample returns, should even then have the same weight in the portfolio.
 
-
+Based on this, we have that optimizing a portfolio composed of a large number of stocks is relatively easy. But the burden of this type of approach originates not from the number of assets, but more from the number of characteristics entering. Also only optimize the entire portfolio based on the parameters we choose, which will parsimony also reduce the risk of in-sample and overfitting. This is because the coefficients will only deviate from zero if there is a combination of risk and return across assets consistently. This will also affect the optimization in the aspect that it tends not to take extreme values.   
 
 
 
@@ -678,7 +685,7 @@ compute_portfolio_weights <- function(theta,
     ) %>%
     mutate(
       # Definition of benchmark weight
-      weight_benchmark <-1/n
+      weight_benchmark <-1/n,
 
       # Weights sum up to 1
       weight_tilt = weight_tilt / sum(weight_tilt) 
