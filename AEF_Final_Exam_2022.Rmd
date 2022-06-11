@@ -678,22 +678,24 @@ US_Stocks <- US_Stocks %>% group_by(permno)
 compute_portfolio_weights <- function(theta,
                                       data) {
   data %>%
-    group_by(month) %>%
-    bind_cols(
-      characteristic_tilt = data %>%
-        transmute(across(contains("lag"), ~ . / n)) %>%
-        as.matrix() %*% theta %>% as.numeric()
-    ) %>%
+    # group_by(month) %>%
+    mutate(
+      characteristic_tilt = size
+    )%>%
     mutate(
       # Definition of benchmark weight
-      weight_benchmark <-1/n,
-
+      weight_benchmark = 1/N,
+       # Parametric portfolio weights
+      weight_tilt = weight_benchmark + characteristic_tilt, 
       # Weights sum up to 1
       weight_tilt = weight_tilt / sum(weight_tilt) 
     ) %>%
     ungroup()
 }
 
+
+
+view(compute_portfolio_weights(theta,US_Stocks))
 
 
 
