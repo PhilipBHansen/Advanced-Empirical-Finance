@@ -1,7 +1,7 @@
 ---
-title: "AEF Exam"
-author: "48, 49, 57"
-date: "7/5/2022"
+title: "AEF Exam 2022"
+author: "Exam numbers: 48, 49 and 57"
+date: "Date: 13/06/2022"
 output: pdf_document
 ---
 
@@ -70,6 +70,15 @@ ff_monthly <- tbl(tidy_finance, "factors_ff_monthly") %>% collect() %>% select("
 US_Stocks <- read.csv(file = "data_exam2022.csv")
 
 ```
+
+## Contribution from each student
+The whole report is made in collaboration with each other where we have all helped with each problem. The main author of each section can be seen as follows:  
+**48**: Part 1: exercise **MISSING** and Part 2: problem 3  
+**49**: Part 1: exercise **MISSING** and Part 2: problem 2  
+**57**: Part 1: exercise **MISSING** and Part 2: problem 1  
+
+\newpage
+
 
 # Exam part 1
 
