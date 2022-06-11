@@ -579,8 +579,7 @@ US_Stocks %>%
             beta_hml_estimate = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[4,1],
             beta_hml_sd = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,1]) %>%
   knitr::kable(booktabs = T, digits = 4, col.names = c("Permno", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd"), caption = "CAPM alpha, beta and excess return for the value-weighted momentum-sorted portfolios", align = "c") %>%
-  kable_styling() %>%
-  add_header_above(c(" " = 1, "\\alpha" = 2, "$\\beta^{M}$" = 2, "$\\beta^{SMB}$" = 2, "$\\beta^{HML}$" = 2)) %>%
+  add_header_above(c(" " = 1, "$\\alpha$" = 2, "$\\beta^{M}$" = 2, "$\\beta^{SMB}$" = 2, "$\\beta^{HML}$" = 2)) %>%
   kable_paper("hover", full_width = T) %>%
   kable_styling(latex_options = "HOLD_position")
 
@@ -666,8 +665,26 @@ And based on this, if we have two stocks that are close to each other in charact
 
 ```{r}
 
+US_Stocks <- US_Stocks %>% group_by(permno)
 
+compute_portfolio_weights <- function(theta,
+                                      data) {
+  data %>%
+    group_by(month) %>%
+    bind_cols(
+      characteristic_tilt = data %>%
+        transmute(across(contains("lag"), ~ . / n)) %>%
+        as.matrix() %*% theta %>% as.numeric()
+    ) %>%
+    mutate(
+      # Definition of benchmark weight
+      weight_benchmark <-1/n
 
+      # Weights sum up to 1
+      weight_tilt = weight_tilt / sum(weight_tilt) 
+    ) %>%
+    ungroup()
+}
 
 
 
