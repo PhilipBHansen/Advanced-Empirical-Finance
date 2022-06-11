@@ -665,6 +665,7 @@ US_Stocks %>%
 
 ```{r}
 
+US_Stocks <- US_Stocks %>% group_by(permno)
 
 compute_portfolio_weights <- function(theta,
                                       data) {
