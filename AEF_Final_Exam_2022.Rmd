@@ -557,6 +557,33 @@ In part 2 of this report we will use a dataset which consists of 252 monthly obs
 
 
 ## Problem 1
+We will now try to estimate the Fama French 3-factor model:
+\begin{equation*}
+    r_{i,t} = \alpha_i + \beta_i^\text{M} r_{m,t} + \beta_i^{\text{SMB}} r_{smb,t} + \beta_i^\text{HML} r_{hml,t} + \epsilon_{i,t}
+\end{equation*}
+This will be done by making a linear regression of the excess return for each stock on each of the parameters Fama French parameters. This results in the following table:
+
+```{r, echo=FALSE}
+
+US_Stocks <- US_Stocks %>% group_by(permno)
+
+US_Stocks %>%
+  summarise(alpha_estimate = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,1],
+            alpha_sd = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,2],
+            beta_m_estimate = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[2,1],
+            beta_m_sd = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,1],
+            beta_smb_estimate = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[3,1],
+            beta_smb_sd = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,1],
+            beta_hml_estimate = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[4,1],
+            beta_hml_sd = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,1]) %>%
+  knitr::kable(booktabs = T, digits = 4, col.names = c("Permno", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd"), caption = "CAPM alpha, beta and excess return for the value-weighted momentum-sorted portfolios", align = "c") %>%
+  kable_styling() %>%
+  add_header_above(c(" " = 1, "\\alpha" = 2, "$\\beta^{M}$" = 2, "$\\beta^{SMB}$" = 2, "$\\beta^{HML}$" = 2)) %>%
+  kable_paper("hover", full_width = T) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+
+```
 
 
 
