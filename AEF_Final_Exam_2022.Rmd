@@ -35,6 +35,8 @@ if(substr(tmp,1,12) == "C:/Users/Mie"){
 # If NON-AUTHOR runs this code, please insert your own path to the working directory where you store tidy_finance.sqlite and uncomment the line below:
 # setwd("INSERT PATH TO YOUR TIDY_FINANCE FILE")
 
+gamma_default <- 4
+
 ######################
 ### END USER INPUT ###
 ######################
@@ -647,11 +649,10 @@ US_Stocks %>%
 
 ## Problem 2
 
+The parameter vector $\theta$ is a vector coefficient that we estimate. Here we don’t estimate one weight for each stock, for the different points in time, we would rather estimate weights as a single function for the chosen characteristics that will apply to all stocks over time, and this is called a portfolio policy.
 
-
-
-
-
+The most important aspect of the coefficient $\theta$ is that the parameterization is constant across assets through time. If we have a constant coefficient across assets, then the weight in the portfolio for each stock will depend on the characteristics of the stock and not on the history of the return on the stock. 
+And based on this, if we have two stocks that are close to each other in characteristics, which are related to the expected return and risk, with different sample returns, should even then have the same weight in the portfolio.
 
 
 
