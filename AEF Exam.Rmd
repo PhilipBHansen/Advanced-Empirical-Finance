@@ -1,0 +1,91 @@
+---
+title: "R Notebook"
+output: PDF
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  cache = TRUE,
+  echo = FALSE,
+  fig.align = "center",
+  warning = FALSE,
+  message = FALSE,
+  out.width = ".65\\linewidth"
+)
+
+########################
+### BEGIN USER INPUT ###
+######################## 
+
+# Automatic setup for working directory for authors of this file
+tmp <- getwd()
+if(substr(tmp,1,12) == "C:/Users/Mie"){
+  # Mie
+  setwd("C:/Users/Mie/OneDrive/CBS/Kandidat/data")
+} else if(substr(tmp,1,14) == "C:/Users/Alexm"){
+  # Alexander
+  setwd("C:/Users/Alexm/Documents")
+} else{
+  # Philip
+  setwd("C:/Users/phili/OneDrive - CBS - Copenhagen Business School/Desktop/Code/R - code/AEF")
+}
+
+######################
+### END USER INPUT ###
+######################
+
+library(lubridate)
+library(sandwich)
+library(lmtest)
+library(RSQLite)
+library(tidyverse)
+library(tidymodels) 
+library(furrr) 
+library(glmnet)
+library(broom)
+library(timetk)
+library(scales)
+library(keras)
+library(hardhat)
+library(kableExtra)
+library(data.table)
+library(ranger)
+library(knitr)
+
+
+# Loading the data
+tidy_finance_ML <- dbConnect(SQLite(), "tidy_finance_ML.sqlite",extended_types = TRUE)
+scm <- tbl(tidy_finance_ML, "stock_characteristics_monthly") %>% collect() 
+
+# Changes decimals from having e to having 0s
+options(scipen = 999)
+
+```
+
+#Excercise 1
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+#Excercise 2
