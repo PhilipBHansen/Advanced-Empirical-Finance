@@ -673,7 +673,9 @@ $$\max\limits_{\theta} \frac{1}{N}\displaystyle\sum_{i=0}^{T-1} \bigg(\displayst
 The most important aspect of the coefficient $\theta$ is that the parameterization is constant across assets through time. If we have a constant coefficient across assets, then the weight in the portfolio for each stock will depend on the characteristics of the stock and not on the history of the return on the stock. 
 And based on this, if we have two stocks that are close to each other in characteristics, which are related to the expected return and risk, with different sample returns, should even then have the same weight in the portfolio.
 
-Based on this, we have that optimizing a portfolio composed of a large number of stocks is relatively easy. But the burden of this type of approach originates not from the number of assets, but more from the number of characteristics entering. Also only optimize the entire portfolio based on the parameters we choose, which will parsimony also reduce the risk of in-sample and overfitting. This is because the coefficients will only deviate from zero if there is a combination of risk and return across assets consistently. This will also affect the optimization in the aspect that it tends not to take extreme values.   
+It is reltivly easy to optimizing a portfolio composed of a large number of stocks. But the burden of this type of optimization does not come from the number of assets, but more from the number of characteristics. Also only optimize the entire portfolio based on the parameters we choose, which will parsimony also reduce the risk of in-sample and overfitting. This is because the coefficients will only deviate from zero if there is a combination of risk and return across assets consistently. This will also affect the optimization in the aspect that it tends not to take extreme values.   
+
+If we look at the function for the simple linear specification for the portfolio weights, it will conveniently nests all the long-short portfolios, which is constructed from the Fama and French model. 
 
 
 
