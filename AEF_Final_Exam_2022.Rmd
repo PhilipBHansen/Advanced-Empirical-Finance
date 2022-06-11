@@ -478,6 +478,26 @@ k_months_ahead_alphas_tall %>% ggplot(aes(x = as.factor(portfolio), y = Value, f
 
 ## Excercise 1
 
+```{r, echo=FALSE}
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```{r Finding from 1 and 3, echo=FALSE}
 unique_months <- unique(crsp_monthly_mom$month)
 half_months <- unique_months[seq(1, length(unique_months), 2)] # In order to delete every other month
