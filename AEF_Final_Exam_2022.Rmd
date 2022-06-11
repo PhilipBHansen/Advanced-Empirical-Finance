@@ -478,6 +478,74 @@ k_months_ahead_alphas_tall %>% ggplot(aes(x = as.factor(portfolio), y = Value, f
 
 ## Excercise 6
 
+```{r, echo=FALSE}
+
+
+
+
+
+
+
+
+
+# Creating the returns for the long-short portfolio
+long_short_portfolio <- mom_portfolios %>%
+                        filter(portfolio %in% c(1, 10)) %>%
+                        mutate(portfolio = case_when(portfolio == 10 ~ "high",
+                                                     portfolio == 1 ~ "low")
+                               ) %>%
+                        pivot_wider(month, names_from = portfolio, values_from = ret_excess) %>%
+                        mutate(long_short = high - low) %>%
+                        left_join(ff_monthly, by = "month")
+
+# Making a linear regression of the portfolio return om the market return in order to get the CAPM values (and then renaming the rows)
+long_short_summary <- summary(lm(long_short ~ mkt_excess, data=long_short_portfolio))$coefficients
+tmp <- t.test(long_short_portfolio$long_short) # Creating a t.test for the return estimate
+long_short_summary <- rbind(long_short_summary, c(tmp$estimate, tmp$stderr, tmp$statistic, tmp$p.value))
+row.names(long_short_summary) <- c("CAPM alpha", "Market beta", "Portfolio return")
+
+# Using the linear regression values to depict as a table
+long_short_summary %>% knitr::kable(booktabs = T, digits = 4, caption = "CAPM alpha, beta and excess return for the long-short portfolio based on value-weighted momentum-sorted portfolios") %>%
+                       kable_paper("hover", full_width = T) %>% 
+                       kable_styling(latex_options = "HOLD_position")
+
+# Finding the average return of the long-short portfolio
+long_short_return <- mean(long_short_portfolio$long_short)
+
+
+
+
+
+# This function adjusts the weights after returns have been realized
+adjust_weights <- function(w, next_return){
+  w_prev <- w *(1+ next_return)
+  as.numeric(w_prev / sum(as.vector(w_prev)))
+}
+
+# This function evaluates the performance before and after transaction cost
+evaluate_performance <- function(w, w_previous, next_return, lambda){
+  raw_return <- as.numeric(t(as.matrix(next_return)) %*% w)
+  turnover <- sum(abs(w - w_previous))
+  net_return <- raw_return - lambda * turnover
+  c(raw_return, turnover, net_return)
+}
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```{r Finding from 1 and 3, echo=FALSE}
 unique_months <- unique(crsp_monthly_mom$month)
 half_months <- unique_months[seq(1, length(unique_months), 2)] # In order to delete every other month
@@ -750,12 +818,17 @@ If we look at the function for the simple linear specification for the portfolio
 
 ```{r}
 
-US_Stocks <- US_Stocks %>% group_by(permno)
 
-compute_portfolio_weights <- function(theta,
+
+N<-US_Stocks$permno %>% unique() %>% length
+theta<-rep(1,3)
+Sub_US_Stocks<-US_Stocks %>% filter(month<"2016-01-01")
+
+
+compute_parametric_portfolio_weights <- function(theta,
                                       data) {
   data %>%
-    # group_by(month) %>%
+    group_by(month) %>%
     mutate(
       characteristic_tilt = beta*theta[1]+size*theta[2]+bm*theta[3]
     )%>%
@@ -763,20 +836,89 @@ compute_portfolio_weights <- function(theta,
       # Definition of benchmark weight
       weight_benchmark = 1/N,
        # Parametric portfolio weights
-      weight_tilt = weight_benchmark + characteristic_tilt, 
-      # Weights sum up to 1
-      weight_tilt = weight_tilt / sum(weight_tilt) 
+      weight_tilt = weight_benchmark + characteristic_tilt/N
     ) %>%
     ungroup()
 }
 
 
 
-view(compute_portfolio_weights(theta,US_Stocks))
+utility_function <- function(r, gamma = gamma_default) { 
+  # (mean(r))^(1 - gamma) / (1 - gamma)
+  mean(r)-gamma/2*var(r)
+}
+
+
+evaluate_portfolio <- function(weights_parametric_portfolio){
+ tmp<-weights_parametric_portfolio %>% 
+    mutate(return_x_w = ret_excess * weight_tilt) %>%
+    group_by(month) %>%
+    summarise(across(return_x_w, sum)) %>%
+    mutate(Rp = return_x_w+1)
+ tmp
+  # return(-utility_function(tmp$Rp))
+}
+
+
+compute_objective_function <- function(theta,
+                                       data) {
+  processed_data <- compute_parametric_portfolio_weights(
+    theta,
+    data
+  )
+
+  objective_function <- evaluate_portfolio(processed_data)
+
+  return(-objective_function)
+}
+
+
+optimal_theta <- optim(
+  par = theta, 
+  compute_objective_function,
+  data = Sub_US_Stocks
+)
+
+optimal_theta$par 
+
+view(compute_parametric_portfolio_weights(theta, Sub_US_Stocks))
+max((compute_parametric_portfolio_weights(theta, Sub_US_Stocks))$weight_tilt/0.125)
+min((compute_parametric_portfolio_weights(theta, Sub_US_Stocks))$weight_tilt/0.125)
+
+compute_objective_function(c(2415384027600149,  1259332216136819, -3175254693880788),Sub_US_Stocks)
+
+
+tmp<-compute_parametric_portfolio_weights(theta,US_Stocks) 
+tmp
+
+sum(tmp$weight_tilt*(1+tmp$ret_excess))
+
+(US_Stocks %>% filter(month =="2015-01-01"))$size %>% mean()
+
+sum(tmp$weight_tilt)
 
 
 
+# Test utility
 
+
+
+#Test weights
+compute_parametric_portfolio_weights(theta,US_Stocks) %>% view()
+
+#Test evaluate
+((evaluate_portfolio(compute_parametric_portfolio_weights(theta,US_Stocks)))$Rp %>%mean())#-2*((evaluate_portfolio(compute_parametric_portfolio_weights(theta,US_Stocks)))$Rp %>%var())
+((evaluate_portfolio(compute_parametric_portfolio_weights(theta,US_Stocks)))$Rp %>%sd())
+
+
+-0.025107100793
+
+
+tmp2<-(compute_parametric_portfolio_weights(theta,US_Stocks)%>% filter(month == "2000-01-01") %>% select("ret_excess", "weight_tilt"))$weight_tilt
+
+cbind(tmp1,tmp2)
+
+sum(tmp1*tmp2)
 
 
 
@@ -786,20 +928,6 @@ view(compute_portfolio_weights(theta,US_Stocks))
 ## Problem 3
 
 ```{r}
-Sub_US_Stocks <- US_Stocks %>% filter(month<="2015-12-31")
-
-Sub_US_Stocks %>% group_by(month) %>% view()
-
-T <- length(unique(Sub_US_Stocks$month))
-
-rt <- Sub_US_Stocks %>% select(permno, ret_excess) %>% group_by(permno) %>% summarise(across(ret_excess,sum))
-
-mutilde <- 1/T*rt
-
-rmu <- Sub_US_Stocks %>% select(permno, ret_excess) %>% group_by(permno) %>% summarise(across(ret_excess,sum)) %>% mutate()
-
-sigmatilde <- 1/(T-1)*
-
 
 ```
 
