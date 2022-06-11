@@ -559,7 +559,7 @@ We suggest a strategy where the assets are held for 2 months instead of 1. This 
 
 
 # Exam part 2
-In part 2 of this report we will use a dataset which consists of 252 monthly observations for 8 different US-listed stocks identified by their permno which is a unique company identifier. The permno for the stocks used are: 10026, 10032, 10044, 10104, 10200, 10232, 10252 and 10397. The whole dataset includes monthly observations from "2000-01-01" to "2020-12-01". The first two problems will focus on the data up until (and including) 2015, where problem 3 will then use the last 5 years in order to test the **MISSING** estimated in problem 1 and 2. For each month-permno observation, the dataset contains the following variables: ret_excess is the net excess return from month t - 1 to t. mkt_excess, smb and hml are the market excess returns, the returns of the small-minus-big portfolio and the high-minus-low book-to-market ratio portfolio returns from Kenneth French’s homepage. beta is the estimated CAPM beta of the stock, measured at the beginning of month t, size is a measure of market capitalization of the stock at the beginning of month t and bm is the book-to-market ratio of the stock, measured at the beginning of month t. The columns beta, size and bm are standardized such that the monthly cross-sectional average is zero and the monthly cross-sectional standard deviation is one.
+In part 2 of this report we will use a dataset which consists of 252 monthly observations for $N=8$ different US-listed stocks identified by their permno which is a unique company identifier. The permno for the stocks used are: 10026, 10032, 10044, 10104, 10200, 10232, 10252 and 10397. The whole dataset includes monthly observations from "2000-01-01" to "2020-12-01". The first two problems will focus on the data up until (and including) 2015, where problem 3 will then use the last 5 years in order to test the **MISSING** estimated in problem 1 and 2. For each month-permno observation, the dataset contains the following variables: ret_excess is the net excess return from month t - 1 to t. mkt_excess, smb and hml are the market excess returns, the returns of the small-minus-big portfolio and the high-minus-low book-to-market ratio portfolio returns from Kenneth French’s homepage. beta is the estimated CAPM beta of the stock, measured at the beginning of month t, size is a measure of market capitalization of the stock at the beginning of month t and bm is the book-to-market ratio of the stock, measured at the beginning of month t. The columns beta, size and bm are standardized such that the monthly cross-sectional average is zero and the monthly cross-sectional standard deviation is one.
 
 
 ## Problem 1
@@ -571,9 +571,8 @@ This will be done by making a linear regression of the excess return for each st
 
 ```{r, echo=FALSE}
 
-US_Stocks <- US_Stocks %>% group_by(permno)
-
-US_Stocks %>%
+parameter_estimates <- US_Stocks %>%
+  group_by(permno) %>%
   summarise(alpha_estimate = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,1],
             alpha_sd = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,2],
             beta_m_estimate = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[2,1],
@@ -581,9 +580,11 @@ US_Stocks %>%
             beta_smb_estimate = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[3,1],
             beta_smb_sd = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,1],
             beta_hml_estimate = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[4,1],
-            beta_hml_sd = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,1]) %>%
+            beta_hml_sd = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,1]) 
+
+parameter_estimates %>%
   knitr::kable(booktabs = T, digits = 4, col.names = c("Permno", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd"), caption = "Fama French 3-factor estimates for the 8 stocks (estimated from 2000 to 2015)", align = "c") %>%
-  add_header_above(c(" " = 1, "$\\alpha_i$" = 2, "$\\beta_i^{M}$" = 2, "$\\beta_i^{SMB}$" = 2, "$\\beta_i^{HML}$" = 2)) %>%
+  add_header_above(c(" " = 1, "$\\hat{\\alpha}_i$" = 2, "$\\hat{\\beta}_i^{M}$" = 2, "$\\hat{\\beta}_i^{SMB}$" = 2, "$\\hat{\\beta}_i^{HML}$" = 2)) %>%
   kable_paper("hover", full_width = T) %>%
   kable_styling(latex_options = "HOLD_position")
 
@@ -591,9 +592,12 @@ US_Stocks %>%
 ```
 Table **MISSING* provides the empirical estimates for the Fama French 3-factor model for the 8 selected US stocks. The three $\beta$-estimates show the correlation between the return for stock $i$ and market return along with the two Fama French portfolio returns (SMB and HML). Here we for example see that the stock with permno 10200 has a very large negative correlation with the HML portfolio wheres the stock with permno 10252 has a fairly large positive correlation with the portfolio. For the SMB portfolio, we notice that all the stock have a positive correlation with this which indicates that the selected stocks probably have a small market cap. Permno 10200 (which is Repligen Corporation) has $\beta_i^{SMB}=1.9845$. This makes sense since the company had an average market cap of \$230 million USD in the estimated period. From the $\beta_i^{M}$-estimates we can also see that all the stocks have a positive correlation with the market. Lastly we also see that the $\alpha_i$-estimates are all very low compared to the $\beta$-estimates which indicates that most of the excess return information for the stocks can be explained by the Fama French 3-factor model. By looking at all the standard deviations for the estimates, we see that they are all very low compared to the estimators, indicating that the confidence intervals for the estimates are very low.
 
-We will now derive the model-implied expected gross excess return $\hat{\mu}^{FF}$ and the model-implied variance-covariance matrix $\hat{\Sigma}^{FF}$ .
+We will now derive the model-implied expected gross excess return $\hat{\mu}^{FF}$ and the model-implied variance-covariance matrix $\hat{\Sigma}^{FF}$ . We start by deriving $\hat{\mu}^{FF}$:
 
 
+**INSERT FROM LATEX WHEN SURE ABOUT CALCULATIONS**
+
+**INCLUDE: What determines the correlation of the returns?**
 
 
 
@@ -619,33 +623,49 @@ We will now derive the model-implied expected gross excess return $\hat{\mu}^{FF
 
 
 ```{r}
+# Compute the model-implied returns
+compute_fama_french_returns <- function(parameter_estimates, stock_data){
+  parameter_estimates <- parameter_estimates %>% select("alpha_estimate", "beta_m_estimate", "beta_smb_estimate", "beta_hml_estimate")
+  stock_data <- stock_data %>% select("permno", "month", "mkt_excess", "smb", "hml")
+  
+  months <- unique(stock_data$month)
+  N <- length(months)
+  returns <- matrix(NA, ncol = length(unique(stock_data$permno)), nrow = N)
+  colnames(returns) <- unique(stock_data$permno)
+  
+  for(i in (1:N)){
+    stocks_monthly <- stock_data %>% filter(month == months[i])
+    returns[i,] <- parameter_estimates$alpha_estimate + parameter_estimates$beta_m_estimate * as.numeric(stocks_monthly$mkt_excess) + parameter_estimates$beta_smb_estimate * as.numeric(stocks_monthly$smb) + parameter_estimates$beta_hml_estimate * as.numeric(stocks_monthly$hml)
+  }
+  returns
+}
 
+# Compute the model-implied expected gross excess return
+compute_fama_french_mu <- function(parameter_estimates, stock_data){
+  returns <- compute_fama_french_returns(parameter_estimates, stock_data)
+  colMeans(returns)
+}
 
+# Compute the model-implied variance covariance matrix
+compute_fama_french_sigma <- function(parameter_estimates){
+  returns <- compute_fama_french_returns(parameter_estimates, stock_data)
+  returns %>% cov() %>% as.matrix()
+}
 
+# Function that computes the optimal weights
+compute_mean_variance_portfolio_weights <- function(w_prev, mu, Sigma, lambda, gamma = gamma_default){
+  N <- ncol(Sigma)
+  iota <- rep(1, N)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  # Invert Sigma 
+  Sigma_inv <- solve(Sigma_star) 
+  
+  # Calculates the optimal portfolio weights
+  w_mvp <- Sigma_inv %*% iota
+  w_mvp <- w_mvp / sum(w_mvp)
+  w_opt <- w_mvp  + 1/gamma * (Sigma_inv - w_mvp %*% t(iota) %*% Sigma_inv) %*% mu_star
+  return(w_opt)
+}
 
 
 ```
