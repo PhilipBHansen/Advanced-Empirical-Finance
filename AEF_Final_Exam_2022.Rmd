@@ -582,15 +582,16 @@ US_Stocks %>%
             beta_smb_sd = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,1],
             beta_hml_estimate = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[4,1],
             beta_hml_sd = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,1]) %>%
-  knitr::kable(booktabs = T, digits = 4, col.names = c("Permno", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd"), caption = "CAPM alpha, beta and excess return for the value-weighted momentum-sorted portfolios", align = "c") %>%
-  add_header_above(c(" " = 1, "$\\alpha$" = 2, "$\\beta^{M}$" = 2, "$\\beta^{SMB}$" = 2, "$\\beta^{HML}$" = 2)) %>%
+  knitr::kable(booktabs = T, digits = 4, col.names = c("Permno", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd"), caption = "Fama French 3-factor estimates for the 8 stocks (estimated from 2000 to 2015)", align = "c") %>%
+  add_header_above(c(" " = 1, "$\\alpha_i$" = 2, "$\\beta_i^{M}$" = 2, "$\\beta_i^{SMB}$" = 2, "$\\beta_i^{HML}$" = 2)) %>%
   kable_paper("hover", full_width = T) %>%
   kable_styling(latex_options = "HOLD_position")
 
 
 ```
+Table **MISSING* provides the empirical estimates for the Fama French 3-factor model for the 8 selected US stocks. The three $\beta$-estimates show the correlation between the return for stock $i$ and market return along with the two Fama French portfolio returns (SMB and HML). Here we for example see that the stock with permno 10200 has a very large negative correlation with the HML portfolio wheres the stock with permno 10252 has a fairly large positive correlation with the portfolio. For the SMB portfolio, we notice that all the stock have a positive correlation with this which indicates that the selected stocks probably have a small market cap. Permno 10200 (which is Repligen Corporation) has $\beta_i^{SMB}=1.9845$. This makes sense since the company had an average market cap of \$230 million USD in the estimated period. From the $\beta_i^{M}$-estimates we can also see that all the stocks have a positive correlation with the market. Lastly we also see that the $\alpha_i$-estimates are all very low compared to the $\beta$-estimates which indicates that most of the excess return information for the stocks can be explained by the Fama French 3-factor model. By looking at all the standard deviations for the estimates, we see that they are all very low compared to the estimators, indicating that the confidence intervals for the estimates are very low.
 
-
+We will now derive the model-implied expected gross excess return $\hat{\mu}^{FF}$ and the model-implied variance-covariance matrix $\hat{\Sigma}^{FF}$ .
 
 
 
