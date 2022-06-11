@@ -665,7 +665,24 @@ US_Stocks %>%
 ```{r}
 
 
+compute_portfolio_weights <- function(theta,
+                                      data) {
+  data %>%
+    group_by(month) %>%
+    bind_cols(
+      characteristic_tilt = data %>%
+        transmute(across(contains("lag"), ~ . / n)) %>%
+        as.matrix() %*% theta %>% as.numeric()
+    ) %>%
+    mutate(
+      # Definition of benchmark weight
+      weight_benchmark <-1/n
 
+      # Weights sum up to 1
+      weight_tilt = weight_tilt / sum(weight_tilt) 
+    ) %>%
+    ungroup()
+}
 
 
 
