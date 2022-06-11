@@ -1,6 +1,8 @@
 ---
-title: "R Notebook"
-output: PDF
+title: "AEF Exam"
+author: "48, 49, 57"
+date: "7/5/2022"
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
