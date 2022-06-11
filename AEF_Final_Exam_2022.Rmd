@@ -592,33 +592,28 @@ parameter_estimates %>%
 ```
 Table **MISSING* provides the empirical estimates for the Fama French 3-factor model for the 8 selected US stocks. The three $\beta$-estimates show the correlation between the return for stock $i$ and market return along with the two Fama French portfolio returns (SMB and HML). Here we for example see that the stock with permno 10200 has a very large negative correlation with the HML portfolio wheres the stock with permno 10252 has a fairly large positive correlation with the portfolio. For the SMB portfolio, we notice that all the stock have a positive correlation with this which indicates that the selected stocks probably have a small market cap. Permno 10200 (which is Repligen Corporation) has $\beta_i^{SMB}=1.9845$. This makes sense since the company had an average market cap of \$230 million USD in the estimated period. From the $\beta_i^{M}$-estimates we can also see that all the stocks have a positive correlation with the market. Lastly we also see that the $\alpha_i$-estimates are all very low compared to the $\beta$-estimates which indicates that most of the excess return information for the stocks can be explained by the Fama French 3-factor model. By looking at all the standard deviations for the estimates, we see that they are all very low compared to the estimators, indicating that the confidence intervals for the estimates are very low.
 
-We will now derive the model-implied expected gross excess return $\hat{\mu}^{FF}$ and the model-implied variance-covariance matrix $\hat{\Sigma}^{FF}$ . We start by deriving $\hat{\mu}^{FF}$:
-
-
-**INSERT FROM LATEX WHEN SURE ABOUT CALCULATIONS**
+We will now derive the model-implied expected gross excess return $\hat{\boldsymbol{\mu}}^{FF}$ and the model-implied variance-covariance matrix $\hat{\boldsymbol{\Sigma}}^{FF}$. A bold symbol signifies that it is a vector or a matrix. We start by deriving $\hat{\boldsymbol{\mu}}^{FF}$, which is a vector consisting of the model-implied expected gross excess return for the each of the 8 stocks, where we use that $E\left[\epsilon_{i,t}\right]=0$:
+\begin{align*}
+    \hat{\boldsymbol{\mu}}^{FF} &= E\left[\boldsymbol{r}_{t}\right] \\
+    &= E\left[\boldsymbol{\alpha} + \boldsymbol{\beta}^\text{M} \boldsymbol{r}_{m,t} + \boldsymbol{\beta}^{\text{SMB}} \boldsymbol{r}_{smb,t} + \boldsymbol{\beta}^\text{HML} \boldsymbol{r}_{hml,t} + \boldsymbol{\epsilon}_{t}\right] \\
+    &= E\left[\boldsymbol{\alpha} + \boldsymbol{\beta}^\text{M} \boldsymbol{r}_{m,t} + \boldsymbol{\beta}^{\text{SMB}} \boldsymbol{r}_{smb,t} + \boldsymbol{\beta}^\text{HML} \boldsymbol{r}_{hml,t}\right] + E\left[\boldsymbol{\epsilon}_{t}\right] \\
+    &= E\left[\boldsymbol{\alpha} + \boldsymbol{\beta}^\text{M} \boldsymbol{r}_{m,t} + \boldsymbol{\beta}^{\text{SMB}} \boldsymbol{r}_{smb,t} + \boldsymbol{\beta}^\text{HML} \boldsymbol{r}_{hml,t}\right] \\
+    &= \frac{1}{N}\sum_{t=1}^N\left(\boldsymbol{\alpha} + \boldsymbol{\beta}^\text{M} \boldsymbol{r}_{m,t} + \boldsymbol{\beta}^{\text{SMB}} \boldsymbol{r}_{smb,t} + \boldsymbol{\beta}^\text{HML} \boldsymbol{r}_{hml,t}\right) \\
+\end{align*}
+In order to derive $\hat{\boldsymbol{\Sigma}}^{FF}$ then we do that in two steps. We start by deriving $V\left(r_i\right)$ and afterwards we find $Cov\left(r_i,r_j\right)$. Then we use these to create $\hat{\boldsymbol{\Sigma}}^{FF}$ since the diagonal is the matrix in the variance and the rest is the covariances between the stocks. We use that $Cov(r_{k,t}, \epsilon_{i,t}) = 0$ for all factors $k$.
+\begin{align*}
+    V\left(r_i\right) &= E\left[\left(r_{i,t} - E\left[r_{i,t}\right]\right)^2\right] \\
+    &= E\left[r_{i,t}^2 + \left(\hat{\mu}_i^{FF}\right)^2 - 2\hat{\mu}_i^{FF} r_{i,t}\right] \\
+    &= E\left[r_{i,t}^2\right] + \left(\hat{\mu}_i^{FF}\right)^2 - 2\hat{\mu}_i^{FF}E\left[r_{i,t}\right] \\
+    &= E\left[r_{i,t}^2\right] + \left(\hat{\mu}_i^{FF}\right)^2 - 2\left(\hat{\mu}_i^{FF}\right)^2 \\
+    &= \frac{1}{N}\sum_{t=1}^N\left(r_{i,t}^2\right) - \left(\hat{\mu}_i^{FF}\right)^2
+\end{align*}
+\begin{align*}
+    Cov\left(r_i,r_j\right) &= E\left[r_i r_j\right] - E\left[r_i\right]E\left[r_j\right] \\
+    &= \frac{1}{N}\sum_{t=1}^N\left(r_i r_j\right) - \hat{\mu}_i^{FF}\hat{\mu}_j^{FF}
+\end{align*}
 
 **INCLUDE: What determines the correlation of the returns?**
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -640,34 +635,81 @@ compute_fama_french_returns <- function(parameter_estimates, stock_data){
   returns
 }
 
-# Compute the model-implied expected gross excess return
+# Compute the model-implied expected gross excess return (mu_hat)
 compute_fama_french_mu <- function(parameter_estimates, stock_data){
   returns <- compute_fama_french_returns(parameter_estimates, stock_data)
   colMeans(returns)
 }
 
-# Compute the model-implied variance covariance matrix
-compute_fama_french_sigma <- function(parameter_estimates){
-  returns <- compute_fama_french_returns(parameter_estimates, stock_data)
-  returns %>% cov() %>% as.matrix()
+
+
+
+# Compute the model-implied variance covariance matrix (Sigma_hat)
+compute_fama_french_sigma <- function(parameter_estimates, stock_data){
+  
+  mu <- compute_fama_french_mu(parameter_estimates, stock_data)
+
+  stock_data <- stock_data %>% 
+    ungroup() %>%
+    select("permno", "month", "ret_excess", "mkt_excess", "smb", "hml") %>%
+    left_join(parameter_estimates, by = "permno") %>%
+    mutate(FF_return = ret_excess - (alpha_estimate + beta_m_estimate * mkt_excess + beta_smb_estimate * smb + beta_hml_estimate * hml)) 
+  
+  N <- length(unique(stock_data$month))
+  
+  stocks <- unique(parameter_estimates$permno)
+  
+  Sigma <- matrix(NA, ncol = length(stocks), nrow = length(stocks))
+  colnames(Sigma) <- stocks
+  rownames(Sigma) <- stocks
+  
+  for(i in 1:length(stocks)){
+    stock_i <- stock_data %>% filter(permno == stocks[i])
+    j <- i
+    while(j <= length(stocks)){
+      stock_j <- stock_data %>% filter(permno == stocks[j])
+      Sigma[i,j] <- Sigma[j,i] <- as.numeric(sum(stock_i$FF_return * stock_j$FF_return)/N - mu[i]*mu[j])
+      j <- j + 1
+    }
+  }
+  Sigma
 }
 
 # Function that computes the optimal weights
-compute_mean_variance_portfolio_weights <- function(w_prev, mu, Sigma, lambda, gamma = gamma_default){
+compute_mean_variance_portfolio_weights <- function(mu, Sigma, gamma = 4){
   N <- ncol(Sigma)
   iota <- rep(1, N)
 
   # Invert Sigma 
-  Sigma_inv <- solve(Sigma_star) 
+  Sigma_inv <- solve(Sigma) 
   
   # Calculates the optimal portfolio weights
   w_mvp <- Sigma_inv %*% iota
   w_mvp <- w_mvp / sum(w_mvp)
-  w_opt <- w_mvp  + 1/gamma * (Sigma_inv - w_mvp %*% t(iota) %*% Sigma_inv) %*% mu_star
+  w_opt <- w_mvp  + 1/gamma * (Sigma_inv - w_mvp %*% t(iota) %*% Sigma_inv) %*% mu
   return(w_opt)
 }
 
 
+```
+
+
+We now use these parameter estimates to report the computed implied mean-variance efficient portfolio weight for an investor with risk aversion $\gamma = 4$, defined by the solution to the problem:
+$$\boldsymbol{\omega}^* = \arg\max_{\sum_{i=1}^N \omega_i=1} \boldsymbol{\omega}^{\prime}\hat{\boldsymbol{\mu}}^{FF} - \frac{\gamma}{2}\boldsymbol{\omega}^{\prime}\hat{\boldsymbol{\Sigma}}^{FF}\boldsymbol{\omega}$$
+From standard Markowitz portfolio optimization theory, we know that the solution to this maximization problem is:
+$$\boldsymbol{\omega}^{*} = \frac{1}{\gamma}\left(\left(\hat{\boldsymbol{\Sigma}}^{FF}\right)^{-1} - \frac{1}{\boldsymbol{\iota}^{\prime}\left(\hat{\boldsymbol{\Sigma}}^{FF}\right)^{-1}\boldsymbol{\iota}}\boldsymbol{\iota}^{\prime}\left(\hat{\boldsymbol{\Sigma}}^{FF}\right)^{-1}\left(\hat{\boldsymbol{\Sigma}}^{FF}\right)^{-1}\boldsymbol{\iota}\right)\hat{\boldsymbol{\mu}}^{FF} + \frac{1}{\boldsymbol{\iota}^{\prime}\left(\hat{\boldsymbol{\Sigma}}^{FF}\right)^{-1}\boldsymbol{\iota}}\left(\hat{\boldsymbol{\Sigma}}^{FF}\right)^{-1}\boldsymbol{\iota}$$
+By using this, we get that the implied mean-variance portfolio weights using the Fama French 3-factor model is:
+
+```{r, echo=FALSE}
+mu <- compute_fama_french_mu(parameter_estimates, US_Stocks)
+Sigma <- compute_fama_french_sigma(parameter_estimates, US_Stocks)
+
+portfolio_weights <- t(compute_mean_variance_portfolio_weights(mu, Sigma))
+rownames(portfolio_weights) <- "Portfolio weights"
+portfolio_weights %>%
+  knitr::kable(booktabs = T, digits = 4, caption = "Mean-variance efficient portfolio weights from using the Fama French 3-factor model-implied $\\hat{\\boldsymbol{\\mu}}^{FF}$ and $\\hat{\\boldsymbol{\\Sigma}}^{FF}$") %>%
+  kable_paper("hover", full_width = T) %>%
+  kable_styling(latex_options = "HOLD_position")
 ```
 
 
