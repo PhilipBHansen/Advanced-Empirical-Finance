@@ -255,6 +255,8 @@ mom_portfolios <- crsp_monthly_mom %>%
                   select("permno", "month", "ret_excess", "mktcap", "mktcap_lag", "mktcap_lag_12", "mom", "portfolio") %>%
                   mutate(portfolio = as.factor(portfolio))
 
+mom_portfolios_raw <- mom_portfolios
+
 # Creating table of equal weighted average of momentum and market cap
 mom_portfolios %>% group_by(portfolio) %>%
                    summarise('average momentum' = mean(mom),'average market capitalization' = mean(mktcap)) %>%
@@ -480,55 +482,56 @@ k_months_ahead_alphas_tall %>% ggplot(aes(x = as.factor(portfolio), y = Value, f
 
 ```{r, echo=FALSE}
 
+# Creating the returns for the long-short portfolio
+better_strategy <- mom_portfolios_raw %>%
+  #filter(portfolio %in% c(1, 2, 9, 10)) %>%
+  group_by(permno) %>%
+  mutate(lag_portfolio = lag(portfolio)) %>%
+  filter(portfolio %in% c(1, 2, 9, 10)) %>%
+  mutate(updated_portfolio = case_when(portfolio == 1 ~ 1,
+                                       portfolio == 10 ~ 10,
+                                       portfolio == 2 & lag_portfolio == 1 ~ 1,
+                                       portfolio == 9 & lag_portfolio == 10 ~ 10,
+                                       portfolio == 2 & lag_portfolio == 2 ~ 1,
+                                       portfolio == 9 & lag_portfolio == 9 ~ 1
+                                       ))
 
+# Creating monthly portfolio value-weighted excess returns
+better_strategy <- better_strategy %>%
+  group_by(month, updated_portfolio) %>%
+  summarize(ret_excess = weighted.mean(ret_excess, mktcap_lag), .groups = "drop") %>% 
+  drop_na()
 
-
-
-
-
-
+# Adds the Fama-French market excess return to the data frame
+better_strategy <- better_strategy %>%
+                  left_join(ff_monthly, by = "month")
 
 # Creating the returns for the long-short portfolio
-long_short_portfolio <- mom_portfolios %>%
-                        filter(portfolio %in% c(1, 10)) %>%
-                        mutate(portfolio = case_when(portfolio == 10 ~ "high",
-                                                     portfolio == 1 ~ "low")
+better_long_short_portfolio <- better_strategy %>%
+                        filter(updated_portfolio %in% c(1, 10)) %>%
+                        mutate(updated_portfolio = case_when(updated_portfolio == 10 ~ "high",
+                                                     updated_portfolio == 1 ~ "low")
                                ) %>%
-                        pivot_wider(month, names_from = portfolio, values_from = ret_excess) %>%
+                        pivot_wider(month, names_from = updated_portfolio, values_from = ret_excess) %>%
                         mutate(long_short = high - low) %>%
                         left_join(ff_monthly, by = "month")
 
+
 # Making a linear regression of the portfolio return om the market return in order to get the CAPM values (and then renaming the rows)
-long_short_summary <- summary(lm(long_short ~ mkt_excess, data=long_short_portfolio))$coefficients
-tmp <- t.test(long_short_portfolio$long_short) # Creating a t.test for the return estimate
-long_short_summary <- rbind(long_short_summary, c(tmp$estimate, tmp$stderr, tmp$statistic, tmp$p.value))
-row.names(long_short_summary) <- c("CAPM alpha", "Market beta", "Portfolio return")
+better_long_short_summary <- summary(lm(long_short ~ mkt_excess, data=better_long_short_portfolio))$coefficients
+tmp <- t.test(better_long_short_portfolio$long_short) # Creating a t.test for the return estimate
+better_long_short_summary <- rbind(better_long_short_summary, c(tmp$estimate, tmp$stderr, tmp$statistic, tmp$p.value))
+row.names(better_long_short_summary) <- c("CAPM alpha", "Market beta", "Portfolio return")
 
 # Using the linear regression values to depict as a table
-long_short_summary %>% knitr::kable(booktabs = T, digits = 4, caption = "CAPM alpha, beta and excess return for the long-short portfolio based on value-weighted momentum-sorted portfolios") %>%
+better_long_short_summary %>% knitr::kable(booktabs = T, digits = 4, caption = "CAPM alpha, beta and excess return for the long-short portfolio based on value-weighted momentum-sorted portfolios") %>%
                        kable_paper("hover", full_width = T) %>% 
                        kable_styling(latex_options = "HOLD_position")
 
 # Finding the average return of the long-short portfolio
-long_short_return <- mean(long_short_portfolio$long_short)
+better_long_short_portfolio <- mean(better_long_short_portfolio$long_short)
 
 
-
-
-
-# This function adjusts the weights after returns have been realized
-adjust_weights <- function(w, next_return){
-  w_prev <- w *(1+ next_return)
-  as.numeric(w_prev / sum(as.vector(w_prev)))
-}
-
-# This function evaluates the performance before and after transaction cost
-evaluate_performance <- function(w, w_previous, next_return, lambda){
-  raw_return <- as.numeric(t(as.matrix(next_return)) %*% w)
-  turnover <- sum(abs(w - w_previous))
-  net_return <- raw_return - lambda * turnover
-  c(raw_return, turnover, net_return)
-}
 
 
 ```
