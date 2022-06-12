@@ -811,9 +811,7 @@ portfolio_weights %>%
 
 The parameter vector $\theta$ is a vector coefficient that we estimate. Here we don’t estimate one weight for each stock, for the different points in time, we would rather estimate weights as a single function for the chosen characteristics that will apply to all stocks over time, and this is called a portfolio policy.
 
-We have the function for the investor problem, and it is chosing the portfolio weights $\omega_{i,t}$ and then to maximize the conditional expected utility of the portfolio's return:
-$$\max\limits_{N_t} E_t[u(r_{p,t+1})] = E_t\bigg[u\bigg(\displaystyle\sum_{i=1}^{N_t}\omega_{i,t} r_{i,t+1} \bigg)\bigg]$$
-We then have the parameteraization of the optimal portfolio weights as a function the characteristics for the stock's, with the simple linear specifications for the weights:
+We parameterize the optimal portfolio weights as a function the characteristics for the stock's, with the simple linear specifications for the weights:
 
 $$\omega_{i,t}=f(x_{i,t};\theta)=\bar\omega_{i,t}+\frac{1}{N_t}\theta^{\intercal}\hat x_{i,t} $$
 
@@ -824,8 +822,6 @@ The most important aspect of the coefficient $\theta$ is that the parameterizati
 And based on this, if we have two stocks that are close to each other in characteristics, which are related to the expected return and risk, with different sample returns, should even then have the same weight in the portfolio.
 
 It is relatively easy to optimizing a portfolio composed of a large number of stocks. But the burden of this type of optimization does not come from the number of assets, but more from the number of characteristics. Also only optimize the entire portfolio based on the parameters we choose, which will parsimony also reduce the risk of in-sample and overfitting. This is because the coefficients will only deviate from zero if there is a combination of risk and return across assets consistently. This will also affect the optimization in the aspect that it tends not to take extreme values.   
-
-If we look at the function for the simple linear specification for the portfolio weights, it will conveniently nests all the long-short portfolios, which is constructed from the Fama and French model. 
 
 To estimate $\hat{\theta}$ we program a series of functions to determine the parametric portfolio given $x_{i,t}$ and $\theta$. We then implement a function to determine the gross return og said portfolio, calculate its certainty equivalent and use the *optim* function in R to do numerical optimization of the certainty equivalent by adjusting $\hat{\theta}$.
 
@@ -971,7 +967,7 @@ naive <- 1/ncol(sigma_tilde) * rep(1, ncol(sigma_tilde))
 efficient <- compute_efficient_weight(sigma_tilde, mu_tilde)
 
 # Computing the total return for each stock over the out-of-sample period
-excess_return <- Sub_US_Stocks %>% 
+excess_return <- Out_Of_Sample %>% 
   select(permno, ret_excess) %>% 
   group_by(permno) %>% 
   summarise(across(ret_excess, sum)) %>%
@@ -998,5 +994,8 @@ strategies_returns %>%
  
 ```
 
+With back-testing strategies, a problem with the estimation can come when we use a very complex model on a dataset that is too small. As our estimation will try to fit more of the data, this can lead to overfitting. 
+The pp strategi in a high-dimensional asset universe will be affected if it needs more characteristics as parameters, as that will make it heavier to optimize. But if you only use very few characteristics it will be easier to optimize. The Naïve portfolio will with a certain number of assets eliminate the diversifiable risk, but still, leave the systematic risk. Having a small amount of capital available for each asset, in general, will minimize the loss and return you get, due to the size of the amount. An efficient portfolio will in this kind of universe have can have problems if there are too many of the same kind of assets. Because it looks at the covariance between two assets, and if prices move in different directions, it will give a lower covariance between assets, and this will gives us a lower risk. 
+When we look at transaction cost, we would in a high-dimensional asset universe have to look at it in combination with turnover. For if we have a high amount of assets, but the strategi perform with a turnover that is too low, compared to the transaction cost. 
 
 
