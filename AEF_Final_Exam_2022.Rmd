@@ -79,7 +79,7 @@ The whole report is made in collaboration with each other where we have all help
 **57**: Part 1: exercise **MISSING** and Part 2: problem 1  
 
 \newpage
-
+\pagenumbering{arabic}
 
 # Exam part 1
 
@@ -622,7 +622,7 @@ To capture the momentum premium but lower turnover we suggest a strategy that ch
 ```{r Finding from 1 and 3, echo=FALSE}
 
 # Define function to calculate the sharpe ratio
-Sharpe_ratio = function(x, annualized = False){
+Sharpe_ratio = function(x, annualized = FALSE){
   if(annualized){
     multiplier <- 12
   } else{
@@ -640,7 +640,7 @@ summary3 <- matrix(NA, ncol = 3, nrow = 2)
 rownames(summary3) <- c("Standard long-short portfolio","Our long-short portfolio")
 
 # Add the data
-summary3[,1] <- c(Sharpe_ratio(long_short_portfolio$long_short, annualized = False), Sharpe_ratio(our_mom_long_short_portfolio$long_short, annualized = False))
+summary3[,1] <- c(Sharpe_ratio(long_short_portfolio$long_short, annualized = FALSE), Sharpe_ratio(our_mom_long_short_portfolio$long_short, annualized = FALSE))
   summary3[,2] <- c(mean(long_short_portfolio$long_short), mean(our_mom_long_short_portfolio$long_short))
 summary3[,3] <- c(turnover_mom, our_mom_turnover)
 
@@ -684,7 +684,7 @@ parameter_estimates <- US_Stocks %>%
 
 parameter_estimates %>%
   knitr::kable(booktabs = T, digits = 4, col.names = c("Permno", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd"), caption = "Fama French 3-factor estimates for the 8 stocks (estimated from 2000 to 2015)", align = "c") %>%
-  add_header_above(c(" " = 1, "$\\hat{\\alpha}_i$" = 2, "$\\hat{\\beta}_i^{M}$" = 2, "$\\hat{\\beta}_i^{SMB}$" = 2, "$\\hat{\\beta}_i^{HML}$" = 2)) %>%
+  add_header_above(c(" " = 1, "alpha" = 2, "beta M" = 2, "beta SMB" = 2, "beta HML" = 2)) %>%
   kable_paper("hover", full_width = T) %>%
   kable_styling(latex_options = "HOLD_position")
 
@@ -823,7 +823,11 @@ Furthermore, based on this, if we have two stocks that are close to each other i
 
 It is relatively easy to optimize a portfolio composed of many stocks. However, the burden of this type of optimization does not come from the number of assets but more from the number of characteristics. Also, only optimize the entire portfolio based on the parameters we choose, which will reduce the risk of in-sample and overfitting. This is because the coefficients will only deviate from zero if there is consistently a combination of risk and return across assets. This will also affect the optimization because it tends not to take extreme values.   
 
+<<<<<<< HEAD
 To estimate $\hat{\theta}$ we program a series of functions to determine the parametric portfolio given $x_{i,t}$ and $\theta$. We then implement a function to determine the portfolio's gross return, calculate its certainty equivalent and use the *optim* function in R to do numerical optimization of the certainty equivalent by adjusting $\hat{\theta}$.
+=======
+To estimate $\hat{\theta}$ we program a series of functions to determine the parametric portfolio given $x_{i,t}$ and $\theta$. We then implement a function to determine the gross return og said portfolio, calculate its certainty equivalent and use the *optim* function in R to do numerical optimization of the certainty equivalent by adjusting $\hat{\theta}$.We define our initial $\hat{\theta}$ as $[\begin{matrix} 1 & 1 & 1 \end{matrix}]'$
+>>>>>>> f77a776d5cc4531342e03fa70554b0ad4ee7b09b
 
 
 ```{r, echo=FALSE}
@@ -885,7 +889,7 @@ compute_objective_function <- function(theta, data) {
 optimal_theta <- optim(
   par = theta, 
   compute_objective_function,
-  data = Sub_US_Stocks
+  data = Out_Of_Sample
 )
 
 # Extracting optimal theta values (which we just found)
