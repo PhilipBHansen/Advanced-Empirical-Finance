@@ -636,6 +636,7 @@ Sharpe_ratio = function(x, annualized = False){
   return(mu/sd)
 }
 
+# Initializes table for output
 summary3 <- matrix(NA, ncol = 3, nrow = 2)
 
 # Adds row names
@@ -646,7 +647,7 @@ summary3[,1] <- c(Sharpe_ratio(long_short_portfolio$long_short, annualized = Fal
 summary3[,2] <- c(mean(long_short_portfolio$long_short), mean(our_mom_long_short_portfolio$long_short))
 summary3[,3] <- c(turnover_mom, our_mom_turnover)
 
-#Prints the table
+# Prints the table
 summary3 %>%
   knitr::kable(booktabs = T, 
                digits = 4, 
@@ -657,20 +658,6 @@ summary3 %>%
 
 
 ```
-
-Causes for high trading cost:
-
- - The portfolio created by the strategy changes often and drastically leading to an almost complete rebuild of the portfolio each time.
- - The strategy has no regard for the liquidity of the assets. It can become costly if you have to buy and sell a not frequently traded asset often.
- 
-
-This might be a little far fetched but most studies also assume assets to be completely divisible. This is obviously not the case in the real world and the strategy therefore requires a large amount of capital to be implemented.
-
-
-A way to lower trading cost would be to reduce the turnover by imposing a restriction on the holding period. This would mean that when the strategy buys an asset it must be held for at least x amount of time.
-
-
-We suggest a strategy where the assets are held for 2 months instead of 1. This should cause a noticeable drop in trading cost due to lower turnover.
 
 
 
@@ -861,7 +848,7 @@ If we look at the function for the simple linear specification for the portfolio
 To estimate $\hat{\theta}$ we program a series of functions to determine the parametric portfolio given $x_{i,t}$ and $\theta$. We then implement a function to determine the gross return og said portfolio, calculate its certainty equivalent and use the *optim* function in R to do numerical optimization of the certainty equivalent by adjusting $\hat{\theta}$.
 
 
-```{r}
+```{r, echo=FALSE}
 
 #Define the number of stocks
 N <- US_Stocks$permno %>% 
