@@ -613,17 +613,33 @@ our_mom_turnover <- our_mom_turnover / length(months)
 
 
 
-
-
-
-
-
-
-
-
-
-
 ```{r Finding from 1 and 3, echo=FALSE}
+
+#Define function to calculate the sharpe ratio
+Sharpe_ratio = function(x){
+  mu <- mean(x)
+  sigma <- sqrt(1 / (length(x) - 1) * sum((x-mu)^2) )
+  return(mu/sigma)
+}
+
+SR <- matrix(c(performance %>% filter(strategy=="Mean-variance with no short-selling") %>% pull("net_return") %>% Sharpe_ratio(),
+               performance %>% filter(strategy=="Mean-variance with TC") %>% pull("net_return") %>% Sharpe_ratio(),
+               performance %>% filter(strategy=="Naive") %>% pull("net_return") %>% Sharpe_ratio()),
+             ncol = 1)
+
+#Adds row and column names
+colnames(SR) <- c("Sharp ratio")
+rownames(SR) <- c("Mean-variance with no short-selling","Mean-variance with TC","Naive")
+
+#Prints the table
+SR%>%
+  knitr::kable(booktabs = T, digits = 4, caption = "Sharpe ratio") %>% 
+  kable_paper("hover", full_width = F) %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+Sharpe_ratio(our_mom_long_short_portfolio$long_short)
+
+
 
 mean_return1 <- aggregate(ret_excess ~ portfolio, data = mom_portfolios, mean)
 
