@@ -823,7 +823,7 @@ And based on this, if we have two stocks that are close to each other in charact
 
 It is relatively easy to optimizing a portfolio composed of a large number of stocks. But the burden of this type of optimization does not come from the number of assets, but more from the number of characteristics. Also only optimize the entire portfolio based on the parameters we choose, which will parsimony also reduce the risk of in-sample and overfitting. This is because the coefficients will only deviate from zero if there is a combination of risk and return across assets consistently. This will also affect the optimization in the aspect that it tends not to take extreme values.   
 
-To estimate $\hat{\theta}$ we program a series of functions to determine the parametric portfolio given $x_{i,t}$ and $\theta$. We then implement a function to determine the gross return og said portfolio, calculate its certainty equivalent and use the *optim* function in R to do numerical optimization of the certainty equivalent by adjusting $\hat{\theta}$.
+To estimate $\hat{\theta}$ we program a series of functions to determine the parametric portfolio given $x_{i,t}$ and $\theta$. We then implement a function to determine the gross return og said portfolio, calculate its certainty equivalent and use the *optim* function in R to do numerical optimization of the certainty equivalent by adjusting $\hat{\theta}$.We define our initial $\hat{\theta}$ as $[\begin{matrix} 1 & 1 & 1 \end{matrix}]'$
 
 
 ```{r, echo=FALSE}
