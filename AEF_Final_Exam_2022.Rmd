@@ -690,21 +690,20 @@ parameter_estimates %>%
 
 
 ```
+
 Table **MISSING* provides the empirical estimates for the Fama French 3-factor model for the 8 selected US stocks. The three $\beta$-estimates show the correlation between the return for stock $i$ and market return along with the two Fama French portfolio returns (SMB and HML). Here we for example see that the stock with permno 10200 has a very large negative correlation with the HML portfolio wheres the stock with permno 10252 has a fairly large positive correlation with the portfolio. For the SMB portfolio, we notice that all the stock have a positive correlation with this which indicates that the selected stocks probably have a small market cap. Permno 10200 (which is Repligen Corporation) has $\beta_i^{SMB}=1.9845$. This makes sense since the company had an average market cap of \$230 million USD in the estimated period. From the $\beta_i^{M}$-estimates we can also see that all the stocks have a positive correlation with the market. Lastly we also see that the $\alpha_i$-estimates are all very low compared to the $\beta$-estimates which indicates that most of the excess return information for the stocks can be explained by the Fama French 3-factor model. By looking at all the standard deviations for the estimates, we see that they are all very low compared to the estimators, indicating that the confidence intervals for the estimates are very low.
 
 We will now derive the model-implied expected gross excess return $\hat{\boldsymbol{\mu}}^{FF}$ and the model-implied variance-covariance matrix $\hat{\boldsymbol{\Sigma}}^{FF}$. A bold symbol signifies that it is a vector or a matrix. We start by deriving $\hat{\boldsymbol{\mu}}^{FF}$, which is a vector consisting of the model-implied expected gross excess return for the each of the 8 stocks, where we use that $E\left[\epsilon_{i,t}\right]=0$:
 \begin{align*}
-    \hat{\boldsymbol{\mu}}^{FF} &= E\left[\boldsymbol{r}_{t}\right] &= \frac{1}{N}\sum_{t=1}^N\left(\boldsymbol{\alpha} + \boldsymbol{\beta}^\text{M} \boldsymbol{r}_{m,t} + \boldsymbol{\beta}^{\text{SMB}} \boldsymbol{r}_{smb,t} + \boldsymbol{\beta}^\text{HML} \boldsymbol{r}_{hml,t}\right) \\
+    \hat{\boldsymbol{\mu}}^{FF} = E\left[\boldsymbol{r}_{t}\right] = \frac{1}{N}\sum_{t=1}^N\left(\boldsymbol{\alpha} + \boldsymbol{\beta}^\text{M} \boldsymbol{r}_{m,t} + \boldsymbol{\beta}^{\text{SMB}} \boldsymbol{r}_{smb,t} + \boldsymbol{\beta}^\text{HML} \boldsymbol{r}_{hml,t}\right) \\
 \end{align*}
 In order to derive $\hat{\boldsymbol{\Sigma}}^{FF}$ then we do that in two steps. We start by deriving $V\left(r_i\right)$ and afterwards we find $Cov\left(r_i,r_j\right)$. Then we use these to create $\hat{\boldsymbol{\Sigma}}^{FF}$ since the diagonal is the matrix in the variance and the rest is the covariances between the stocks. We use that $Cov(r_{k,t}, \epsilon_{i,t}) = 0$ for all factors $k$.
 \begin{align*}
-    V\left(r_i\right) &= E\left[\left(r_{i,t} - E\left[r_{i,t}\right]\right)^2\right] = \frac{1}{N}\sum_{t=1}^N\left(r_{i,t}^2\right) - \left(\hat{\mu}_i^{FF}\right)^2
+    V\left(r_i\right) = E\left[\left(r_{i,t} - E\left[r_{i,t}\right]\right)^2\right] = \frac{1}{N}\sum_{t=1}^N\left(r_{i,t}^2\right) - \left(\hat{\mu}_i^{FF}\right)^2
 \end{align*}
 \begin{align*}
     Cov\left(r_i,r_j\right) &= E\left[r_i r_j\right] - E\left[r_i\right]E\left[r_j\right] = \frac{1}{N}\sum_{t=1}^N\left(r_i r_j\right) - \hat{\mu}_i^{FF}\hat{\mu}_j^{FF}
 \end{align*}
-
-**INCLUDE: What determines the correlation of the returns?**
 Since the returns are estimated from the Fama French 3-factor model, then it is clear to see, that what determines the correlation of the returns are a mixture of the $\beta$-estimates and the Fama French market and portfolio returns. If two stocks for example have a large positive $\beta^M$-value, and the $r_{m,t}$ is large enough to play a significant role, then both of these stocks will have a return moving in the same direction.
 
 
