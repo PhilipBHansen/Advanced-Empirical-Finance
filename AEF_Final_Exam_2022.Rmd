@@ -65,6 +65,10 @@ ff_monthly <- tbl(tidy_finance, "factors_ff_monthly") %>% collect() %>% select("
 
 # Loading relevant data for part 2 of the exam
 US_Stocks <- read.csv(file = "data_exam2022.csv")
+#Generate a subset of the data with dates 2015-12-31 or earlier
+Sub_US_Stocks <- US_Stocks %>% filter(month < "2016-01-01")
+#Out of sample periode
+Out_Of_Sample <- US_Stocks %>% filter(month >= "2016-01-01")
 
 ```
 
@@ -867,9 +871,6 @@ N <- US_Stocks$permno %>%
 #Define an initial guess of theta
 theta <- rep(1, 3)
 
-#Generate a subset of the data with dates 2015-12-31 or earlier
-Sub_US_Stocks <- US_Stocks %>% filter(month<"2016-01-01")
-
 #Define function to compute the portfolio weights
 compute_parametric_portfolio_weights <- function(theta,  data) {
   data %>%
@@ -1001,7 +1002,12 @@ w_pp_table %>%
 
  efficient <- compute_efficient_weight(sigmatilde, mutilde, w_prev = naive, beta = 0)
  
+ excess_return <- Sub_US_Stocks %>% select(permno, ret_excess) %>% group_by(permno) %>% summarise(across(ret_excess,sum))
  
+excess_return$ret_excess * w_pp_table
+excess_return$ret_excess * portfolio_weights
+excess_return$ret_excess * naive
+excess_return$ret_excess * efficient
  
 ```
 
