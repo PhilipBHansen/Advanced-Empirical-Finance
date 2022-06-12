@@ -259,7 +259,7 @@ mom_portfolios %>% group_by(portfolio) %>%
                digits = c(0, 2, 0), 
                col.names = c("Portfolio number", "Average momentum", "Average market capitalization"), 
                caption = "Equal weighted momentum-sorted portfolios with average momentum and market capitalization for each") %>% 
-  kable_paper("hover", full_width = T) %>% 
+  kable_paper("hover", full_width = F) %>% 
   kable_styling(latex_options = "HOLD_position")
 
 ```
@@ -287,7 +287,7 @@ mom_portfolios %>%
                digits = 4, 
                col.names = c("Portfolio number", "CAPM alpha", "Market beta", "Average value-weighted excess return"), 
                caption = "CAPM alpha, beta and excess return for the value-weighted momentum-sorted portfolios") %>% 
-  kable_paper("hover", full_width = T) %>% 
+  kable_paper("hover", full_width = F) %>% 
   kable_styling(latex_options = "HOLD_position")
 
 ```
@@ -312,9 +312,6 @@ mom_portfolios_summary %>%
   theme(legend.position = "None") + 
   theme_bw()
 
-mean_return <- aggregate(ret_excess~portfolio, data = mom_portfolios, mean)
-
-sharp_ratio_e4 <- mean_return$ret_excess/sd(mom_portfolios$ret_excess)
 ```
 
 As seen in the graph above, it looks like there is a large negative CAPM alpha for portfolio 1 and  a fairly large positive CAPM alpha for portfolio 10. We therefore try to analyse the momentum strategy where we go long in portfolio 10 (which has the highest momentum) and go short in portfolio 1 (which has the lowest momentum). So for each month we compute the return of this long-short portfolio by taking the value-weighted return for portfolio 10 and subtracting the value-weighted return for portfolio 1. Running a linear regression of the long-short return on the market return gives us the following table. The last row in the table is computed as a t-test to investigate if the true mean of the return could be 0.
