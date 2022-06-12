@@ -85,12 +85,12 @@ The whole report is made in collaboration with each other where we have all help
 
 
 
-## Excercise 1
-The financial stock data for this assignment comes from the CRSP-universe and includes stock data from "1989-02-01" to "2020-12-01). We load the variables *permno*, *month*, *ret_excess*, *mktcap* and *mktcap_lag*. Furthermore, we also use the monthly Fama-French data which includes the variables *month* and *mkt_excess*. Below is the definition of the variables used in the assignment:
-1. *Permno*: Permno is a security identification number. Each security has its own unique PERMNO. A permno belongs to permco and a permco is CRPS's company identifier. One permco is not locked to only one permno, but can have more than one. 
-2. *ret_excess*: This is the excess return, which is the return on the stock minus the return we get on the risk-free asset over the same period. So the excess return shows the extra return you get by investing in a risky asset compared to just putting your money in the bank (investing in the risk-free asset).
-3. *mktcap*: Market capitalization (or market cap) is the total value of the company. It is calculated as the total amount of outstanding shares of a company multiplied with the stock price. This makes it easier to compare the size of each company to one another and to the market in general. 
-4. *mkt_excess*: This is the excess return for the whole market combined.
+## Exercise 1
+The financial stock data for this assignment comes from the CRSP-universe and includes stock data from "1989-02-01" to "2020-12-01". We load the variables *permno*, *month*, *ret_excess*, *mktcap* and *mktcap_lag*. Furthermore, we also use the monthly Fama-French data which includes the variables *month* and *mkt_excess*. Below is the definition of the variables used in the assignment:  
+1. *Permno*: Permno is a security identification number.   
+2. *ret_excess*: This is the excess return, which is the return on the stock minus the return we get on the risk-free asset over the same period. So the excess return shows the extra return you get by investing in a risky asset compared to just putting your money in the bank (investing in the risk-free asset).  
+3. *mktcap*: Market capitalization (or market cap) is the total value of the company. It is calculated as the total amount of outstanding shares of a company multiplied with the stock price. This makes it easier to compare the size of each company to one another and to the market in general.  
+4. *mkt_excess*: This is the excess return for the whole market combined.  
 
 In order to get a sense of the data, we create the following summary statistics, where we calculate the mean, standard deviation and quartiles for both the excess return and the market capitalization for each month and then we average these results over all months. This gives us the following table:
 
@@ -128,12 +128,12 @@ summary1 %>%
 
 ```
 
-Table 1 shows that the cross-section mean of the excess return and market capitalization is 0.0083 and 1815, respectively. On average the monthly excess return varies from -0.6906 to 2.6775 where the market capitalization on average varies from 0.7 to 242415. Furthermore, it is seen that the mean is larger than the median for both variables. This indicates that the distribution of the data is positively skewed (right-skewed). 
+Table 1 shows that the cross-sectional mean of the excess return and market capitalization is 0.83\% and 1815 million USD, respectively. On average the monthly excess return varies from -69.06\% to 267.75\% where the market capitalization on average varies from 0.7 to 242,415 million USD. Furthermore, it is seen that the mean is larger than the median for both variables. This indicates that the distribution of the data is positively skewed (right-skewed). 
 
 
-## Excercise 2
+## Exercise 2
 
-The reason why *crsp_monthly %>% group_by(permno) %>% mutate(ret_excess_lag = lag(ret_excess))* does not provide the correct result if there are non-explicit missing values in the time series is, that the lag function doesn't differentiate between one-month lag and just the closest lag available. If data for a specific month, lets say May, doesn't exist, then it just takes April as the lagged value instead, which would be wrong. Therefore, a better way to find the lagged excess return would be to copy the data to a new data frame (only including permno, month and excess return) where you overwrite the month to be the next month. This means that all the data in the new data frame is now depicted as being one month ahead of what it actually is. Then you re-name the excess return column to instead depict lagged excess return and lastly you drop all the NAs in the data frame. By now innerjoining this data frame to the original on month and permno you now get the lagged excess return variable as well.
+The reason why *crsp_monthly %>% group_by(permno) %>% mutate(ret_excess_lag = lag(ret_excess))* does not provide the correct result if there are non-explicit missing values in the time series is, that the lag function doesn't differentiate between one-month lag and just the closest lag available. If data for a specific month, lets say May, doesn't exist, then it just takes April as the lagged value instead, which would be wrong. Therefore, a better way to find the lagged excess return would be to copy the data to a new data frame (only including permno, month and excess return) where you overwrite the month to be the next month. This means that all the data in the new data frame is now depicted as being one month behind of what it actually is. Then you re-name the excess return column to instead depict lagged excess return and lastly you drop all the NAs in the data frame. By now innerjoining this data frame to the original on month and permno you now get the lagged excess return variable as well.
 
 
 ```{r summerise for autocorrelation, echo=FALSE}
@@ -155,12 +155,12 @@ return_correlation <- cor(crsp_monthly_new$ret_excess, crsp_monthly_new$ret_exce
 In order to investigate whether or not the returns exhibit autocorrelation of lag 1, then we can find the correlation between the excess return and the lagged excess return, which is: `r round(return_correlation, 4)`. This negative correlation implies that the returns move in opposite direction from the lagged returns. Therefore, if the returns have been positive last month, then they are likely to be negative this month and vice versa. 
 
 
-## Excercise 3
-We start by adding a new column showing the momentum of a company. The momentum is calculated as the growth of the market capitalization for a company over the past year. The market cap 12 with 12 months lag is calculated in the same way as described in excercise 2 with the lagged excess return:
+## Exercise 3
+We start by adding a new column showing the momentum of a company. The momentum is calculated as the growth of the market capitalization for a company over the past year. The market cap with 12 months lag is calculated in the same way as described in exercise 2 with the lagged excess return:
 $$
-Mom_{i,t} = 100*\frac{(mc_{i,t-1}-mc_{i,t-12})}{mc_{i,t-12}}
+Mom_{i,t} = 100\cdot\frac{(mc_{i,t-1}-mc_{i,t-12})}{mc_{i,t-12}}
 $$
-The difference between computing momentum as the relative change in prices or as the relative change in market capitalization is fundamentally identical. However when working with data over long time periods market capitalization has a profound edge over prices. When using prices the momentum will be affected by noise caused by operations in the financial market that has nothing to with the market valuation of the company. The issuing of new stocks will naturally dilute the value of a single stock causing prices to drop, but it will not affect the market capitalization. If a company for example decides to split up the stocks so each stock is made into two, this will cut the price of the stock in half but leave the market capitalization unchanged which promotes the use of market capitalization over prices.
+Computing momentum as the relative change in prices or as the relative change in market capitalization is fundamentally identical. However when working with data over long time periods, market capitalization has a profound edge over prices. When using prices, the momentum will be affected by noise caused by operations in the financial market which has nothing to with the company's market valuation. The issuing of new stocks will naturally dilute the value of a single stock causing prices to drop, but it will not affect the market capitalization. Suppose a company decides to do a stock split. This will cut the price of the stock in half, but leave the market capitalization unchanged which promotes the use of market capitalization over prices.
 
 ```{r lag for 12 months, echo=FALSE}
 
@@ -211,13 +211,13 @@ summary2 %>%
 mom_mktcap_correlation <- cor(crsp_monthly_mom$mom, log(crsp_monthly_mom$mktcap))
 
 ```
-Table 2 shows that the cross-section mean of momentum is 19 while the median is only 5.6. Just like in table 1, this indicates a positive skew (right-skew). There are therefore very large momentum values which have a big impact on the mean, which is also seen by the average maximum momentum being 3200. We can also notice that the standard deviation is 96 and therefore quite high (especially when comparing to a mean of 19). Another indication of the effect of the extreme large momentum-values is the difference between the 95th percentile and the maximum. Since the 95th percentile is "only" 118, then this means that only 5% of the observations have a momentum of 118 or larger.
+Table 2 shows that the cross-sectional mean of the momentum is 19 while the median is only 5.6. As in table 1, this indicates a positive skew (right-skew). There are therefore very large momentum values which have a big impact on the mean, which is also seen by the average maximum momentum being 3200. We can also notice that the standard deviation is 96 and therefore quite high (especially when comparing to a mean of 19). Another indication of the extreme momentum-values' effect is the difference between the 95th percentile and the maximum. Since the 95th percentile is "only" 118, this means that only 5% of the observations have a momentum of 118 or larger.
 
-By calculating the correlation between momentum and $log(mc_{i,t})$ we get a value of `r round(mom_mktcap_correlation, 4)`. We therefore see a positive correlation between momentum and $log(mc_{i,t})$. If we can observe positive momentum over the past year, then we can to some degree expect a larger market cap next month.
+By calculating the correlation between *momentum* and $log(mc_{i,t})$ we get a value of `r round(mom_mktcap_correlation, 4)`. We therefore see a positive correlation between momentum and $log(mc_{i,t})$. If we can observe positive momentum over the past year, then we can to some degree expect a larger market cap next month.
 
 
-## Excercise 4
-Now we want to examine the relationship between momentum and future stock returns. First we start by dividing the stock into 10 portfolios based on the size of the momentum for a stock given each period. In the following, we have calculated the equal-weighted average values of the momentum and market capitalization for each of the 10 portfolios:
+## Exercise 4
+Now we want to examine the relationship between momentum and future stock returns. First, we start by dividing the stocks into 10 portfolios based on the momentum size for a given stock in each period. In the following, we have calculated the equal-weighted average values of the momentum and market capitalization for each of the 10 portfolios:
 
 ```{r Relation, echo=FALSE}
 # Arranges data by month instead of permno
@@ -258,14 +258,14 @@ mom_portfolios %>% group_by(portfolio) %>%
   knitr::kable(booktabs = T, 
                digits = c(0, 2, 0), 
                col.names = c("Portfolio number", "Average momentum", "Average market capitalization"), 
-               caption = "Equal weighted momentum-sorted portfolios with average momentum and market capitalization for each") %>% 
+               caption = "Equal weighted momentum-sorted portfolios with average momentum and market capitalization") %>% 
   kable_paper("hover", full_width = F) %>% 
   kable_styling(latex_options = "HOLD_position")
 
 ```
-In table **MISSING** we see that the momentum is increasing with the portfolio number (which makes sense as per the creation of the portfolios). We also notice that the average market capitalization in increasing from portfolio 1-7 and then begins to fall back down for the last three portfolios with the highest momentum.
+In table 3 we see that the momentum is increasing with the portfolio number (which makes sense as per the definition of the portfolios). We also notice that the average market capitalization is increasing from portfolio 1-7 and then begins to fall back down for the last three portfolios with the highest momentum.
 
-We now calculate the value-weighted monthly excess returns for each of the portfolios which is depicted in the table below.
+We now calculate the value-weighted monthly excess returns for each portfolio which is depicted in the table below:
 
 ```{r, echo=FALSE}
 # Creating the monthly portfolio value-weighted excess returns
@@ -292,7 +292,7 @@ mom_portfolios %>%
 
 ```
 
-In table **MISSING** we see that the average value-weighted returns and the CAPM alphas (risk-adjusted performance) are increasing in the portfolios (with the exception of portfolio 6 and 7). We also see that all of the portfolios are very correlated with the market return which is depicted in the Market beta. Most of the portfolios have a Market beta around 1 which indicates that they move more or less like the market. Portfolio 1 is however extremely correlated with the market returns, so whenever the market moves a little bit in one direction, then this portfolio moves a lot in the same direction, making the fluctuations very large. Since we are interested in looking at the CAPM alphas of the different portfolios, we have depicted them in the graph below, so they are easier to compare to each other.
+In table 4 we see that the average value-weighted returns and the CAPM alphas (risk-adjusted performance) are increasing in the portfolios (with the exception of portfolios 6 and 7). We also see that all of the portfolios are very correlated with the market return which is depicted in the Market beta. Most of the portfolios have a Market beta around 1 which indicates that they move more or less like the market. Portfolio 1 is however extremely correlated with the market returns, so whenever the market moves a little bit in one direction, then this portfolio moves a lot in the same direction, making the fluctuations very large. Since we are interested in looking at the CAPM alphas of the different portfolios, we have depicted them in the graph below, so they are easier to compare to each other.
 
 ```{r fig1, out.width = '80%', echo=FALSE}
 # Calculating the CAPM (linear regression of the excess return on the market excess return)
@@ -314,7 +314,7 @@ mom_portfolios_summary %>%
 
 ```
 
-As seen in the graph above, it looks like there is a large negative CAPM alpha for portfolio 1 and  a fairly large positive CAPM alpha for portfolio 10. We therefore try to analyse the momentum strategy where we go long in portfolio 10 (which has the highest momentum) and go short in portfolio 1 (which has the lowest momentum). So for each month we compute the return of this long-short portfolio by taking the value-weighted return for portfolio 10 and subtracting the value-weighted return for portfolio 1. Running a linear regression of the long-short return on the market return gives us the following table. The last row in the table is computed as a t-test to investigate if the true mean of the return could be 0.
+As seen in the graph above, it looks like there is a large negative CAPM alpha for portfolio 1 and  a fairly large positive CAPM alpha for portfolio 10. We therefore try to analyse the momentum strategy where we go long in portfolio 10 (which has the highest momentum) and short in portfolio 1 (which has the lowest momentum). So for each month we compute the return of this long-short portfolio by taking the value-weighted return for portfolio 10 and subtracting the value-weighted return for portfolio 1. Running a linear regression of the long-short return on the market return gives us the following table. The last row in the table is computed as a t-test to investigate if the true mean of the return could be 0.
 
 
 ```{r, echo=FALSE}
@@ -385,10 +385,10 @@ long_short_summary %>%
 
 ```
 
-If we start by looking at the bottom row which depict the results for the return, we see that the portfolio does in fact deliver an average return above 0. Wee see this by creating a t-test where the null hypothesis is that the true mean is 0. By looking at the p-value we can reject this on a 5% confidence interval. From the CAPM regression we also see that we get a positive alpha, where we likewise can reject a null hypothesis of the true alpha being 0. By comparing the long-short portfolio alpha with the alphas for portfolio 1 og 10 from table **MISSING** we see that the alpha has now increased. Instead of just going long in portfolio 10, we now get a higher alpha by investing in the long-short portfolio.
+If we start by looking at the bottom row which depicts the results for the return, we see that the portfolio does in fact deliver an average return above 0 (an estimate of 0.75%). We see this by conducting a t-test where the null hypothesis is that the true mean is 0. By looking at the p-value we can reject this on a 5% significance level. From the CAPM regression we also see that we get a positive alpha, where we likewise can reject a null hypothesis of the true alpha being 0. By comparing the long-short portfolio alpha with the alphas for portfolio 1 and 10 from table 5 we see that the alpha has now increased. Instead of just going long in portfolio 10, we now get a higher alpha by investing in the long-short portfolio.
 
 
-## Excercise 5
+## Exercise 5
 In the following, we will calculate the CAPM alphas using the k-month-ahead excess returns for $k\in\{1,3,6,12\}$. Since we lose a few observations by having to find the k-months ahead returns, then in order to most efficiently compare all the results, we have chosen to only calculate the CAPM values for observations where we have found all the specific k-months ahead returns. The k-months ahead portfolio returns are calculated as value-weighted returns based on the lagged market cap value (since this is known at the time the portfolio is constructed). It is assumed that the 1-month ahead is just the standard excess return and therefore that 3-months ahead should be calculated as the excess return two months later. The reason for this assumption is that the lagged variables are meant to be known at the time we construct the portfolio, where the excess return is then the result of this. Hence, it must be the 1-month ahead return.
 
 ```{r  Repeat the univariate portfolio, echo=FALSE}
@@ -477,7 +477,7 @@ k_months_ahead_alphas <- mom_portfolios_k_ahead %>%
 k_months_ahead_alphas %>%
   knitr::kable(booktabs = T, 
                digits = 4, 
-               col.names = c("Portfolio number", "Alpha 1 month ahead", "Alpha 3 months ahead", "Alpha 6 months ahead", "Alpha 12 months ahead"), 
+               col.names = c("Portfolio", "Alpha 1 month ahead", "Alpha 3 months ahead", "Alpha 6 months ahead", "Alpha 12 months ahead"), 
                caption = "CAPM alphas for the value-weighted momentum-sorted portfolios") %>%
   kable_paper("hover", full_width = F) %>% 
   kable_styling(latex_options = "HOLD_position")
@@ -485,7 +485,7 @@ k_months_ahead_alphas %>%
 
 ```
 
-The graph below shows the CAPM alphas for all the k-months-ahead returns (with $k=1,3,6,12$) for all 10 momentum-sorted portfolios. Something that is very noticeable is that the CAPM alpha for the 12-months-ahead returns has opposite signs for most of the portfolios. For portfolio 1 it shows a positive CAPM alpha, where the shorter returns show a negative alpha. As we move into the middle portfolios then the alpha value becomes smaller for all the k-months-ahead returns. According to this investigation, portfolio 1 with a time horizon of 12 months seems to predict the highest risk-adjusted performance. This horizon also continues to deliver positive CAPM alphas for all portfolios except portfolio 9 and 10. However, by looking at the 3-months-ahead CAPM alphas, then we see the same movements as for the original 1-month-ahead just larger. It could therefore suggest that creating the long-short portfolio as we did in exercise 4 would result in an even larger risk-adjusted performance.
+
 
 ```{r fig2, out.width = '80%', echo=FALSE}
 
@@ -514,8 +514,9 @@ k_months_ahead_alphas_tall %>%
 
 ```
 
+The graph above shows the CAPM alphas for all the k-months-ahead returns (with $k=1,3,6,12$) for all 10 momentum-sorted portfolios. Something that is very noticeable is that the CAPM alpha for the 12-months-ahead returns has opposite signs for most of the portfolios. For portfolio 1 it shows a positive CAPM alpha, where the shorter lags show a negative CAPM alpha. As we move into the middle portfolios then the CAPM alpha becomes smaller for all the k-months-ahead returns. According to this investigation, portfolio 1 with a time horizon of 12 months seems to predict the highest risk-adjusted performance. This horizon also continues to deliver positive CAPM alphas for all portfolios except portfolios 9 and 10. However, by looking at the 3-months-ahead CAPM alphas, then we see the same movements as for the original 1-month-ahead just larger. It could therefore suggest that creating the long-short portfolio as we did in exercise 4 would result in an even larger risk-adjusted performance.
 
-## Excercise 6
+## Exercise 6
 
 ```{r, echo=FALSE}
 
@@ -611,13 +612,11 @@ our_mom_turnover <- our_mom_turnover / length(months)
 
 ```
 
-Most academic studies ignore real world costs, this could prove to be an issue for the momentum portfolio. We have seen that the momentum strategy has quite a high turnover and this might lead to momentum becoming too expensive to trade compared to its return premium.
-It is very likely that the turnover of a size sort portfolio would be significantly smaller than that of a momentum portfolio. A company that is large will most 
-likely remain so in the foreseeable future. Take an example as Apple, and imagine its stock price dropping 10% this would imply severe negative momentum but i would for a decent amount of time remain a huge company. The same goes for really small companies, imagine your local bakery doing an IPO and doubling its market cap in a year, that is enormous positive momentum but that does not make it a Fortune 500 or anything close to it.
+Most academic studies ignore real world costs, which could prove to be an issue for the momentum portfolio. We have seen that the momentum strategy has quite a high turnover and this might lead to momentum becoming too expensive to trade compared to its return premium. It is very likely that the turnover of a portfolio sorted on size instead would be significantly smaller than that of a momentum sorted portfolio. A company that is large will most likely remain so in the foreseeable future. Take Apple as an example, and imagine its stock price dropping 10%. This would imply severe negative momentum, but it would, for a decent amount of time, remain a huge company. The same goes for really small companies. Imagine your local bakery doing an IPO and doubling its market cap in a year. This is an enormous positive momentum, but it does not make it a Fortune 500 or anything close to it.
 
-The assumption of perfectly divisible assets might also have an effect on cost in the real world. However this problem dissapears as the value of the portfolio becomes sufficiently large. Asset liquidity might also be an issue as some assets simply cant be traded at the pace a momentum strategy requires, at least not without trading at a discount which most likely would leave the strategy worse off.
+The assumption of perfectly divisible assets might also have an effect on cost in the real world. However, this problem dissapears as the value of the portfolio becomes sufficiently large. Asset liquidity might also be an issue as some assets simply cannot be traded at the pace a momentum strategy requires. At least not without trading at a discount, which most likely would leave the strategy worse off.
 
-To capture the momentum premium but lower turnover we suggest a strategy that chooses assets the same way as the *standard long-short* strategy. Instead of dropping the position as soon as its momentum moves out of the top or bottom 10%, we hold it until it hast moved out of the top or bottom 20%.
+To capture the momentum premium while lowering the turnover, we suggest a strategy that chooses assets the same way as the standard long-short strategy. Instead of dropping the position as soon as its momentum moves out of the top or bottom 10%, we hold it until it hast moved out of the top or bottom 20%. This limits the turnover, since there might be a large fluctuations of companies, are close to the division line between the top and bottom 20%. We therefore limit the turnover by not dropping the stock from our portfolio if it just moves to the adjacent portfolio category.
 
 ```{r Finding from 1 and 3, echo=FALSE}
 
@@ -656,10 +655,10 @@ summary3 %>%
 
 ```
 
-We see that our suggested strategy has a better sharpe ratio, so a better return proportional to the amount of risk taken.The positive excess return of 0.0047 compared to 0.0075 suggests, that we are able to catch a good part of the momentum premium but with a turnover that is about 25% smaller while also taking on less risk. We therefore conclude that the strategy works decently for the assigned purpose.
+We see that our suggested strategy has a better sharpe ratio, so a better return proportional to the amount of risk taken. The positive excess return of 0.47% compared to 0.75% suggests, that we are able to catch a good part of the momentum premium, but with a turnover that is about 25% smaller while also taking on less risk. We therefore conclude that the strategy works decently for the assigned purpose.
 
 # Exam part 2
-In part 2 of this report we will use a dataset which consists of 252 monthly observations for $N=8$ different US-listed stocks identified by their permno which is a unique company identifier. The permno for the stocks used are: 10026, 10032, 10044, 10104, 10200, 10232, 10252 and 10397. The whole dataset includes monthly observations from "2000-01-01" to "2020-12-01". The first two problems will focus on the data up until (and including) 2015, where problem 3 will then use the last 5 years in order to test the **MISSING** estimated in problem 1 and 2. For each month-permno observation, the dataset contains the following variables: ret_excess is the net excess return for each month. mkt_excess, smb and hml are the market excess returns, the returns of the small-minus-big portfolio and the high-minus-low book-to-market ratio portfolio returns from Kenneth French’s homepage. beta is the estimated CAPM beta of the stock, measured at the beginning of month t, size is a measure of market capitalization of the stock at the beginning of month t and bm is the book-to-market ratio of the stock, measured at the beginning of month t. The columns beta, size and bm are standardized such that the monthly cross-sectional average is zero and the monthly cross-sectional standard deviation is one.
+In part 2 of this report we will use a dataset which consists of 252 monthly observations for $N=8$ different US-listed stocks identified by their permno which is a unique company identifier. The permno for the stocks used are: 10026, 10032, 10044, 10104, 10200, 10232, 10252 and 10397. The whole dataset includes monthly observations from "2000-01-01" to "2020-12-01". All the portfolio weights from our strategies will be found by using the data up until (and including) 2015, where the last 5 years will then be used to test the out-of-sample returns for these strategies. For each month-permno observation, the dataset contains the following variables: ret_excess is the net excess return for each month. mkt_excess, smb and hml are the market excess returns, the returns of the small-minus-big portfolio and the high-minus-low book-to-market ratio portfolio returns from Kenneth French’s homepage. beta is the estimated CAPM beta of the stock, measured at the beginning of month t, size is a measure of market capitalization of the stock at the beginning of month t and bm is the book-to-market ratio of the stock, measured at the beginning of month t. The columns beta, size and bm are standardized such that the monthly cross-sectional average is zero and the monthly cross-sectional standard deviation is one.
 
 
 ## Problem 1
@@ -667,7 +666,7 @@ We will now try to estimate the Fama French 3-factor model:
 \begin{equation*}
     r_{i,t} = \alpha_i + \beta_i^\text{M} r_{m,t} + \beta_i^{\text{SMB}} r_{smb,t} + \beta_i^\text{HML} r_{hml,t} + \epsilon_{i,t}
 \end{equation*}
-This will be done by making a linear regression of the excess return for each stock on each of the parameters Fama French parameters. This results in the following table:
+This will be done by making a linear regression of the excess return for each stock on each of the three Fama French parameters. This results in the following table:
 
 ```{r, echo=FALSE}
 
@@ -691,20 +690,17 @@ parameter_estimates %>%
 
 ```
 
-Table **MISSING* provides the empirical estimates for the Fama French 3-factor model for the 8 selected US stocks. The three $\beta$-estimates show the correlation between the return for stock $i$ and market return along with the two Fama French portfolio returns (SMB and HML). Here we for example see that the stock with permno 10200 has a very large negative correlation with the HML portfolio wheres the stock with permno 10252 has a fairly large positive correlation with the portfolio. For the SMB portfolio, we notice that all the stock have a positive correlation with this which indicates that the selected stocks probably have a small market cap. Permno 10200 (which is Repligen Corporation) has $\beta_i^{SMB}=1.9845$. This makes sense since the company had an average market cap of \$230 million USD in the estimated period. From the $\beta_i^{M}$-estimates we can also see that all the stocks have a positive correlation with the market. Lastly we also see that the $\alpha_i$-estimates are all very low compared to the $\beta$-estimates which indicates that most of the excess return information for the stocks can be explained by the Fama French 3-factor model. By looking at all the standard deviations for the estimates, we see that they are all very low compared to the estimators, indicating that the confidence intervals for the estimates are very low.
+Table 9 provides the empirical estimates for the Fama French 3-factor model for the 8 selected US stocks. The three $\beta$-estimates show the correlation between the return for stock $i$ and market return along with the two Fama French portfolio returns (SMB and HML). Here we for example see that the stock with permno 10200 has a very large negative correlation with the HML portfolio wheres the stock with permno 10252 has a fairly large positive correlation with the portfolio. For the SMB portfolio, we notice that all the stocks have a positive correlation with this, which indicates that the selected stocks probably have a small market cap. Permno 10200 (which is Repligen Corporation) has $\beta_i^{SMB}=1.9845$. This makes sense since the company had an average market cap of only \$230 million USD in the estimated period. From the $\beta_i^{M}$-estimates we can also see that all the stocks have a positive correlation with the market. Lastly we also see that the $\alpha_i$-estimates are all very low compared to the $\beta$-estimates which indicates that most of the excess return information for the stocks can be explained by the Fama French 3-factor model. By looking at all the standard deviations for the estimates, we see that they are all very low compared to the estimators, indicating that the confidence intervals for the estimates are very low.
 
-We will now derive the model-implied expected gross excess return $\hat{\boldsymbol{\mu}}^{FF}$ and the model-implied variance-covariance matrix $\hat{\boldsymbol{\Sigma}}^{FF}$. A bold symbol signifies that it is a vector or a matrix. We start by deriving $\hat{\boldsymbol{\mu}}^{FF}$, which is a vector consisting of the model-implied expected gross excess return for the each of the 8 stocks, where we use that $E\left[\epsilon_{i,t}\right]=0$:
+We will now derive the model-implied expected gross excess return $\hat{\boldsymbol{\mu}}^{FF}$ and the model-implied variance-covariance matrix $\hat{\boldsymbol{\Sigma}}^{FF}$. A bold symbol signifies that it is a vector or a matrix. We start by deriving $\hat{\boldsymbol{\mu}}^{FF}$, which is a vector consisting of the model-implied expected gross excess return for each of the 8 stocks, where we use that $E\left[\epsilon_{i,t}\right]=0$:
 \begin{align*}
-    \hat{\boldsymbol{\mu}}^{FF} = E\left[\boldsymbol{r}_{t}\right] = \frac{1}{N}\sum_{t=1}^N\left(\boldsymbol{\alpha} + \boldsymbol{\beta}^\text{M} \boldsymbol{r}_{m,t} + \boldsymbol{\beta}^{\text{SMB}} \boldsymbol{r}_{smb,t} + \boldsymbol{\beta}^\text{HML} \boldsymbol{r}_{hml,t}\right) \\
+    \hat{\boldsymbol{\mu}}^{FF} = E\left[\boldsymbol{r}_{t}\right] = \frac{1}{N}\sum_{t=1}^N\left(\boldsymbol{\alpha} + \boldsymbol{\beta}^\text{M} \boldsymbol{r}_{m,t} + \boldsymbol{\beta}^{\text{SMB}} \boldsymbol{r}_{smb,t} + \boldsymbol{\beta}^\text{HML} \boldsymbol{r}_{hml,t}\right)
 \end{align*}
-In order to derive $\hat{\boldsymbol{\Sigma}}^{FF}$ then we do that in two steps. We start by deriving $V\left(r_i\right)$ and afterwards we find $Cov\left(r_i,r_j\right)$. Then we use these to create $\hat{\boldsymbol{\Sigma}}^{FF}$ since the diagonal is the matrix in the variance and the rest is the covariances between the stocks. We use that $Cov(r_{k,t}, \epsilon_{i,t}) = 0$ for all factors $k$.
-\begin{align*}
-    V\left(r_i\right) = E\left[\left(r_{i,t} - E\left[r_{i,t}\right]\right)^2\right] = \frac{1}{N}\sum_{t=1}^N\left(r_{i,t}^2\right) - \left(\hat{\mu}_i^{FF}\right)^2
-\end{align*}
+In order to derive $\hat{\boldsymbol{\Sigma}}^{FF}$ we use that the covariance of an asset with itself is just the variance. All the entries in $\hat{\boldsymbol{\Sigma}}^{FF}$ can therefore be calculated as follows, where we use that $Cov(r_{k,t}, \epsilon_{i,t}) = 0$ for all factors $k$:
 \begin{align*}
     Cov\left(r_i,r_j\right) &= E\left[r_i r_j\right] - E\left[r_i\right]E\left[r_j\right] = \frac{1}{N}\sum_{t=1}^N\left(r_i r_j\right) - \hat{\mu}_i^{FF}\hat{\mu}_j^{FF}
 \end{align*}
-Since the returns are estimated from the Fama French 3-factor model, then it is clear to see, that what determines the correlation of the returns are a mixture of the $\beta$-estimates and the Fama French market and portfolio returns. If two stocks for example have a large positive $\beta^M$-value, and the $r_{m,t}$ is large enough to play a significant role, then both of these stocks will have a return moving in the same direction.
+Since the returns are estimated from the Fama French 3-factor model, it is clear that the correlation of the returns is determined by a mixture of the $\beta$-estimates and the Fama French market- and portfolio returns. If two stocks for example have a large positive $\beta^M$-value, and the $r_{m,t}$ is large enough to play a significant role, then both of these stocks will have a return moving in the same direction.
 
 
 
@@ -785,49 +781,38 @@ compute_mean_variance_portfolio_weights <- function(mu, Sigma, gamma = gamma_def
 ```
 
 
-We now use these parameter estimates to report the computed implied mean-variance efficient portfolio weight for an investor with risk aversion $\gamma = 4$, defined by the solution to the problem:
-$$\boldsymbol{\omega}^* = \arg\max_{\sum_{i=1}^N \omega_i=1} \boldsymbol{\omega}^{\prime}\hat{\boldsymbol{\mu}}^{FF} - \frac{\gamma}{2}\boldsymbol{\omega}^{\prime}\hat{\boldsymbol{\Sigma}}^{FF}\boldsymbol{\omega}$$
-From standard Markowitz portfolio optimization theory, we know that the solution to this maximization problem is:
+We now use these parameter estimates to report the computed implied mean-variance efficient portfolio weight for an investor with risk aversion $\gamma = 4$, defined by the solution to the standard Markowitz problem, which is:
 $$\boldsymbol{\omega}^{*} = \frac{1}{\gamma}\left(\left(\hat{\boldsymbol{\Sigma}}^{FF}\right)^{-1} - \frac{1}{\boldsymbol{\iota}^{\prime}\left(\hat{\boldsymbol{\Sigma}}^{FF}\right)^{-1}\boldsymbol{\iota}}\boldsymbol{\iota}^{\prime}\left(\hat{\boldsymbol{\Sigma}}^{FF}\right)^{-1}\left(\hat{\boldsymbol{\Sigma}}^{FF}\right)^{-1}\boldsymbol{\iota}\right)\hat{\boldsymbol{\mu}}^{FF} + \frac{1}{\boldsymbol{\iota}^{\prime}\left(\hat{\boldsymbol{\Sigma}}^{FF}\right)^{-1}\boldsymbol{\iota}}\left(\hat{\boldsymbol{\Sigma}}^{FF}\right)^{-1}\boldsymbol{\iota}$$
-By using this, we get that the implied mean-variance portfolio weights using the Fama French 3-factor model is:
+By using this, we get that the following implied mean-variance portfolio weights:
 
 ```{r, echo=FALSE}
 mu <- compute_fama_french_mu(parameter_estimates, US_Stocks)
 Sigma <- compute_fama_french_sigma(parameter_estimates, US_Stocks)
 
 portfolio_weights <- t(compute_mean_variance_portfolio_weights(mu, Sigma))
-rownames(portfolio_weights) <- "Portfolio weights"
+rownames(portfolio_weights) <- "Weights"
 
 portfolio_weights %>%
   knitr::kable(booktabs = T, 
                digits = 4, 
-               caption = "Mean-variance efficient portfolio weights from using the Fama French 3-factor model-implied $\\hat{\\boldsymbol{\\mu}}^{FF}$ and $\\hat{\\boldsymbol{\\Sigma}}^{FF}$") %>%
+               caption = "Mean-variance efficient portfolio weights using the Fama French 3-factor model-implied $\\hat{\\boldsymbol{\\mu}}^{FF}$ and $\\hat{\\boldsymbol{\\Sigma}}^{FF}$") %>%
   kable_paper("hover", full_width = T) %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
 
 ## Problem 2
+Instead of estimating one weight for each stock for the different points in time, we instead estimate weights using a vector of parameters, $\boldsymbol{\theta}$, and some chosen firm characteristics. $\boldsymbol{\theta}$ applies to all stocks through time. We define portofolio weights as a function of the benchmark portfolio ($\bar{\omega}_{i,t}$), $\boldsymbol{\theta}$ and stock characteristics ($\hat{\boldsymbol{x}}_{i,t}$). 
+$$\omega_{i,t}=\bar\omega_{i,t}+\frac{1}{N_t}\boldsymbol{\theta}^{\prime}\hat{\boldsymbol{x}}_{i,t}$$
+To estimate $\boldsymbol{\theta}$ we maximize the linear policy case function:
+$$\max\limits_{\boldsymbol{\theta}} \frac{1}{N}\displaystyle\sum_{i=0}^{T-1} \bigg(\displaystyle\sum_{i=1}^{N_t}\bigg (\bar\omega_{i,t}+\frac{1}{N_t}\boldsymbol{\theta}^{\prime}\hat{\boldsymbol{x}}_{i,t} \bigg) r_{i,t+1} \bigg)$$
 
-The parameter vector $\theta$ is a vector coefficient that we estimate. Here we do not estimate one weight for each stock for the different points in time, and we would instead estimate weights as a single function for the chosen characteristics that will apply to all stocks over time, which is called a portfolio policy.
+The most important aspect of the coefficient $\boldsymbol{\theta}$ is that the parameterization is constant across assets through time. Because we have a constant coefficient across assets the weight in the portfolio for each stock will depend on the characteristics of the stock and not on the stocks historic returns. This implies that two stocks with identical characteristics will have identical weights despite them having widely different historic returns.
 
-We parameterize the optimal portfolio weights as a function the characteristics for the stock's, with the simple linear specifications for the weights:
+It is relatively easy to optimize a portfolio composed of many stocks. However, the burden of this type of optimization does not come from the number of assets, but more from the number of characteristics. Also, only optimizing the entire portfolio based on the parameters we choose, which will reduce the risk of the in-sample and overfitting. This is because the coefficients will only deviate from zero if there is consistently a combination of risk and return across assets. This will also affect the optimization because it tends not to take extreme values.   
 
-$$\omega_{i,t}=f(x_{i,t};\theta)=\bar\omega_{i,t}+\frac{1}{N_t}\theta^{\intercal}\hat x_{i,t} $$
+To estimate $\hat{\boldsymbol{\theta}}$ we program a series of functions to determine the parametric portfolio given $\boldsymbol{x}_{i,t}$ and ${\theta}$. We then implement a function to determine the portfolio's gross return, calculate its certainty equivalent and use the *optim* function in R to do numerical optimization of the certainty equivalent by adjusting $\hat{\boldsymbol{\theta}}$. We define our initial $\hat{\boldsymbol{\theta}}$ as $[\begin{matrix} 1 & 1 & 1 \end{matrix}]'$
 
-To estimate $\theta$ we maximize the linear policy case  function:
-$$\max\limits_{\theta} \frac{1}{N}\displaystyle\sum_{i=0}^{T-1} \bigg(\displaystyle\sum_{i=1}^{N_t}\bigg (\bar\omega_{i,t}+\frac{1}{N_t}\theta^{\intercal}\hat x_{i,t} \bigg) r_{i,t+1} \bigg)$$
-
-The most important aspect of the coefficient $\theta$ is that the parameterization is constant across assets through time. If we have a constant coefficient across assets, then the weight in the portfolio for each stock will depend on the characteristics of the stock and not on the history of the return on the stock. 
-Furthermore, based on this, if we have two stocks that are close to each other in characteristics related to the expected return and risk, with different sample returns, they should even have the same weight in the portfolio.
-
-It is relatively easy to optimize a portfolio composed of many stocks. However, the burden of this type of optimization does not come from the number of assets but more from the number of characteristics. Also, only optimize the entire portfolio based on the parameters we choose, which will reduce the risk of in-sample and overfitting. This is because the coefficients will only deviate from zero if there is consistently a combination of risk and return across assets. This will also affect the optimization because it tends not to take extreme values.   
-
-<<<<<<< HEAD
-To estimate $\hat{\theta}$ we program a series of functions to determine the parametric portfolio given $x_{i,t}$ and $\theta$. We then implement a function to determine the portfolio's gross return, calculate its certainty equivalent and use the *optim* function in R to do numerical optimization of the certainty equivalent by adjusting $\hat{\theta}$.
-=======
-To estimate $\hat{\theta}$ we program a series of functions to determine the parametric portfolio given $x_{i,t}$ and $\theta$. We then implement a function to determine the gross return og said portfolio, calculate its certainty equivalent and use the *optim* function in R to do numerical optimization of the certainty equivalent by adjusting $\hat{\theta}$.We define our initial $\hat{\theta}$ as $[\begin{matrix} 1 & 1 & 1 \end{matrix}]'$
->>>>>>> f77a776d5cc4531342e03fa70554b0ad4ee7b09b
 
 
 ```{r, echo=FALSE}
@@ -998,13 +983,11 @@ strategies_returns %>%
  
 ```
 
-The different strategies show us that Fama French has the highest total return, but its sharp ratio is only the second highest Sharp Ratio. The highest sharp ratio comes from the Naïve portfolio, which has the second highest total return. This shows us that the best portfolio is the Naïve portfolio compared to the risk we have taken. 
+The different strategies show us that Fama French has the highest total return, but its sharp ratio is only the second highest. The highest sharpe ratio comes from the Naive portfolio, which has the second highest total return. This shows us that the best portfolio is the Naive portfolio compared to the amount of risk we have taken. With back-testing strategies, a problem with the estimation can come when we use a very complex model on a dataset which is too small. As our estimation will try to fit more of the data, this can lead to overfitting. A shortfall for this implementation is that we create a portfolio which should hold for 5 years without rebalancing. This is a hard task, since we try to predict so far into the future based on the historical data.
 
-With back-testing strategies, a problem with the estimation can come when we use a very complex model on a dataset that is too small. As our estimation will try to fit more of the data, this can lead to overfitting. A shortfall for this implementation is that we create a portfolio that should hold for 5 years, without rebalancing. Which is a hard task, as we try to predict that far in the future based on the historical data.
+The Parametric portfolio strategy in a high-dimensional asset universe will be affected if it needs more characteristics as parameters, as this will make it heavier to optimize. So we expect it to perform better if we add more characteristics, but it will also make the calculation heavier and therefore take more time. The Naive portfolio will, with a certain number of assets, eliminate the diversifiable risk, but still, leave the systematic risk. An efficient portfolio will in this kind of universe have can have problems if the time horizen is to small, as it need a long time horizon to calculate the covariance matrix. Farma French will perform well if it is given a time horizon that is long enough, as the investor has to ride out underperformance and volatility that could occur in a short term.  
 
-The Parametric portfolio strategi in a high-dimensional asset universe will be affected if it needs more characteristics as parameters, as that will make it heavier to optimize. So we expected it to perform better if we add more characteristics, but it will also make the calculation heavier and therefore take more time. The Naïve portfolio will with a certain number of assets eliminate the diversifiable risk, but still, leave the systematic risk. An efficient portfolio will in this kind of universe have can have problems if the time horizen is to small, as it need a long time horizon to calculate the covariance matrix. Farma French will perform well if it is given a time horizon that is long enough, as the investor has to ride out underperformance and volatility that could occur in a short term.  
-
-From the chosen portfolio weights we have aqquired from all 4 methods our assesment is that the efficient will have the largest turnover and therefore the largest transaction costs. Fama French and parametric will have about the same turnover and the naive portfolio will have by far the lowest turnover as it only has to be adjusted marginally to compensat for returns.
+From the chosen portfolio weights we have aquired from all 4 methods our assesment is that the efficient will have the largest turnover and therefore the largest transaction costs. Fama French and parametric will have about the same turnover and the naive portfolio will have by far the lowest turnover as it only has to be adjusted marginally to compensat for returns.
 
 
 
