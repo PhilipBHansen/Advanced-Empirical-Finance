@@ -65,9 +65,11 @@ ff_monthly <- tbl(tidy_finance, "factors_ff_monthly") %>% collect() %>% select("
 
 # Loading relevant data for part 2 of the exam
 US_Stocks <- read.csv(file = "data_exam2022.csv")
-#Generate a subset of the data with dates 2015-12-31 or earlier
+
+# Generate a subset of the data with dates 2015-12-31 or earlier
 Sub_US_Stocks <- US_Stocks %>% filter(month < "2016-01-01")
-#Out of sample periode
+
+# Out of sample periode
 Out_Of_Sample <- US_Stocks %>% filter(month >= "2016-01-01")
 
 ```
@@ -670,7 +672,7 @@ This will be done by making a linear regression of the excess return for each st
 
 ```{r, echo=FALSE}
 
-parameter_estimates <- US_Stocks %>%
+parameter_estimates <- Sub_US_Stocks %>%
   group_by(permno) %>%
   summarise(alpha_estimate = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,1],
             alpha_sd = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,2],
@@ -728,9 +730,6 @@ compute_fama_french_mu <- function(parameter_estimates, stock_data){
   colMeans(returns)
 }
 
-
-
-
 # Compute the model-implied variance covariance matrix (Sigma_hat)
 compute_fama_french_sigma <- function(parameter_estimates, stock_data){
   
@@ -786,8 +785,8 @@ $$\boldsymbol{\omega}^{*} = \frac{1}{\gamma}\left(\left(\hat{\boldsymbol{\Sigma}
 By using this, we get that the following implied mean-variance portfolio weights:
 
 ```{r, echo=FALSE}
-mu <- compute_fama_french_mu(parameter_estimates, US_Stocks)
-Sigma <- compute_fama_french_sigma(parameter_estimates, US_Stocks)
+mu <- compute_fama_french_mu(parameter_estimates, Sub_US_Stocks)
+Sigma <- compute_fama_french_sigma(parameter_estimates, Sub_US_Stocks)
 
 portfolio_weights <- t(compute_mean_variance_portfolio_weights(mu, Sigma))
 rownames(portfolio_weights) <- "Weights"
@@ -816,7 +815,7 @@ To estimate $\hat{\boldsymbol{\theta}}$ we program a series of functions to dete
 ```{r, echo=FALSE}
 
 #Define the number of stocks
-N <- US_Stocks$permno %>% 
+N <- Sub_US_Stocks$permno %>% 
   unique() %>% 
   length
 
@@ -872,7 +871,7 @@ compute_objective_function <- function(theta, data) {
 optimal_theta <- optim(
   par = theta, 
   compute_objective_function,
-  data = Out_Of_Sample
+  data = Sub_US_Stocks
 )
 
 # Extracting optimal theta values (which we just found)
@@ -895,7 +894,7 @@ theta_hat_table %>%
   kable_styling(latex_options = "HOLD_position")
 
 # Computing optimal weights for last period of the sample
-w_pp <- compute_parametric_portfolio_weights(theta_hat, US_Stocks %>% 
+w_pp <- compute_parametric_portfolio_weights(theta_hat, Sub_US_Stocks %>% 
                                               filter(month == max(Sub_US_Stocks$month))) %>% 
   pull(weight_tilt)
 
@@ -967,7 +966,7 @@ strategies_returns <- matrix(NA, ncol = 4, nrow = 2)
 rownames(strategies_returns) <- c("Total return","Annual sharpe ratio")
 
 # Add the data
-strategies_returns[1,] <- c(sum(excess_return * portfolio_weights), sum(excess_return * w_pp_table), sum(excess_return * efficient), sum(excess_return * naive))
+strategies_returns[1,] <- c(sum(excess_return * portfolio_weights), sum(excess_return * w_pp), sum(excess_return * efficient), sum(excess_return * naive))
 strategies_returns[2,] <- c(Sharpe_ratio(excess_return * portfolio_weights, annualized = TRUE), Sharpe_ratio(excess_return * w_pp_table, annualized = TRUE), Sharpe_ratio(excess_return * efficient, annualized = TRUE), Sharpe_ratio(excess_return * naive, annualized = TRUE))
 
 # Prints the table
