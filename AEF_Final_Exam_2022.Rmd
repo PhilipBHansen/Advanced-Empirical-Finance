@@ -853,17 +853,16 @@ evaluate_portfolio <- function(weights_parametric_portfolio){
     group_by(month) %>%
     summarise(across(return_x_w, sum)) %>%
     mutate(Rp = return_x_w+1)
+ 
   return(tmp$Rp)
 }
 
 # Function that gathers the framework and allows "optim" to maximize the utility by adjusting theta 
-compute_objective_function <- function(theta,
-                                       data) {
+compute_objective_function <- function(theta, data) {
+  
   #Use the compute_parametric_portfolio_weights function to calculate the portfolio weights given theta
-  processed_data <- compute_parametric_portfolio_weights(
-    theta,
-    data
-  )
+  processed_data <- compute_parametric_portfolio_weights(theta,data)
+  
   # Use the evaluate_portfolio function to generate the gross returns for the utility function and pipe this vector to the utility function
   objective_function <- evaluate_portfolio(processed_data) %>% utility_function()
   
@@ -878,9 +877,9 @@ optimal_theta <- optim(
   data = Sub_US_Stocks
 )
 
-optimal_theta$par 
+theta_hat<-optimal_theta$par 
 
-mean(evaluate_portfolio(compute_parametric_portfolio_weights(optimal_theta$par ,Sub_US_Stocks))-1)
+
 
 
 
