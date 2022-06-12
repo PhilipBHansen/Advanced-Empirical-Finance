@@ -810,6 +810,7 @@ Sigma <- compute_fama_french_sigma(parameter_estimates, US_Stocks)
 
 portfolio_weights <- t(compute_mean_variance_portfolio_weights(mu, Sigma))
 rownames(portfolio_weights) <- "Portfolio weights"
+
 portfolio_weights %>%
   knitr::kable(booktabs = T, 
                digits = 4, 
@@ -956,45 +957,64 @@ w_pp_table %>%
 ## Problem 3
 
 ```{r}
- compute_efficient_weight <- function(Sigma,
-                                      mu,
-                                      gamma = gamma_default,
-                                      beta = 0, # transaction costs
-                                      w_prev = 1/ncol(Sigma) * rep(1, ncol(Sigma))){
+# Defining af function which computes the efficient portfolio weights defined in problem 3
+compute_efficient_weight <- function(Sigma, mu, gamma = gamma_default){
+  # Creating a vector of ones
+  iota <- rep(1, ncol(Sigma))
+  
+  Sigma_inverse <- solve(Sigma)
+  
+  # Computing optimal Markowitz weights (equation derived in problem 1)
+  w_mvp <- Sigma_inverse %*% iota
+  w_mvp <- as.vector(w_mvp / sum(w_mvp))
+  w_opt <- w_mvp  + 1/gamma * (Sigma_inverse - 1 / sum(Sigma_inverse) * Sigma_inverse %*% iota %*% t(iota) %*% Sigma_inverse) %*% mu
+  return(as.vector(w_opt))
+}
 
-   iota <- rep(1, ncol(Sigma))
-   Sigma_processed <- Sigma + beta / gamma * diag(ncol(Sigma))
-   mu_processed <- mu + beta * w_prev
+# Creating the returns matrix (columns = stocks and rows = months)
+returns_matrix <- Sub_US_Stocks %>% select(permno, month, ret_excess) %>%
+  pivot_wider(
+    names_from = permno,
+    values_from = ret_excess) %>% 
+  select(-month)
 
-   Sigma_inverse <- solve(Sigma_processed)
+# Finding mu_tilde
+mu_tilde <- colMeans(returns_matrix)
 
-   w_mvp <- Sigma_inverse %*% iota
-   w_mvp <- as.vector(w_mvp / sum(w_mvp))
-   w_opt <- w_mvp  + 1/gamma * (Sigma_inverse - 1 / sum(Sigma_inverse) * Sigma_inverse %*% iota %*% t(iota) %*% Sigma_inverse) %*% mu_processed
-   return(as.vector(w_opt))
- }
-
- returns_matrix <- Sub_US_Stocks %>% select(permno, month, ret_excess) %>%
-   pivot_wider(
-     names_from = permno,
-     values_from = ret_excess
-   ) %>% select(-month)
-
- mu_tilde <- colMeans(returns_matrix)
-
- sigma_tilde <- cov(returns_matrix)
+# Finding sigma_tilde
+sigma_tilde <- cov(returns_matrix)
  
+# Creating the naive (equal-weighted) portfolio weights
+naive <- 1/ncol(sigma_tilde) * rep(1, ncol(sigma_tilde))
 
- naive <- 1/ncol(sigmatilde) * rep(1, ncol(sigmatilde))
+# Computing the efficient portfolio weights
+efficient <- compute_efficient_weight(sigma_tilde, mu_tilde)
 
- efficient <- compute_efficient_weight(sigmatilde, mutilde, w_prev = naive, beta = 0)
- 
- excess_return <- Sub_US_Stocks %>% select(permno, ret_excess) %>% group_by(permno) %>% summarise(across(ret_excess,sum))
- 
-excess_return$ret_excess * w_pp_table
-excess_return$ret_excess * portfolio_weights
-excess_return$ret_excess * naive
-excess_return$ret_excess * efficient
+# Computing the total return for each stock over the out-of-sample period
+excess_return <- Sub_US_Stocks %>% 
+  select(permno, ret_excess) %>% 
+  group_by(permno) %>% 
+  summarise(across(ret_excess, sum)) %>%
+  pull(ret_excess)
+
+# Initializes table for output
+strategies_returns <- matrix(NA, ncol = 4, nrow = 2)
+
+# Adds row names
+rownames(strategies_returns) <- c("Total return","Annual sharpe ratio")
+
+# Add the data
+strategies_returns[1,] <- c(sum(excess_return * portfolio_weights), sum(excess_return * w_pp_table), sum(excess_return * efficient), sum(excess_return * naive))
+strategies_returns[2,] <- c(Sharpe_ratio(excess_return * portfolio_weights, annualized = TRUE), Sharpe_ratio(excess_return * w_pp_table, annualized = TRUE), Sharpe_ratio(excess_return * efficient, annualized = TRUE), Sharpe_ratio(excess_return * naive, annualized = TRUE))
+
+# Prints the table
+strategies_returns %>%
+  knitr::kable(booktabs = T,
+               digits = 4,
+               col.names = c("Fama French", "Parametric", "Efficient", "naive"),
+               caption = "Sharpe ratio") %>%
+  kable_paper("hover", full_width = F) %>%
+  kable_styling(latex_options = "HOLD_position")
  
 ```
 
