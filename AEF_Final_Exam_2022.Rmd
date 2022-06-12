@@ -906,7 +906,7 @@ theta_hat <- optimal_theta$par
 theta_hat_table <- matrix(NA, ncol = 3, nrow = 1)
 
 theta_hat_table[1,] <- as.vector(theta_hat)
-theta_hat_table
+
 rownames(theta_hat_table) <- "Theta hat"
 
 # Printing a table with the theta_hat values
@@ -915,7 +915,7 @@ theta_hat_table %>%
                digits = 4,
                col.names = c("Beta", "Size", "BM"),
                caption = "MISSING") %>%
-  kable_paper("hover", full_width = T) %>%
+  kable_paper("hover", full_width = F) %>%
   kable_styling(latex_options = "HOLD_position")
 
 # Computing optimal weights for last period of the sample
@@ -927,7 +927,6 @@ w_pp <- compute_parametric_portfolio_weights(theta_hat, US_Stocks %>%
 w_pp_table <- matrix(NA, ncol = length(unique(Sub_US_Stocks$permno)), nrow = 1)
 
 w_pp_table[1,] <- as.vector(w_pp)
-w_pp_table
 rownames(w_pp_table) <- "Optimal weights"
 
 # Printing a table with the optimal weights for last period of the sample
