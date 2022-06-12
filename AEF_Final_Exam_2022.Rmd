@@ -610,6 +610,11 @@ our_mom_turnover <- our_mom_turnover / length(months)
 
 ```
 
+Most academic studies ignore real world costs, this could prove to be an issue for the momentum portfolio. We have seen that the momentum strategy has quite a high turnover and this might lead to momentum becoming too expensive to trade compared to its return premium.
+It is very likely that the turnover of a size sort portfolio would be significantly smaller than that of a momentum portfolio. A company that is large will most 
+likely remain so in the forseeable future. Take an example as Apple, and imagine its stock price dropping 10% this would imply severe negative momentum but i would for a decent amount of time remain a huge company. The same goes for really small companies, imagine your local bakery doing an IPO and doubling its market cap in a year, that is enourmos positive momentum but that does not make it a Fortune 500 or anything close to it.
+
+The assumption of perfectly divisible assets might also have an effect on cost in the real world. However this problem dissapears as the value of the portfolio becomes sufficiently large. Asset liquidity might also be an issue as some assets simply cant be traded at the pace a momentum strategy requires, atleast not without trading at a discount which most likely would leave the strategy worse off.
 
 
 
