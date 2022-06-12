@@ -294,7 +294,7 @@ mom_portfolios %>%
 
 In table **MISSING** we see that the average value-weighted returns and the CAPM alphas (risk-adjusted performance) are increasing in the portfolios (with the exception of portfolio 6 and 7). We also see that all of the portfolios are very correlated with the market return which is depicted in the Market beta. Most of the portfolios have a Market beta around 1 which indicates that they move more or less like the market. Portfolio 1 is however extremely correlated with the market returns, so whenever the market moves a little bit in one direction, then this portfolio moves a lot in the same direction, making the fluctuations very large. Since we are interested in looking at the CAPM alphas of the different portfolios, we have depicted them in the graph below, so they are easier to compare to each other.
 
-```{r, echo=FALSE}
+```{r fig1, out.width = '80%', echo=FALSE}
 # Calculating the CAPM (linear regression of the excess return on the market excess return)
 mom_portfolios_summary <- mom_portfolios %>%
   group_by(portfolio) %>%
@@ -487,7 +487,7 @@ k_months_ahead_alphas %>%
 
 The graph below shows the CAPM alphas for all the k-months-ahead returns (with $k=1,3,6,12$) for all 10 momentum-sorted portfolios. Something that is very noticeable is that the CAPM alpha for the 12-months-ahead returns has opposite signs for most of the portfolios. For portfolio 1 it shows a positive CAPM alpha, where the shorter returns show a negative alpha. As we move into the middle portfolios then the alpha value becomes smaller for all the k-months-ahead returns. According to this investigation, portfolio 1 with a time horizon of 12 months seems to predict the highest risk-adjusted performance. This horizon also continues to deliver positive CAPM alphas for all portfolios except portfolio 9 and 10. However, by looking at the 3-months-ahead CAPM alphas, then we see the same movements as for the original 1-month-ahead just larger. It could therefore suggest that creating the long-short portfolio as we did in exercise 4 would result in an even larger risk-adjusted performance.
 
-```{r, echo=FALSE}
+```{r fig2, out.width = '80%', echo=FALSE}
 
 # Creating a tall table with all k-months-ahead alphas together in order to create combined plot
 k_months_ahead_alphas_tall <- k_months_ahead_alphas %>% 
