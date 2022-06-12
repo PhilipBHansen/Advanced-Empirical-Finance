@@ -291,11 +291,6 @@ for(i in (2:length(months))){
   
   turnover_mom <- turnover_mom + sum(abs(tmp$weight.x - tmp$weight.y))
   
-  # Testing
-  prev_length <- nrow(w_prev)
-  new_length <- nrow(w_new)
-  total_length <- nrow(tmp)
-  
   w_prev <- w_new
 }
 
@@ -599,11 +594,6 @@ for(i in (2:length(months))){
   tmp[["weight.y"]][is.na(tmp[["weight.y"]])] <- 0
   
   better_turnover <- better_turnover + sum(abs(tmp$weight.x - tmp$weight.y))
-  
-  # Testing
-  prev_length_v2 <- nrow(w_prev)
-  new_length_v2 <- nrow(w_new)
-  total_length_v2 <- nrow(tmp)
   
   w_prev <- w_new
 }
