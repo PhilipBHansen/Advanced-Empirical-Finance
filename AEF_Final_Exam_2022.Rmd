@@ -266,6 +266,41 @@ mom_portfolios <- crsp_monthly_mom %>%
 
 mom_portfolios_raw <- mom_portfolios
 
+# Finding the portfolio turnover
+months <- unique(mom_portfolios$month)
+w_prev <- mom_portfolios %>% 
+  filter(month == months[1]) %>% 
+  ungroup() %>% 
+  filter(portfolio %in% c(1, 10)) %>% 
+  mutate(weight = mktcap_lag / sum(mktcap_lag)) %>%
+  select(permno, weight)
+
+turnover_mom <- 0
+
+for(i in (2:length(months))){
+  w_new <- mom_portfolios %>% 
+    filter(month == months[i]) %>% 
+    ungroup() %>% 
+    filter(portfolio %in% c(1, 10)) %>% 
+    mutate(weight = mktcap_lag / sum(mktcap_lag)) %>%
+    select(permno, weight)
+  
+  tmp <- w_prev %>% full_join(w_new, by="permno")
+  tmp[["weight.x"]][is.na(tmp[["weight.x"]])] <- 0
+  tmp[["weight.y"]][is.na(tmp[["weight.y"]])] <- 0
+  
+  turnover_mom <- turnover_mom + sum(abs(tmp$weight.x - tmp$weight.y))
+  
+  # Testing
+  prev_length <- nrow(w_prev)
+  new_length <- nrow(w_new)
+  total_length <- nrow(tmp)
+  
+  w_prev <- w_new
+}
+
+turnover_mom <- turnover_mom / length(months)
+
 # Creating table of equal weighted average of momentum and market cap
 mom_portfolios %>% group_by(portfolio) %>%
                    summarise('average momentum' = mean(mom),'average market capitalization' = mean(mktcap)) %>%
@@ -549,7 +584,7 @@ w_prev <- better_strategy_raw %>%
   mutate(weight = mktcap_lag / sum(mktcap_lag)) %>%
   select(permno, weight)
 
-turnover <- 0
+better_turnover <- 0
 
 for(i in (2:length(months))){
   w_new <- better_strategy_raw %>% 
@@ -563,12 +598,17 @@ for(i in (2:length(months))){
   tmp[["weight.x"]][is.na(tmp[["weight.x"]])] <- 0
   tmp[["weight.y"]][is.na(tmp[["weight.y"]])] <- 0
   
-  turnover <- turnover + sum(abs(tmp$weight.x - tmp$weight.y))
+  better_turnover <- better_turnover + sum(abs(tmp$weight.x - tmp$weight.y))
+  
+  # Testing
+  prev_length_v2 <- nrow(w_prev)
+  new_length_v2 <- nrow(w_new)
+  total_length_v2 <- nrow(tmp)
   
   w_prev <- w_new
 }
 
-turnover <- turnover / length(months)
+better_turnover <- better_turnover / length(months)
 
 
 ```
