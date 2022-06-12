@@ -914,7 +914,7 @@ theta_hat_table %>%
   knitr::kable(booktabs = T, 
                digits = 4,
                col.names = c("Beta", "Size", "BM"),
-               caption = "MISSING") %>%
+               caption = "Optimal $\\hat{\\theta}$ estimated on data up until december 31st 2015") %>%
   kable_paper("hover", full_width = F) %>%
   kable_styling(latex_options = "HOLD_position")
 
@@ -934,7 +934,7 @@ w_pp_table %>%
   knitr::kable(booktabs = T, 
                digits = 4,
                col.names = unique(Sub_US_Stocks$permno),
-               caption = "MISSING") %>%
+               caption = "Optimal parametric portfolio as of december 2015 given $\\hat{\\theta}$ estimated on data up until december 31st 2015") %>%
   kable_paper("hover", full_width = T) %>%
   kable_styling(latex_options = "HOLD_position")
 
