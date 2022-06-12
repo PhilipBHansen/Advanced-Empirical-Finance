@@ -967,7 +967,7 @@ naive <- 1/ncol(sigma_tilde) * rep(1, ncol(sigma_tilde))
 efficient <- compute_efficient_weight(sigma_tilde, mu_tilde)
 
 # Computing the total return for each stock over the out-of-sample period
-excess_return <- Sub_US_Stocks %>% 
+excess_return <- Out_Of_Sample %>% 
   select(permno, ret_excess) %>% 
   group_by(permno) %>% 
   summarise(across(ret_excess, sum)) %>%
@@ -994,5 +994,8 @@ strategies_returns %>%
  
 ```
 
+With back-testing strategies, a problem with the estimation can come when we use a very complex model on a dataset that is too small. As our estimation will try to fit more of the data, this can lead to overfitting. 
+The pp strategi in a high-dimensional asset universe will be affected if it needs more characteristics as parameters, as that will make it heavier to optimize. But if you only use very few characteristics it will be easier to optimize. The Naïve portfolio will with a certain number of assets eliminate the diversifiable risk, but still, leave the systematic risk. Having a small amount of capital available for each asset, in general, will minimize the loss and return you get, due to the size of the amount. An efficient portfolio will in this kind of universe have can have problems if there are too many of the same kind of assets. Because it looks at the covariance between two assets, and if prices move in different directions, it will give a lower covariance between assets, and this will gives us a lower risk. 
+When we look at transaction cost, we would in a high-dimensional asset universe have to look at it in combination with turnover. For if we have a high amount of assets, but the strategi perform with a turnover that is too low, compared to the transaction cost. 
 
 
