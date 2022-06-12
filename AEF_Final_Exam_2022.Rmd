@@ -615,39 +615,39 @@ our_mom_turnover <- our_mom_turnover / length(months)
 
 ```{r Finding from 1 and 3, echo=FALSE}
 
+# #Define function to calculate the sharpe ratio
+# Sharpe_ratio = function(x){
+#   mu <- mean(x)
+#   sigma <- sqrt(1 / (length(x) - 1) * sum((x-mu)^2) )
+#   return(mu/sigma)
+# }
+
 #Define function to calculate the sharpe ratio
 Sharpe_ratio = function(x){
-  mu <- mean(x)
-  sigma <- sqrt(1 / (length(x) - 1) * sum((x-mu)^2) )
-  return(mu/sigma)
+  mu <- mean(12 * x)
+  sd <- sqrt(12) * sd(x)
+  return(mu/sd)
 }
 
-SR <- matrix(c(performance %>% filter(strategy=="Mean-variance with no short-selling") %>% pull("net_return") %>% Sharpe_ratio(),
-               performance %>% filter(strategy=="Mean-variance with TC") %>% pull("net_return") %>% Sharpe_ratio(),
-               performance %>% filter(strategy=="Naive") %>% pull("net_return") %>% Sharpe_ratio()),
-             ncol = 1)
+summary3 <- matrix(NA, ncol = 3, nrow = 2)
 
-#Adds row and column names
-colnames(SR) <- c("Sharp ratio")
-rownames(SR) <- c("Mean-variance with no short-selling","Mean-variance with TC","Naive")
+# Adds row names
+rownames(summary3) <- c("Standard long-short portfolio","Our long-short portfolio")
+
+# Add the data
+summary3[,1] <- c(Sharpe_ratio(long_short_portfolio$long_short), Sharpe_ratio(our_mom_long_short_portfolio$long_short))
+summary3[,2] <- c(mean(long_short_portfolio$long_short), mean(our_mom_long_short_portfolio$long_short))
+summary3[,3] <- c(turnover_mom, our_mom_turnover)
 
 #Prints the table
-SR%>%
-  knitr::kable(booktabs = T, digits = 4, caption = "Sharpe ratio") %>% 
+summary3 %>%
+  knitr::kable(booktabs = T, 
+               digits = 4, 
+               col.names = c("Sharpe ratio", "Estimated excess return", "Turnover"),
+               caption = "Sharpe ratio") %>% 
   kable_paper("hover", full_width = F) %>% 
   kable_styling(latex_options = "HOLD_position")
 
-Sharpe_ratio(our_mom_long_short_portfolio$long_short)
-
-
-
-mean_return1 <- aggregate(ret_excess ~ portfolio, data = mom_portfolios, mean)
-
-sharp_ratio_e6 <- mean_return1$ret_excess/sd(mom_portfolios$ret_excess) # Not sure about Sharpe Ratio, because they are very small
-
-sharp_ratio <- cbind(sharp_ratio_e4,sharp_ratio_e6)
-
-sharp_ratio %>% knitr::kable(digits = 4) #creates a table to view the data.
 
 ```
 
