@@ -79,7 +79,7 @@ The whole report is made in collaboration with each other where we have all help
 **57**: Part 1: exercise **MISSING** and Part 2: problem 1  
 
 \newpage
-
+\pagenumbering{arabic}
 
 # Exam part 1
 
@@ -684,7 +684,7 @@ parameter_estimates <- US_Stocks %>%
 
 parameter_estimates %>%
   knitr::kable(booktabs = T, digits = 4, col.names = c("Permno", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd"), caption = "Fama French 3-factor estimates for the 8 stocks (estimated from 2000 to 2015)", align = "c") %>%
-  add_header_above(c(" " = 1, "$\\hat{\\alpha}_i$" = 2, "$\\hat{\\beta}_i^{M}$" = 2, "$\\hat{\\beta}_i^{SMB}$" = 2, "$\\hat{\\beta}_i^{HML}$" = 2)) %>%
+  add_header_above(c(" " = 1, "alpha" = 2, "beta M" = 2, "beta SMB" = 2, "beta HML" = 2)) %>%
   kable_paper("hover", full_width = T) %>%
   kable_styling(latex_options = "HOLD_position")
 
@@ -889,7 +889,7 @@ compute_objective_function <- function(theta, data) {
 optimal_theta <- optim(
   par = theta, 
   compute_objective_function,
-  data = Sub_US_Stocks
+  data = Out_Of_Sample
 )
 
 # Extracting optimal theta values (which we just found)
