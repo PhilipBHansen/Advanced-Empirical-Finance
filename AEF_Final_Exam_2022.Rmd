@@ -971,10 +971,42 @@ w_pp_table %>%
 
 ```
 
+
 ## Problem 3
 
 ```{r}
+compute_efficient_weight <- function(Sigma,
+                                     mu,
+                                     gamma = gamma_default, 
+                                     beta = 0, # transaction costs
+                                     w_prev = 1/ncol(Sigma) * rep(1, ncol(Sigma))){ 
+  
+  iota <- rep(1, ncol(Sigma))
+  Sigma_processed <- Sigma + beta / gamma * diag(ncol(Sigma))
+  mu_processed <- mu + beta * w_prev
+  
+  Sigma_inverse <- solve(Sigma_processed)
+  
+  w_mvp <- Sigma_inverse %*% iota
+  w_mvp <- as.vector(w_mvp / sum(w_mvp))
+  w_opt <- w_mvp  + 1/gamma * (Sigma_inverse - 1 / sum(Sigma_inverse) * Sigma_inverse %*% iota %*% t(iota) %*% Sigma_inverse) %*% mu_processed
+  return(as.vector(w_opt))
+}
 
+returns_matrix <- Sub_US_Stocks %>% select(permno, month, ret_excess) %>%
+  pivot_wider(
+    names_from = permno,
+    values_from = ret_excess
+  ) %>% select(-month)
+
+
+
+sigmatilde <- cov(returns_matrix)
+mutilde <- colMeans(returns_matrix)
+
+naive <- 1/ncol(sigmatilde) * rep(1, ncol(sigmatilde))
+
+efficient <- compute_efficient_weight(sigmatilde, mutilde, w_prev = naive, beta = 0)
 ```
 
 
