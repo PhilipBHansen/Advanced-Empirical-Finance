@@ -75,7 +75,7 @@ Out_Of_Sample <- US_Stocks %>% filter(month >= "2016-01-01")
 ```
 
 ## Contribution from each student
-The whole report is made in collaboration with each other where we have all helped with each problem. The main author of each section can be seen as follows:  
+The whole report is made in close collaboration with each other where we have all helped with each problem. The main author of each section can be seen as follows:  
 **48**: Part 1: exercise **MISSING** and Part 2: problem 2 (text) and problem 3  
 **49**: Part 1: exercise **MISSING** and Part 2: problem 2 (coding)  
 **57**: Part 1: exercise **MISSING** and Part 2: problem 1  
@@ -94,7 +94,7 @@ The financial stock data for this assignment comes from the CRSP-universe and in
 3. *mktcap*: Market capitalization (or market cap) is the total value of the company. It is calculated as the total amount of outstanding shares of a company multiplied with the stock price. This makes it easier to compare the size of each company to one another and to the market in general.  
 4. *mkt_excess*: This is the excess return for the whole market combined.  
 
-In order to get a sense of the data, we create the following summary statistics, where we calculate the mean, standard deviation and quartiles for both the excess return and the market capitalization for each month and then we average these results over all months. This gives us the following table:
+In order to get a sense of the data, we create the following summary statistics, where we calculate the mean, standard deviation and quartiles for both the excess return and the market capitalization for each month and then we average these results over all months. We considered deflating the marketcap with the consumer price index as inflation also naturally drives the market cap upwards thus mimicking positive momentum. We have chosen not to do so as the assignment said nothing about this, but it could be interesting to investigate further.
 
 ```{r summary statistics, echo=FALSE}
 
@@ -135,7 +135,7 @@ Table 1 shows that the cross-sectional mean of the excess return and market capi
 
 ## Exercise 2
 
-The reason why *crsp_monthly %>% group_by(permno) %>% mutate(ret_excess_lag = lag(ret_excess))* does not provide the correct result if there are non-explicit missing values in the time series is, that the lag function doesn't differentiate between one-month lag and just the closest lag available. If data for a specific month, lets say May, doesn't exist, then it just takes April as the lagged value instead, which would be wrong. Therefore, a better way to find the lagged excess return would be to copy the data to a new data frame (only including permno, month and excess return) where you overwrite the month to be the next month. This means that all the data in the new data frame is now depicted as being one month behind of what it actually is. Then you re-name the excess return column to instead depict lagged excess return and lastly you drop all the NAs in the data frame. By now innerjoining this data frame to the original on month and permno you now get the lagged excess return variable as well.
+The reason why *crsp_monthly %>% group_by(permno) %>% mutate(ret_excess_lag = lag(ret_excess))* does not provide the correct result if there are non-explicit missing values in the time series is, that the lag function does not differentiate between one-month lag and just the closest lag available. If data for a specific month, lets say May, does not exist, then it just takes April as the lagged value instead, which would be wrong. Therefore, a better way to find the lagged excess return would be to copy the data to a new data frame (only including permno, month and excess return) where you overwrite the month to be the next month. This means that all the data in the new data frame is now depicted as being one month behind of what it actually is. Then you re-name the excess return column to instead depict lagged excess return and lastly you drop all the NAs in the data frame. By now innerjoining this data frame to the original on month and permno you now get the lagged excess return variable as well.
 
 
 ```{r summerise for autocorrelation, echo=FALSE}
@@ -256,7 +256,7 @@ mom_portfolios_raw <- mom_portfolios
 
 # Creating the table of equal weighted average of momentum and market cap
 mom_portfolios %>% group_by(portfolio) %>%
-  summarise('average momentum' = mean(mom),'average market capitalization' = mean(mktcap)) %>%
+  summarise("average momentum' = mean(mom),'average market capitalization" = mean(mktcap)) %>%
   knitr::kable(booktabs = T, 
                digits = c(0, 2, 0), 
                col.names = c("Portfolio number", "Average momentum", "Average market capitalization"), 
@@ -311,8 +311,9 @@ mom_portfolios_summary %>%
        y = "CAPM alpha",
        fill = "Portfolio") +
   scale_y_continuous(labels = percent) +
-  theme(legend.position = "None") + 
-  theme_bw()
+  theme_bw() +
+  theme(legend.position = "right") + 
+  theme(plot.title = element_text(size = 10))
 
 ```
 
@@ -659,6 +660,7 @@ summary3 %>%
 
 We see that our suggested strategy has a better sharpe ratio, so a better return proportional to the amount of risk taken. The positive excess return of 0.47% compared to 0.75% suggests, that we are able to catch a good part of the momentum premium, but with a turnover that is about 25% smaller while also taking on less risk. We therefore conclude that the strategy works decently for the assigned purpose.
 
+\newpage
 # Exam part 2
 In part 2 of this report we will use a dataset which consists of 252 monthly observations for $N=8$ different US-listed stocks identified by their permno which is a unique company identifier. The permno for the stocks used are: 10026, 10032, 10044, 10104, 10200, 10232, 10252 and 10397. The whole dataset includes monthly observations from "2000-01-01" to "2020-12-01". All the portfolio weights from our strategies will be found by using the data up until (and including) 2015, where the last 5 years will then be used to test the out-of-sample returns for these strategies. For each month-permno observation, the dataset contains the following variables: ret_excess is the net excess return for each month. mkt_excess, smb and hml are the market excess returns, the returns of the small-minus-big portfolio and the high-minus-low book-to-market ratio portfolio returns from Kenneth French’s homepage. beta is the estimated CAPM beta of the stock, measured at the beginning of month t, size is a measure of market capitalization of the stock at the beginning of month t and bm is the book-to-market ratio of the stock, measured at the beginning of month t. The columns beta, size and bm are standardized such that the monthly cross-sectional average is zero and the monthly cross-sectional standard deviation is one.
 
@@ -684,7 +686,7 @@ parameter_estimates <- Sub_US_Stocks %>%
             beta_hml_sd = summary(lm(ret_excess ~ mkt_excess + smb + hml))$coefficients[1,1]) 
 
 parameter_estimates %>%
-  knitr::kable(booktabs = T, digits = 4, col.names = c("Permno", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd"), caption = "Fama French 3-factor estimates for the 8 stocks (estimated from 2000 to 2015)", align = "c") %>%
+  knitr::kable(booktabs = T, digits = 4, col.names = c("Permno", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd", "Estimate", "sd"), caption = "Fama French 3-factor estimates for the 8 stocks", align = "c") %>%
   add_header_above(c(" " = 1, "alpha" = 2, "beta M" = 2, "beta SMB" = 2, "beta HML" = 2)) %>%
   kable_paper("hover", full_width = T) %>%
   kable_styling(latex_options = "HOLD_position")
@@ -889,7 +891,7 @@ theta_hat_table %>%
   knitr::kable(booktabs = T, 
                digits = 4,
                col.names = c("Beta", "Size", "BM"),
-               caption = "Optimal $\\hat{\\boldsymbol{\\theta}}$ estimated on data up until december 31st 2015") %>%
+               caption = "Optimal $\\hat{\\boldsymbol{\\theta}}$ values") %>%
   kable_paper("hover", full_width = F) %>%
   kable_styling(latex_options = "HOLD_position")
 
@@ -980,11 +982,12 @@ strategies_returns %>%
  
 ```
 
-The different strategies show us that Fama French has the highest total return, but its sharp ratio is only the second highest. The highest sharpe ratio comes from the Naive portfolio, which has the second highest total return. This shows us that the best portfolio is the Naive portfolio compared to the amount of risk we have taken. With back-testing strategies, a problem with the estimation can come when we use a very complex model on a dataset which is too small. As our estimation will try to fit more of the data, this can lead to overfitting. A shortfall for this implementation is that we create a portfolio which should hold for 5 years without rebalancing. This is a hard task, since we try to predict so far into the future based on the historical data.
+Evaluating the strategies’ performances, shows that Fama French generates the highest return over the 5-year period. Despite having the highest return its sharpe ratio is beat by the Naive portfolio. This means the Naive portfolio provides a better return when considering the risk. During back-testing, problems can arise when trying to fit a highly complex model on small dataset as this creates a risk of overfitting. A shortfall of this testing strategy is that we choose a portfolio and stick with it for 5 years. This assumes that stock performance 5 years ahead can be predicted on historical data which seems highly unlikely. 
 
-The Parametric portfolio strategy in a high-dimensional asset universe will be affected if it needs more characteristics as parameters, as this will make it heavier to optimize. So we expect it to perform better if we add more characteristics, but it will also make the calculation heavier and therefore take more time. The Naive portfolio will, with a certain number of assets, eliminate the diversifiable risk, but still, leave the systematic risk. An efficient portfolio will in this kind of universe have problems if the time horizon is to small, as it needs a long time horizon to calculate the covariance matrix. Fama French will perform well if it is given a time horizon that is long enough, as the investor has to ride out underperformance and volatility that could occur in the short term.  
+In a high dimensional asset universe the parametric portfolio will be affected by a change in benchmark, but it will have more data to consistently estimate $\boldsymbol{\theta}$ on. When the universe becomes sufficiently large, the Naive portfolio will have eliminated the diversifiable risk. The efficient portfolio becomes challenging to estimate as the number of assets grows as you will need more observations to determine a nonsingular covariance matrix. Given a long enough time horizon, Fama French will perform well as the investor must ride out underperformance and volatility that could occur in the short term.  
 
-From the chosen portfolio weights we have acquired from all 4 methods our assessment is that the Efficient portfolio will have the largest turnover and therefore the largest transaction costs. The Fama French and the Parametric portfolios will have about the same turnover and the naive portfolio will by far have the lowest turnover as it only has to be adjusted marginally to compensate for the effect of the returns.
+From the portfolio weights we have acquired from all 4 methods, our assessment is that the Efficient portfolio will have the largest turnover and therefore the largest transaction costs. The Fama French and the Parametric portfolios will have about the same turnover and the naive portfolio will by far have the lowest turnover as it only has to be adjusted marginally to compensate for the effect of the returns.
+
 
 
 
