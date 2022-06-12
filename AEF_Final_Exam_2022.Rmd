@@ -899,7 +899,7 @@ If we look at the function for the simple linear specification for the portfolio
 ```{r}
 
 
-
+#Define the number of stocks
 N<-US_Stocks$permno %>% unique() %>% length
 theta<-rep(1,3)
 Sub_US_Stocks<-US_Stocks %>% filter(month<"2016-01-01")
@@ -916,7 +916,11 @@ compute_parametric_portfolio_weights <- function(theta,
       # Definition of benchmark weight
       weight_benchmark = 1/N,
        # Parametric portfolio weights
-      weight_tilt = weight_benchmark + characteristic_tilt/N
+      weight_tilt = weight_benchmark + characteristic_tilt/N,
+      # Limit to no short positions
+       weight_tilt = pmax(0, weight_tilt),
+      #Make protfolio weights balance to 1
+        weight_tilt =  weight_tilt/sum( weight_tilt)
     ) %>%
     ungroup()
 }
@@ -961,22 +965,6 @@ optimal_theta <- optim(
 
 optimal_theta$par 
 
-view(compute_parametric_portfolio_weights(theta, Sub_US_Stocks))
-max((compute_parametric_portfolio_weights(theta, Sub_US_Stocks))$weight_tilt/0.125)
-min((compute_parametric_portfolio_weights(theta, Sub_US_Stocks))$weight_tilt/0.125)
-
-compute_objective_function(c(2415384027600149,  1259332216136819, -3175254693880788),Sub_US_Stocks)
-
-
-tmp<-compute_parametric_portfolio_weights(theta,US_Stocks) 
-tmp
-
-sum(tmp$weight_tilt*(1+tmp$ret_excess))
-
-(US_Stocks %>% filter(month =="2015-01-01"))$size %>% mean()
-
-sum(tmp$weight_tilt)
-
 
 
 # Test utility
@@ -989,18 +977,6 @@ compute_parametric_portfolio_weights(theta,US_Stocks) %>% view()
 #Test evaluate
 ((evaluate_portfolio(compute_parametric_portfolio_weights(theta,US_Stocks)))$Rp %>%mean())#-2*((evaluate_portfolio(compute_parametric_portfolio_weights(theta,US_Stocks)))$Rp %>%var())
 ((evaluate_portfolio(compute_parametric_portfolio_weights(theta,US_Stocks)))$Rp %>%sd())
-
-
--0.025107100793
-
-
-tmp2<-(compute_parametric_portfolio_weights(theta,US_Stocks)%>% filter(month == "2000-01-01") %>% select("ret_excess", "weight_tilt"))$weight_tilt
-
-cbind(tmp1,tmp2)
-
-sum(tmp1*tmp2)
-
-
 
 
 ```
