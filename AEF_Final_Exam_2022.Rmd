@@ -71,7 +71,7 @@ US_Stocks <- read.csv(file = "data_exam2022.csv")
 ## Contribution from each student
 The whole report is made in collaboration with each other where we have all helped with each problem. The main author of each section can be seen as follows:  
 **48**: Part 1: exercise **MISSING** and Part 2: problem 2 (text) and problem 3  
-**49**: Part 1: exercise **MISSING** and Part 2: problem 2 (coding)
+**49**: Part 1: exercise **MISSING** and Part 2: problem 2 (coding)  
 **57**: Part 1: exercise **MISSING** and Part 2: problem 1  
 
 \newpage
@@ -801,7 +801,9 @@ Sigma <- compute_fama_french_sigma(parameter_estimates, US_Stocks)
 portfolio_weights <- t(compute_mean_variance_portfolio_weights(mu, Sigma))
 rownames(portfolio_weights) <- "Portfolio weights"
 portfolio_weights %>%
-  knitr::kable(booktabs = T, digits = 4, caption = "Mean-variance efficient portfolio weights from using the Fama French 3-factor model-implied $\\hat{\\boldsymbol{\\mu}}^{FF}$ and $\\hat{\\boldsymbol{\\Sigma}}^{FF}$") %>%
+  knitr::kable(booktabs = T, 
+               digits = 4, 
+               caption = "Mean-variance efficient portfolio weights from using the Fama French 3-factor model-implied $\\hat{\\boldsymbol{\\mu}}^{FF}$ and $\\hat{\\boldsymbol{\\Sigma}}^{FF}$") %>%
   kable_paper("hover", full_width = T) %>%
   kable_styling(latex_options = "HOLD_position")
 ```
@@ -843,20 +845,23 @@ If we look at the function for the simple linear specification for the portfolio
 
 ```{r}
 
-
 #Define the number of stocks
-N<-US_Stocks$permno %>% unique() %>% length
+N <- US_Stocks$permno %>% 
+  unique() %>% 
+  length
+
 #Define an initial guess of theta
-theta<-rep(1.5,3)
+theta <- rep(1, 3)
+
 #Generate a subset of the data with dates 2015-12-31 or earlier
-Sub_US_Stocks<-US_Stocks %>% filter(month<"2016-01-01")
+Sub_US_Stocks <- US_Stocks %>% filter(month<"2016-01-01")
 
 #Define function to compute the portfolio weights
 compute_parametric_portfolio_weights <- function(theta,  data) {
   data %>%
   group_by(month) %>%
   mutate(
-    characteristic_tilt = beta*theta[1]+size*theta[2]+bm*theta[3]
+    characteristic_tilt = beta*theta[1] + size*theta[2] + bm*theta[3]
     )%>%
   mutate(
     # Definition of benchmark weight
@@ -866,7 +871,6 @@ compute_parametric_portfolio_weights <- function(theta,  data) {
     ) %>%
   ungroup()
 }
-
 
 # Define the certainty equivalent function to be the utility that must be maximized
 utility_function <- function(r, gamma = gamma_default) { 
@@ -904,12 +908,45 @@ optimal_theta <- optim(
   data = Sub_US_Stocks
 )
 
-theta_hat<-optimal_theta$par 
+# Extracting optimal theta values (which we just found)
+theta_hat <- optimal_theta$par 
 
+# Creating table to store and print theta_hat values
+theta_hat_table <- matrix(NA, ncol = 3, nrow = 1)
 
+theta_hat_table[1,] <- as.vector(theta_hat)
+theta_hat_table
+rownames(theta_hat_table) <- "Theta hat"
 
+# Printing a table with the theta_hat values
+theta_hat_table %>%
+  knitr::kable(booktabs = T, 
+               digits = 4,
+               col.names = c("Beta", "Size", "BM"),
+               caption = "MISSING") %>%
+  kable_paper("hover", full_width = T) %>%
+  kable_styling(latex_options = "HOLD_position")
 
+# Computing optimal weights for last period of the sample
+w_pp <- compute_parametric_portfolio_weights(theta_hat, US_Stocks %>% 
+                                              filter(month == max(Sub_US_Stocks$month))) %>% 
+  pull(weight_tilt)
 
+# Creating table to store and print optimal weights
+w_pp_table <- matrix(NA, ncol = length(unique(Sub_US_Stocks$permno)), nrow = 1)
+
+w_pp_table[1,] <- as.vector(w_pp)
+w_pp_table
+rownames(w_pp_table) <- "Optimal weights"
+
+# Printing a table with the optimal weights for last period of the sample
+w_pp_table %>%
+  knitr::kable(booktabs = T, 
+               digits = 4,
+               col.names = unique(Sub_US_Stocks$permno),
+               caption = "MISSING") %>%
+  kable_paper("hover", full_width = T) %>%
+  kable_styling(latex_options = "HOLD_position")
 
 ```
 
