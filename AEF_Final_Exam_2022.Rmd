@@ -36,7 +36,7 @@ if(substr(tmp,1,12) == "C:/Users/Mie"){
 # setwd("INSERT PATH TO YOUR TIDY_FINANCE FILE")
 
 
-# The following input is used in part 2 of the exam
+# The following input is used in part 2 of the exam in problem 1 and 2
 gamma_default <- 4
 
 ######################
@@ -60,11 +60,8 @@ options(scipen = 999)
 
 # Loading relevant data for part 1 of the exam
 tidy_finance <- dbConnect(SQLite(), "tidy_finance.sqlite", extended_types = TRUE) # Connect to sql
-
-crsp_monthly <- tbl(tidy_finance, "crsp_monthly") %>% collect() %>% select("permno", "month", "ret_excess", "mktcap",                                                                                     "mktcap_lag")
-
+crsp_monthly <- tbl(tidy_finance, "crsp_monthly") %>% collect() %>% select("permno", "month", "ret_excess", "mktcap", "mktcap_lag")
 ff_monthly <- tbl(tidy_finance, "factors_ff_monthly") %>% collect() %>% select("month", "mkt_excess")
-
 
 # Loading relevant data for part 2 of the exam
 US_Stocks <- read.csv(file = "data_exam2022.csv")
@@ -73,8 +70,8 @@ US_Stocks <- read.csv(file = "data_exam2022.csv")
 
 ## Contribution from each student
 The whole report is made in collaboration with each other where we have all helped with each problem. The main author of each section can be seen as follows:  
-**48**: Part 1: exercise **MISSING** and Part 2: problem 3  
-**49**: Part 1: exercise **MISSING** and Part 2: problem 2  
+**48**: Part 1: exercise **MISSING** and Part 2: problem 2 (text) and problem 3  
+**49**: Part 1: exercise **MISSING** and Part 2: problem 2 (coding)
 **57**: Part 1: exercise **MISSING** and Part 2: problem 1  
 
 \newpage
@@ -95,51 +92,34 @@ In order to get a sense of the data, we create the following summary statistics,
 
 ```{r summary statistics, echo=FALSE}
 
-# Creating the summary statistics of the excess return and market cap
- crsp_monthly_reduced <- crsp_monthly %>% select(ret_excess, mktcap)
-# 
-# kable(summary(crsp_monthly_reduced), booktabs = T, digits = 4, col.names = c("Excess Return", "Market Cap"), 
-#       caption = "Summary statistics of the excess return and the market cap") %>% 
-#   kable_classic(full_width = F) %>% 
-#   kable_styling(latex_options = "HOLD_position")
-
-
-
-
-# Generates an empty data frame, assigns columns for summary statistics and loads a vector with the variables we wish to summarise
-summary1 <- data.frame(matrix(ncol=7, nrow=2)) #There are 7 summary statistics and two variables
+# Generates an empty data frame, assigns columns for summary statistics and loads a vector with the variables we wish to summarize
+summary1 <- data.frame(matrix(ncol=7, nrow=2)) #There are 7 summary statistics and 2 variables
 colnames(summary1) <- c("mean", "sd", "min", "Q1","median", "Q3", "max")
 var_names <- c("ret_excess",  "mktcap")
 
 # Loops through all the chosen variables and calculates mean, sd, min, Q1, median, Q3 and max for each month then takes the average of those results.  
-for(i in 1:2){  
-              summary1[i,] <- crsp_monthly %>%
-                              group_by(month) %>%
-                              summarise(across(var_names[i],
-                                        list(mean = mean, 
-                                             sd = sd, 
-                                             min = min,
-                                             q25 = ~quantile(., 0.25),
-                                             median = median,
-                                             q75 = ~quantile(., 0.75), 
-                                             max = max),
+for(i in 1:2){
+  summary1[i,] <- crsp_monthly %>%
+    group_by(month) %>%
+    summarise(across(var_names[i], list(mean = mean, 
+                                        sd = sd, 
+                                        min = min,
+                                        q25 = ~quantile(., 0.25),
+                                        median = median,
+                                        q75 = ~quantile(., 0.75), 
+                                        max = max),
                                         .names = "{.fn}  ")
                                         ) %>%
-                              summarise(across(-month, mean))
-              }
+    summarise(across(-month, mean))
+}
 
-#Assigns relevant row names
+# Assigns relevant row names
 rownames(summary1) <- c("Excess return", "Market cap")
 
-# Rounding the excess return values to 4 for the output
-summary1[1,] <- round(summary1[1,], 4)
-
-# Rounding the market cap values (since they are so large that decimals have no real significance)
-summary1[2,c(1:2, 4:7)] <- round(summary1[2,c(1:2, 4:7)], 0)
-
-#Prints the summary nicely in a table
-summary1 %>% knitr::kable(booktabs = T, digits = 4, caption = "Summary statistics of the excess return and the market cap") %>%              kable_paper("hover", full_width = T) %>% 
-             kable_styling(latex_options = "HOLD_position")
+# Prints the summary nicely in a table
+summary1 %>% knitr::kable(booktabs = T, digits = 4, caption = "Summary statistics of the excess return and the market cap") %>%
+  kable_paper("hover", full_width = T) %>%
+  kable_styling(latex_options = "HOLD_position")
 
 ```
 
@@ -563,7 +543,7 @@ better_long_short_summary <- rbind(better_long_short_summary, c(tmp$estimate, tm
 row.names(better_long_short_summary) <- c("CAPM alpha", "Market beta", "Portfolio return")
 
 # Using the linear regression values to depict as a table
-better_long_short_summary %>% knitr::kable(booktabs = T, digits = 4, caption = "CAPM alpha, beta and excess return for the long-short portfolio based on value-weighted momentum-sorted portfolios") %>%
+better_long_short_summary %>% knitr::kable(booktabs = T, digits = 4, caption = "CAPM alpha, beta and excess return for the new long-short portfolio based on value-weighted momentum-sorted portfolios") %>%
                        kable_paper("hover", full_width = T) %>% 
                        kable_styling(latex_options = "HOLD_position")
 
@@ -617,58 +597,6 @@ better_turnover <- better_turnover / length(months)
 
 
 ```{r Finding from 1 and 3, echo=FALSE}
-unique_months <- unique(crsp_monthly_mom$month)
-half_months <- unique_months[seq(1, length(unique_months), 2)] # In order to delete every other month
-
-mom_portfolios <- crsp_monthly_mom %>%
-                  group_by(month) %>%
-                  mutate(breakpoint_10 = quantile(mom, probs = .1),
-                         breakpoint_20 = quantile(mom, probs = .2),
-                         breakpoint_30 = quantile(mom, probs = .3),
-                         breakpoint_40 = quantile(mom, probs = .4),
-                         breakpoint_50 = quantile(mom, probs = .5),
-                         breakpoint_60 = quantile(mom, probs = .6),
-                         breakpoint_70 = quantile(mom, probs = .7),
-                         breakpoint_80 = quantile(mom, probs = .8),
-                         breakpoint_90 = quantile(mom, probs = .9),
-                         portfolio = case_when(mom <= breakpoint_10 ~ 10,
-                                               mom > breakpoint_10 & mom <= breakpoint_20 ~ 20,
-                                               mom > breakpoint_20 & mom <= breakpoint_30 ~ 30,
-                                               mom > breakpoint_30 & mom <= breakpoint_40 ~ 40,
-                                               mom > breakpoint_40 & mom <= breakpoint_50 ~ 50,
-                                               mom > breakpoint_50 & mom <= breakpoint_60 ~ 60,
-                                               mom > breakpoint_60 & mom <= breakpoint_70 ~ 70,
-                                               mom > breakpoint_70 & mom <= breakpoint_80 ~ 80,
-                                               mom > breakpoint_80 & mom <= breakpoint_90 ~ 90,
-                                               mom > breakpoint_90 ~ 100
-                         )) %>%
-              # stores the excess return for the next periode, so it is not forgotten when that period is deleted
-               mutate(ret_excess_lead = lead(ret_excess)) %>% 
-               filter(month %in% half_months) %>% # Deleting every other month so we dont rebalance during these months
-               filter(!is.na(ret_excess_lead)) %>%
-               mutate(ret_excess_sum = ret_excess + ret_excess_lead) %>%
-               group_by(month, portfolio) %>%
-               summarize(ret_excess = weighted.mean(ret_excess_sum, mktcap_lag), .groups = "drop")
-
-mom_portfolios <- mom_portfolios %>% left_join(ff_monthly, by = "month")
-
-# Finding CAPM alpha
-mom_portfolios_summary <- mom_portfolios %>%
-                          group_by(portfolio) %>%
-  summarise(alpha = as.numeric(lm(ret_excess ~ mkt_excess)$coefficients[1]),
-            beta = as.numeric(lm(ret_excess ~ mkt_excess)$coefficients[2]),
-            ret_excess = mean(ret_excess)
-            )
-
-mom_portfolios_summary %>% ggplot(aes(x = portfolio, y = alpha/2, fill = as.factor(portfolio))) +
-                           geom_bar(stat = "identity") +
-                           labs(title = "Alphas of momentum-sorted portfolios (rebalancing every 2 months)",
-                                x = "Momentum decile portfolios",
-                                y = "CAPM alpha",
-                                fill = "Portfolio"
-                                ) +
-                           scale_y_continuous(labels = percent) +
-                           theme(legend.position = "None")
 
 mean_return1 <- aggregate(ret_excess ~ portfolio, data = mom_portfolios, mean)
 
@@ -815,7 +743,7 @@ compute_fama_french_sigma <- function(parameter_estimates, stock_data){
 }
 
 # Function that computes the optimal weights
-compute_mean_variance_portfolio_weights <- function(mu, Sigma, gamma = 4){
+compute_mean_variance_portfolio_weights <- function(mu, Sigma, gamma = gamma_default){
   N <- ncol(Sigma)
   iota <- rep(1, N)
 
