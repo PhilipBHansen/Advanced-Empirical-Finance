@@ -795,7 +795,7 @@ rownames(portfolio_weights) <- "Weights"
 portfolio_weights %>%
   knitr::kable(booktabs = T, 
                digits = 4, 
-               caption = "Mean-variance efficient portfolio weights using the Fama French 3-factor model-implied $\\hat{\\boldsymbol{\\mu}}^{FF}$ and $\\hat{\\boldsymbol{\\Sigma}}^{FF}$") %>%
+               caption = "Mean-variance efficient portfolio weights using $\\hat{\\boldsymbol{\\mu}}^{FF}$ and $\\hat{\\boldsymbol{\\Sigma}}^{FF}$") %>%
   kable_paper("hover", full_width = T) %>%
   kable_styling(latex_options = "HOLD_position")
 ```
@@ -809,9 +809,7 @@ $$\max\limits_{\boldsymbol{\theta}} \frac{1}{N}\displaystyle\sum_{i=0}^{T-1} \bi
 
 The most important aspect of the coefficient $\boldsymbol{\theta}$ is that the parameterization is constant across assets through time. Because we have a constant coefficient across assets the weight in the portfolio for each stock will depend on the characteristics of the stock and not on the stocks historic returns. This implies that two stocks with identical characteristics will have identical weights despite them having widely different historic returns.
 
-It is relatively easy to optimize a portfolio composed of many stocks. However, the burden of this type of optimization does not come from the number of assets, but more from the number of characteristics. Also, only optimizing the entire portfolio based on the parameters we choose, which will reduce the risk of the in-sample and overfitting. This is because the coefficients will only deviate from zero if there is consistently a combination of risk and return across assets. This will also affect the optimization because it tends not to take extreme values.   
-
-To estimate $\hat{\boldsymbol{\theta}}$ we program a series of functions to determine the parametric portfolio given $\boldsymbol{x}_{i,t}$ and ${\theta}$. We then implement a function to determine the portfolio's gross return, calculate its certainty equivalent and use the *optim* function in R to do numerical optimization of the certainty equivalent by adjusting $\hat{\boldsymbol{\theta}}$. We define our initial $\hat{\boldsymbol{\theta}}$ as $[\begin{matrix} 1 & 1 & 1 \end{matrix}]'$
+To estimate $\hat{\boldsymbol{\theta}}$ we program a series of functions to determine the parametric portfolio given $\boldsymbol{x}_{i,t}$ and ${\theta}$. We then implement a function to determine the portfolio's gross return, calculate its certainty equivalent and use the *optim* function in R to do numerical optimization of the certainty equivalent by adjusting $\hat{\boldsymbol{\theta}}$. We define our initial $\hat{\boldsymbol{\theta}}$ as $[\begin{matrix} 1 & 1 & 1 \end{matrix}]^{\prime}$.
 
 
 
@@ -892,7 +890,7 @@ theta_hat_table %>%
   knitr::kable(booktabs = T, 
                digits = 4,
                col.names = c("Beta", "Size", "BM"),
-               caption = "Optimal $\\hat{\\theta}$ estimated on data up until december 31st 2015") %>%
+               caption = "Optimal $\\hat{\\boldsymbol{\\theta}}$ estimated on data up until december 31st 2015") %>%
   kable_paper("hover", full_width = F) %>%
   kable_styling(latex_options = "HOLD_position")
 
@@ -905,14 +903,14 @@ w_pp <- compute_parametric_portfolio_weights(theta_hat, US_Stocks %>%
 w_pp_table <- matrix(NA, ncol = length(unique(Sub_US_Stocks$permno)), nrow = 1)
 
 w_pp_table[1,] <- as.vector(w_pp)
-rownames(w_pp_table) <- "Optimal weights"
+rownames(w_pp_table) <- "Weights"
 
 # Printing a table with the optimal weights for last period of the sample
 w_pp_table %>%
   knitr::kable(booktabs = T, 
                digits = 4,
                col.names = unique(Sub_US_Stocks$permno),
-               caption = "Optimal parametric portfolio as of december 2015 given $\\hat{\\theta}$ estimated on data up until december 31st 2015") %>%
+               caption = "Optimal parametric portfolio weights computed for december 2015 given $\\hat{\\boldsymbol{\\theta}}$") %>%
   kable_paper("hover", full_width = T) %>%
   kable_styling(latex_options = "HOLD_position")
 
@@ -985,9 +983,9 @@ strategies_returns %>%
 
 The different strategies show us that Fama French has the highest total return, but its sharp ratio is only the second highest. The highest sharpe ratio comes from the Naive portfolio, which has the second highest total return. This shows us that the best portfolio is the Naive portfolio compared to the amount of risk we have taken. With back-testing strategies, a problem with the estimation can come when we use a very complex model on a dataset which is too small. As our estimation will try to fit more of the data, this can lead to overfitting. A shortfall for this implementation is that we create a portfolio which should hold for 5 years without rebalancing. This is a hard task, since we try to predict so far into the future based on the historical data.
 
-The Parametric portfolio strategy in a high-dimensional asset universe will be affected if it needs more characteristics as parameters, as this will make it heavier to optimize. So we expect it to perform better if we add more characteristics, but it will also make the calculation heavier and therefore take more time. The Naive portfolio will, with a certain number of assets, eliminate the diversifiable risk, but still, leave the systematic risk. An efficient portfolio will in this kind of universe have can have problems if the time horizen is to small, as it need a long time horizon to calculate the covariance matrix. Farma French will perform well if it is given a time horizon that is long enough, as the investor has to ride out underperformance and volatility that could occur in a short term.  
+The Parametric portfolio strategy in a high-dimensional asset universe will be affected if it needs more characteristics as parameters, as this will make it heavier to optimize. So we expect it to perform better if we add more characteristics, but it will also make the calculation heavier and therefore take more time. The Naive portfolio will, with a certain number of assets, eliminate the diversifiable risk, but still, leave the systematic risk. An efficient portfolio will in this kind of universe have problems if the time horizon is to small, as it needs a long time horizon to calculate the covariance matrix. Fama French will perform well if it is given a time horizon that is long enough, as the investor has to ride out underperformance and volatility that could occur in the short term.  
 
-From the chosen portfolio weights we have aquired from all 4 methods our assesment is that the efficient will have the largest turnover and therefore the largest transaction costs. Fama French and parametric will have about the same turnover and the naive portfolio will have by far the lowest turnover as it only has to be adjusted marginally to compensat for returns.
+From the chosen portfolio weights we have acquired from all 4 methods our assessment is that the Efficient portfolio will have the largest turnover and therefore the largest transaction costs. The Fama French and the Parametric portfolios will have about the same turnover and the naive portfolio will by far have the lowest turnover as it only has to be adjusted marginally to compensate for the effect of the returns.
 
 
 
