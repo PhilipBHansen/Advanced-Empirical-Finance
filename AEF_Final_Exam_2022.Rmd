@@ -492,7 +492,7 @@ k_months_ahead_alphas_tall %>% ggplot(aes(x = as.factor(portfolio), y = Value, f
 ```{r, echo=FALSE}
 
 # Creating the returns for the long-short portfolio
-better_strategy <- mom_portfolios_raw %>%
+better_strategy_raw <- mom_portfolios_raw %>%
   #filter(portfolio %in% c(1, 2, 9, 10)) %>%
   group_by(permno) %>%
   mutate(lag_portfolio = lag(portfolio)) %>%
@@ -506,7 +506,7 @@ better_strategy <- mom_portfolios_raw %>%
                                        ))
 
 # Creating monthly portfolio value-weighted excess returns
-better_strategy <- better_strategy %>%
+better_strategy <- better_strategy_raw %>%
   group_by(month, updated_portfolio) %>%
   summarize(ret_excess = weighted.mean(ret_excess, mktcap_lag), .groups = "drop") %>% 
   drop_na()
@@ -538,9 +538,37 @@ better_long_short_summary %>% knitr::kable(booktabs = T, digits = 4, caption = "
                        kable_styling(latex_options = "HOLD_position")
 
 # Finding the average return of the long-short portfolio
-better_long_short_portfolio <- mean(better_long_short_portfolio$long_short)
+better_long_short_portfolio_mu <- mean(better_long_short_portfolio$long_short)
 
+# Finding the portfolio turnover
+months <- unique(better_strategy_raw$month)
+w_prev <- better_strategy_raw %>% 
+  filter(month == months[1]) %>% 
+  ungroup() %>% 
+  filter(updated_portfolio %in% c(1, 10)) %>% 
+  mutate(weight = mktcap_lag / sum(mktcap_lag)) %>%
+  select(permno, weight)
 
+turnover <- 0
+
+for(i in (2:length(months))){
+  w_new <- better_strategy_raw %>% 
+    filter(month == months[i]) %>% 
+    ungroup() %>% 
+    filter(updated_portfolio %in% c(1, 10)) %>% 
+    mutate(weight = mktcap_lag / sum(mktcap_lag)) %>%
+    select(permno, weight)
+  
+  tmp <- w_prev %>% full_join(w_new, by="permno")
+  tmp[["weight.x"]][is.na(tmp[["weight.x"]])] <- 0
+  tmp[["weight.y"]][is.na(tmp[["weight.y"]])] <- 0
+  
+  turnover <- turnover + sum(abs(tmp$weight.x - tmp$weight.y))
+  
+  w_prev <- w_new
+}
+
+turnover <- turnover / length(months)
 
 
 ```
