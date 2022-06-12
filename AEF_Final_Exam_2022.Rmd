@@ -694,23 +694,14 @@ Table **MISSING* provides the empirical estimates for the Fama French 3-factor m
 
 We will now derive the model-implied expected gross excess return $\hat{\boldsymbol{\mu}}^{FF}$ and the model-implied variance-covariance matrix $\hat{\boldsymbol{\Sigma}}^{FF}$. A bold symbol signifies that it is a vector or a matrix. We start by deriving $\hat{\boldsymbol{\mu}}^{FF}$, which is a vector consisting of the model-implied expected gross excess return for the each of the 8 stocks, where we use that $E\left[\epsilon_{i,t}\right]=0$:
 \begin{align*}
-    \hat{\boldsymbol{\mu}}^{FF} &= E\left[\boldsymbol{r}_{t}\right] \\
-    &= E\left[\boldsymbol{\alpha} + \boldsymbol{\beta}^\text{M} \boldsymbol{r}_{m,t} + \boldsymbol{\beta}^{\text{SMB}} \boldsymbol{r}_{smb,t} + \boldsymbol{\beta}^\text{HML} \boldsymbol{r}_{hml,t} + \boldsymbol{\epsilon}_{t}\right] \\
-    &= E\left[\boldsymbol{\alpha} + \boldsymbol{\beta}^\text{M} \boldsymbol{r}_{m,t} + \boldsymbol{\beta}^{\text{SMB}} \boldsymbol{r}_{smb,t} + \boldsymbol{\beta}^\text{HML} \boldsymbol{r}_{hml,t}\right] + E\left[\boldsymbol{\epsilon}_{t}\right] \\
-    &= E\left[\boldsymbol{\alpha} + \boldsymbol{\beta}^\text{M} \boldsymbol{r}_{m,t} + \boldsymbol{\beta}^{\text{SMB}} \boldsymbol{r}_{smb,t} + \boldsymbol{\beta}^\text{HML} \boldsymbol{r}_{hml,t}\right] \\
-    &= \frac{1}{N}\sum_{t=1}^N\left(\boldsymbol{\alpha} + \boldsymbol{\beta}^\text{M} \boldsymbol{r}_{m,t} + \boldsymbol{\beta}^{\text{SMB}} \boldsymbol{r}_{smb,t} + \boldsymbol{\beta}^\text{HML} \boldsymbol{r}_{hml,t}\right) \\
+    \hat{\boldsymbol{\mu}}^{FF} &= E\left[\boldsymbol{r}_{t}\right] &= \frac{1}{N}\sum_{t=1}^N\left(\boldsymbol{\alpha} + \boldsymbol{\beta}^\text{M} \boldsymbol{r}_{m,t} + \boldsymbol{\beta}^{\text{SMB}} \boldsymbol{r}_{smb,t} + \boldsymbol{\beta}^\text{HML} \boldsymbol{r}_{hml,t}\right) \\
 \end{align*}
 In order to derive $\hat{\boldsymbol{\Sigma}}^{FF}$ then we do that in two steps. We start by deriving $V\left(r_i\right)$ and afterwards we find $Cov\left(r_i,r_j\right)$. Then we use these to create $\hat{\boldsymbol{\Sigma}}^{FF}$ since the diagonal is the matrix in the variance and the rest is the covariances between the stocks. We use that $Cov(r_{k,t}, \epsilon_{i,t}) = 0$ for all factors $k$.
 \begin{align*}
-    V\left(r_i\right) &= E\left[\left(r_{i,t} - E\left[r_{i,t}\right]\right)^2\right] \\
-    &= E\left[r_{i,t}^2 + \left(\hat{\mu}_i^{FF}\right)^2 - 2\hat{\mu}_i^{FF} r_{i,t}\right] \\
-    &= E\left[r_{i,t}^2\right] + \left(\hat{\mu}_i^{FF}\right)^2 - 2\hat{\mu}_i^{FF}E\left[r_{i,t}\right] \\
-    &= E\left[r_{i,t}^2\right] + \left(\hat{\mu}_i^{FF}\right)^2 - 2\left(\hat{\mu}_i^{FF}\right)^2 \\
-    &= \frac{1}{N}\sum_{t=1}^N\left(r_{i,t}^2\right) - \left(\hat{\mu}_i^{FF}\right)^2
+    V\left(r_i\right) &= E\left[\left(r_{i,t} - E\left[r_{i,t}\right]\right)^2\right] = \frac{1}{N}\sum_{t=1}^N\left(r_{i,t}^2\right) - \left(\hat{\mu}_i^{FF}\right)^2
 \end{align*}
 \begin{align*}
-    Cov\left(r_i,r_j\right) &= E\left[r_i r_j\right] - E\left[r_i\right]E\left[r_j\right] \\
-    &= \frac{1}{N}\sum_{t=1}^N\left(r_i r_j\right) - \hat{\mu}_i^{FF}\hat{\mu}_j^{FF}
+    Cov\left(r_i,r_j\right) &= E\left[r_i r_j\right] - E\left[r_i\right]E\left[r_j\right] = \frac{1}{N}\sum_{t=1}^N\left(r_i r_j\right) - \hat{\mu}_i^{FF}\hat{\mu}_j^{FF}
 \end{align*}
 
 **INCLUDE: What determines the correlation of the returns?**
