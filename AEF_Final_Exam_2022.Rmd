@@ -618,9 +618,9 @@ Most academic studies ignore real world costs, this could prove to be an issue f
 It is very likely that the turnover of a size sort portfolio would be significantly smaller than that of a momentum portfolio. A company that is large will most 
 likely remain so in the foreseeable future. Take an example as Apple, and imagine its stock price dropping 10% this would imply severe negative momentum but i would for a decent amount of time remain a huge company. The same goes for really small companies, imagine your local bakery doing an IPO and doubling its market cap in a year, that is enormous positive momentum but that does not make it a Fortune 500 or anything close to it.
 
-The assumption of perfectly divisible assets might also have an effect on cost in the real world. However this problem dissapears as the value of the portfolio becomes sufficiently large. Asset liquidity might also be an issue as some assets simply cant be traded at the pace a momentum strategy requires, atleast not without trading at a discount which most likely would leave the strategy worse off.
+The assumption of perfectly divisible assets might also have an effect on cost in the real world. However this problem dissapears as the value of the portfolio becomes sufficiently large. Asset liquidity might also be an issue as some assets simply cant be traded at the pace a momentum strategy requires, at least not without trading at a discount which most likely would leave the strategy worse off.
 
-
+To capture the momentum premium but lower turnover we suggest a strategy that chooses assets the same way as the *standard long-short* strategy. Instead of dropping the position as soon as its momentum moves out of the top or bottom 10%, we hold it until it hast moved out of the top or bottom 20%.
 
 ```{r Finding from 1 and 3, echo=FALSE}
 
@@ -659,7 +659,7 @@ summary3 %>%
 
 ```
 
-We see that our suggested strategy has a better sharpe ratio, so a better return proportional to the amount of risk taken.The positive excess return 0.0047 compared to 0.0075 suggests that we are able to catch a good part of the momentum premium but with a turnover that is about 25% smaller while also taking on less risk. We therefore conclude that the strategy works decently for the assigned purpose.
+We see that our suggested strategy has a better sharpe ratio, so a better return proportional to the amount of risk taken.The positive excess return of 0.0047 compared to 0.0075 suggests, that we are able to catch a good part of the momentum premium but with a turnover that is about 25% smaller while also taking on less risk. We therefore conclude that the strategy works decently for the assigned purpose.
 
 # Exam part 2
 In part 2 of this report we will use a dataset which consists of 252 monthly observations for $N=8$ different US-listed stocks identified by their permno which is a unique company identifier. The permno for the stocks used are: 10026, 10032, 10044, 10104, 10200, 10232, 10252 and 10397. The whole dataset includes monthly observations from "2000-01-01" to "2020-12-01". The first two problems will focus on the data up until (and including) 2015, where problem 3 will then use the last 5 years in order to test the **MISSING** estimated in problem 1 and 2. For each month-permno observation, the dataset contains the following variables: ret_excess is the net excess return for each month. mkt_excess, smb and hml are the market excess returns, the returns of the small-minus-big portfolio and the high-minus-low book-to-market ratio portfolio returns from Kenneth French’s homepage. beta is the estimated CAPM beta of the stock, measured at the beginning of month t, size is a measure of market capitalization of the stock at the beginning of month t and bm is the book-to-market ratio of the stock, measured at the beginning of month t. The columns beta, size and bm are standardized such that the monthly cross-sectional average is zero and the monthly cross-sectional standard deviation is one.
