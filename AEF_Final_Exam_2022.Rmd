@@ -622,7 +622,7 @@ To capture the momentum premium but lower turnover we suggest a strategy that ch
 ```{r Finding from 1 and 3, echo=FALSE}
 
 # Define function to calculate the sharpe ratio
-Sharpe_ratio = function(x, annualized = False){
+Sharpe_ratio = function(x, annualized = FALSE){
   if(annualized){
     multiplier <- 12
   } else{
@@ -640,7 +640,7 @@ summary3 <- matrix(NA, ncol = 3, nrow = 2)
 rownames(summary3) <- c("Standard long-short portfolio","Our long-short portfolio")
 
 # Add the data
-summary3[,1] <- c(Sharpe_ratio(long_short_portfolio$long_short, annualized = False), Sharpe_ratio(our_mom_long_short_portfolio$long_short, annualized = False))
+summary3[,1] <- c(Sharpe_ratio(long_short_portfolio$long_short, annualized = FALSE), Sharpe_ratio(our_mom_long_short_portfolio$long_short, annualized = FALSE))
   summary3[,2] <- c(mean(long_short_portfolio$long_short), mean(our_mom_long_short_portfolio$long_short))
 summary3[,3] <- c(turnover_mom, our_mom_turnover)
 
