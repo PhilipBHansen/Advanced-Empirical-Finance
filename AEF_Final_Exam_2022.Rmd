@@ -479,7 +479,7 @@ k_months_ahead_alphas %>%
                digits = 4, 
                col.names = c("Portfolio number", "Alpha 1 month ahead", "Alpha 3 months ahead", "Alpha 6 months ahead", "Alpha 12 months ahead"), 
                caption = "CAPM alphas for the value-weighted momentum-sorted portfolios") %>%
-  kable_paper("hover", full_width = T) %>% 
+  kable_paper("hover", full_width = F) %>% 
   kable_styling(latex_options = "HOLD_position")
 
 
@@ -564,7 +564,7 @@ our_mom_long_short_summary %>%
   knitr::kable(booktabs = T, 
                digits = 4, 
                caption = "CAPM alpha, beta and excess return for the new long-short portfolio based on value-weighted momentum-sorted portfolios") %>%
-  kable_paper("hover", full_width = T) %>% 
+  kable_paper("hover", full_width = F) %>% 
   kable_styling(latex_options = "HOLD_position")
 
 # Calculating the portfolio turnover (using the mom_portfolios_raw dataset before grouping stocks together in portfolios)
