@@ -610,6 +610,11 @@ our_mom_turnover <- our_mom_turnover / length(months)
 
 ```
 
+Most academic studies ignore real world costs, this could prove to be an issue for the momentum portfolio. We have seen that the momentum strategy has quite a high turnover and this might lead to momentum becoming too expensive to trade compared to its return premium.
+It is very likely that the turnover of a size sort portfolio would be significantly smaller than that of a momentum portfolio. A company that is large will most 
+likely remain so in the foreseeable future. Take an example as Apple, and imagine its stock price dropping 10% this would imply severe negative momentum but i would for a decent amount of time remain a huge company. The same goes for really small companies, imagine your local bakery doing an IPO and doubling its market cap in a year, that is enormous positive momentum but that does not make it a Fortune 500 or anything close to it.
+
+The assumption of perfectly divisible assets might also have an effect on cost in the real world. However this problem dissapears as the value of the portfolio becomes sufficiently large. Asset liquidity might also be an issue as some assets simply cant be traded at the pace a momentum strategy requires, atleast not without trading at a discount which most likely would leave the strategy worse off.
 
 
 
@@ -841,22 +846,17 @@ We can then estimate $\theta$ by maximizing the corresponding sample analog
 
 $$\max\limits_{\theta} \frac{1}{T}\displaystyle\sum_{i=0}^{T-1}u(r_{p,t+1}) =\frac{1}{N}\displaystyle\sum_{i=0}^{T-1} u \bigg(\displaystyle\sum_{i=1}^{N_t}f(x_{i,t};\theta) r_{i,t+1} \bigg)$$
 
-To estimate $\theta$ we maximize the linear policy case  fucntion:
+To estimate $\theta$ we maximize the linear policy case  function:
 $$\max\limits_{\theta} \frac{1}{N}\displaystyle\sum_{i=0}^{T-1} \bigg(\displaystyle\sum_{i=1}^{N_t}\bigg (\bar\omega_{i,t}+\frac{1}{N_t}\theta^{\intercal}\hat x_{i,t} \bigg) r_{i,t+1} \bigg)$$
 
 The most important aspect of the coefficient $\theta$ is that the parameterization is constant across assets through time. If we have a constant coefficient across assets, then the weight in the portfolio for each stock will depend on the characteristics of the stock and not on the history of the return on the stock. 
 And based on this, if we have two stocks that are close to each other in characteristics, which are related to the expected return and risk, with different sample returns, should even then have the same weight in the portfolio.
 
-It is reltivly easy to optimizing a portfolio composed of a large number of stocks. But the burden of this type of optimization does not come from the number of assets, but more from the number of characteristics. Also only optimize the entire portfolio based on the parameters we choose, which will parsimony also reduce the risk of in-sample and overfitting. This is because the coefficients will only deviate from zero if there is a combination of risk and return across assets consistently. This will also affect the optimization in the aspect that it tends not to take extreme values.   
+It is relatively easy to optimizing a portfolio composed of a large number of stocks. But the burden of this type of optimization does not come from the number of assets, but more from the number of characteristics. Also only optimize the entire portfolio based on the parameters we choose, which will parsimony also reduce the risk of in-sample and overfitting. This is because the coefficients will only deviate from zero if there is a combination of risk and return across assets consistently. This will also affect the optimization in the aspect that it tends not to take extreme values.   
 
 If we look at the function for the simple linear specification for the portfolio weights, it will conveniently nests all the long-short portfolios, which is constructed from the Fama and French model. 
 
-
-
-
-
-
-
+To estimate $\hat{\theta}$ we program a series of functions to determine the parametric portfolio given $x_{i,t}$ and $\theta$. We then implement a function to determine the gross return og said portfolio, calculate its certainty equivalent and use the *optim* function in R to do numerical optimization of the certainty equivalent by adjusting $\hat{\theta}$.
 
 
 ```{r}
@@ -966,10 +966,42 @@ w_pp_table %>%
 
 ```
 
+
 ## Problem 3
 
 ```{r}
+compute_efficient_weight <- function(Sigma,
+                                     mu,
+                                     gamma = gamma_default, 
+                                     beta = 0, # transaction costs
+                                     w_prev = 1/ncol(Sigma) * rep(1, ncol(Sigma))){ 
+  
+  iota <- rep(1, ncol(Sigma))
+  Sigma_processed <- Sigma + beta / gamma * diag(ncol(Sigma))
+  mu_processed <- mu + beta * w_prev
+  
+  Sigma_inverse <- solve(Sigma_processed)
+  
+  w_mvp <- Sigma_inverse %*% iota
+  w_mvp <- as.vector(w_mvp / sum(w_mvp))
+  w_opt <- w_mvp  + 1/gamma * (Sigma_inverse - 1 / sum(Sigma_inverse) * Sigma_inverse %*% iota %*% t(iota) %*% Sigma_inverse) %*% mu_processed
+  return(as.vector(w_opt))
+}
 
+returns_matrix <- Sub_US_Stocks %>% select(permno, month, ret_excess) %>%
+  pivot_wider(
+    names_from = permno,
+    values_from = ret_excess
+  ) %>% select(-month)
+
+
+
+sigmatilde <- cov(returns_matrix)
+mutilde <- colMeans(returns_matrix)
+
+naive <- 1/ncol(sigmatilde) * rep(1, ncol(sigmatilde))
+
+efficient <- compute_efficient_weight(sigmatilde, mutilde, w_prev = naive, beta = 0)
 ```
 
 
